@@ -1,0 +1,162 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Trophy, Medal, Crown, TrendingUp, User } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
+
+interface LeaderboardEntry {
+    rank: number;
+    user: string;
+    profit: string;
+    multiplier: string;
+    isMe?: boolean;
+}
+
+export default function Leaderboard() {
+    const [topPlayers, setTopPlayers] = useState<LeaderboardEntry[]>([]);
+    const [myRank, setMyRank] = useState<LeaderboardEntry | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchLeaderboard = async () => {
+            try {
+                // Fetch top 10 winners
+                const { data: bets, error } = await supabase
+                    .from('bets')
+                    .select('win_amount, cashout_at, users(wallet_address)')
+                    .eq('status', 'cashed')
+                    .order('win_amount', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const processed: LeaderboardEntry[] = (bets || []).map((b: any, i: number) => ({
+                    rank: i + 1,
+                    user: b.users?.wallet_address ? `@${b.users.wallet_address.slice(0, 6)}...${b.users.wallet_address.slice(-4)}` : 'Unknown',
+                    profit: `${b.win_amount || 0} TON`,
+                    multiplier: `${b.cashout_at || 0}x`,
+                }));
+
+                setTopPlayers(processed);
+            } catch (e) {
+                console.error("Leaderboard fetch failed:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLeaderboard();
+
+        // Polling for updates every 30s
+        const interval = setInterval(fetchLeaderboard, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Placeholder for myRank until dynamic fetching is implemented for it
+    // The instruction only provided fetching logic for topPlayers.
+    useEffect(() => {
+        setMyRank({ rank: 142, user: '@Bhavish_R', profit: '12.5 TON', multiplier: '2.1x', isMe: true });
+    }, []);
+
+
+    return (
+        <div className="flex flex-col gap-4 h-full w-full max-w-sm">
+            {/* Top 3 Podium Dynamic */}
+            <div className="flex justify-center items-end gap-2 mb-2 h-32 pt-4">
+                {topPlayers.length >= 2 ? (
+                    <PodiumPlace rank={2} user={topPlayers[1].user} height="h-20" />
+                ) : (
+                    <PodiumPlace rank={2} user="---" height="h-20" />
+                )}
+
+                {topPlayers.length >= 1 ? (
+                    <PodiumPlace rank={1} user={topPlayers[0].user} height="h-28" isCrown />
+                ) : (
+                    <PodiumPlace rank={1} user="---" height="h-28" isCrown />
+                )}
+
+                {topPlayers.length >= 3 ? (
+                    <PodiumPlace rank={3} user={topPlayers[2].user} height="h-16" />
+                ) : (
+                    <PodiumPlace rank={3} user="---" height="h-16" />
+                )}
+            </div>
+
+            {/* Leaderboard Header */}
+            <div className="flex justify-between items-center px-4 mb-1">
+                <h3 className="text-[10px] uppercase font-bold text-white/40 flex items-center gap-2">
+                    <TrendingUp className="w-3 h-3 text-gold" /> Weekly Top Profit
+                </h3>
+                <span className="text-[8px] text-white/20 uppercase font-black italic">Resets in 2d 14h</span>
+            </div>
+
+            {/* Players List */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-hide min-h-[300px]">
+                {loading ? (
+                    <div className="text-center py-10 text-white/20 animate-pulse uppercase font-bold text-[10px]">Loading Rankings...</div>
+                ) : topPlayers.length === 0 ? (
+                    <div className="text-center py-10 text-white/20 uppercase font-bold text-[10px]">No winners yet today</div>
+                ) : (
+                    topPlayers.map((player) => (
+                        <LeaderboardRow key={player.rank} {...player} />
+                    ))
+                )}
+            </div>
+
+            {/* My Rank Sticky (Personalized placeholder) */}
+            <div className="mt-auto pt-2">
+                <div className="glass-card !bg-gold/10 border-gold/30 p-3 flex justify-between items-center shadow-[0_-10px_20px_-10px_rgba(212,175,55,0.2)]">
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-black text-gold">#--</span>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-white uppercase tracking-tighter italic">@Bhavish_R</span>
+                            <span className="text-[8px] text-gold/60 uppercase font-bold">Your Rank</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PodiumPlace({ rank, user, height, isCrown }: { rank: number, user: string, height: string, isCrown?: boolean }) {
+    return (
+        <div className={`flex flex-col items-center gap-1 w-20`}>
+            {isCrown && <Crown className="w-4 h-4 text-gold fill-gold/20 animate-bounce mb-1" />}
+            {!isCrown && <Medal className={`w-4 h-4 ${rank === 2 ? 'text-slate-300' : 'text-amber-600'} mb-1`} />}
+            <div className={`w-full ${height} glass-card relative flex flex-col items-center justify-center border-white/10`}>
+                <div className="absolute inset-0 bg-gold/5 blur-xl" />
+                <span className="text-xs font-black text-white/80 truncate px-2 w-full text-center tracking-tighter">{user}</span>
+                <span className="text-[10px] font-black italic text-gold">#{rank}</span>
+            </div>
+        </div>
+    );
+}
+
+function LeaderboardRow({ rank, user, profit, multiplier, isMe }: LeaderboardEntry) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={`glass-card p-3 flex justify-between items-center transition-all ${isMe ? 'border-gold/30 bg-gold/5 shadow-gold/10' : 'border-white/5 bg-white/5 hover:border-gold/20 hover:bg-white/10'}`}
+        >
+            <div className="flex items-center gap-3">
+                <div className="w-6 flex justify-center">
+                    {rank <= 3 ? (
+                        <Medal className={`w-4 h-4 ${rank === 1 ? 'text-gold' : rank === 2 ? 'text-slate-300' : 'text-amber-600'}`} />
+                    ) : (
+                        <span className="text-xs font-black text-white/20 italic">#{rank}</span>
+                    )}
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white/90 truncate max-w-[100px]">{user}</span>
+                    <span className="text-[8px] text-white/30 uppercase font-bold">{multiplier} Max X</span>
+                </div>
+            </div>
+            <div className="text-right">
+                <span className="text-sm font-black gold-text italic tracking-tighter">{profit}</span>
+            </div>
+        </motion.div>
+    );
+}
