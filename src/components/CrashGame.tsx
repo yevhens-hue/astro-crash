@@ -49,6 +49,7 @@ export default function CrashGame({ balance = 0 }: { balance?: number }) {
     const currentBetIdRefA = useRef<string | null>(null);
     const currentBetIdRefB = useRef<string | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const pendingCrashAtRef = useRef<number | null>(null);
 
     useEffect(() => {
         // Initial fetch
@@ -153,68 +154,96 @@ export default function CrashGame({ balance = 0 }: { balance?: number }) {
             console.log(`Starting bet for panel ${panel}... Amount:`, amount);
             setIsBetting(true);
 
-            // 1. Fetch or create a synchronized round from backend
-            const { data: roundData, error: roundError } = await supabase.functions.invoke('generate-round');
-            if (roundError || !roundData) throw new Error(roundError?.message || "Failed to sync round");
+            let crashAt: number;
+            let roundId: string;
+            let serverSeed: string;
 
-            const crashAt = parseFloat(roundData.crash_point);
-            setCurrentSeed(roundData.server_seed);
+            // 1. Fetch or simulate round
+            if (address === 'guest_test_wallet' || FEATURE_FLAGS.DEBUG_MODE) {
+                // Simulation mode for guest/debug
+                crashAt = Math.max(1.1, 0.99 / (1 - Math.random()));
+                roundId = `mock_round_${Date.now()}`;
+                serverSeed = "local_simulation_seed";
+            } else {
+                const { data: roundData, error: roundError } = await supabase.functions.invoke('generate-round');
+                if (roundError || !roundData) throw new Error(roundError?.message || "Failed to sync round");
+                crashAt = parseFloat(roundData.crash_point);
+                roundId = roundData.id;
+                serverSeed = roundData.server_seed;
+            }
 
+            setCurrentSeed(serverSeed);
             const txHash = `internal_tx_${Date.now()}`;
 
-            // 2. Sync User
-            const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .upsert({
-                    wallet_address: address,
-                    telegram_id: tgUser?.id
-                }, { onConflict: 'wallet_address' })
-                .select().single();
+            // 2. Sync User (only if real supabase)
+            let userId = "guest_id";
+            let currentUserBalance = balance;
 
-            if (userError || !userData) throw userError || new Error("User sync failed");
+            if (address !== 'guest_test_wallet') {
+                const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+                const { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .upsert({
+                        wallet_address: address,
+                        telegram_id: tgUser?.id
+                    }, { onConflict: 'wallet_address' })
+                    .select().single();
 
-            // 3. Atomically subtract balance in DB
-            const { error: balError } = await supabase
-                .from('users')
-                .update({ balance: Number(userData.balance) - amount })
-                .eq('id', userData.id);
+                if (userError || !userData) throw userError || new Error("User sync failed");
+                userId = userData.id;
+                currentUserBalance = Number(userData.balance);
 
-            if (balError) throw new Error("Balance update failed");
+                // 3. Atomically subtract balance in DB
+                const { error: balError } = await supabase
+                    .from('users')
+                    .update({ balance: currentUserBalance - amount })
+                    .eq('id', userId);
 
-            const { data: bData, error: bError } = await supabase
-                .from('bets')
-                .insert({
-                    round_id: roundData.id,
-                    user_id: userData.id,
-                    amount: amount,
-                    status: 'confirmed', // Confirmed immediately since it's internal balance
-                    tx_hash: txHash
-                })
-                .select().single();
+                if (balError) throw new Error("Balance update failed");
 
-            if (bError || !bData) throw bError || new Error("Bet record failed");
+                await supabase
+                    .from('bets')
+                    .insert({
+                        round_id: roundId,
+                        user_id: userId,
+                        amount: amount,
+                        status: 'confirmed',
+                        tx_hash: txHash
+                    });
+            }
 
             // Update local state
             if (panel === 'A') {
-                currentBetIdRefA.current = bData.id;
+                currentBetIdRefA.current = `bet_a_${Date.now()}`;
                 setBetStatusA('betting');
                 betStatusRefA.current = 'betting';
                 autoCashoutRefA.current = auto;
             } else {
-                currentBetIdRefB.current = bData.id;
+                currentBetIdRefB.current = `bet_b_${Date.now()}`;
                 setBetStatusB('betting');
                 betStatusRefB.current = 'betting';
                 autoCashoutRefB.current = auto;
             }
 
-            // If game is not flying and no countdown, start launch sequence
+            // Game Logic: If already flying, we are betting for NEXT round if possible (not implemented yet)
+            // or we just wait for countdown to finish.
             if (!isFlying && countdown === null) {
                 startLaunchSequence(crashAt);
+            } else {
+                // Store crashAt for when countdown ends
+                pendingCrashAtRef.current = crashAt;
             }
         } catch (e: any) {
             console.error("Bet failed:", e);
             alert(`Bet failed: ${e.message || 'Check connection'}`);
+            // Reset status on failure
+            if (panel === 'A') {
+                setBetStatusA('none');
+                betStatusRefA.current = 'none';
+            } else {
+                setBetStatusB('none');
+                betStatusRefB.current = 'none';
+            }
         } finally {
             setIsBetting(false);
         }
@@ -377,7 +406,12 @@ export default function CrashGame({ balance = 0 }: { balance?: number }) {
     };
 
     useEffect(() => {
-        // Auto Play trigger
+        // Auto Play trigger or start pending round
+        if (countdown === null && !isFlying && pendingCrashAtRef.current !== null) {
+            startLaunchSequence(pendingCrashAtRef.current);
+            pendingCrashAtRef.current = null;
+        }
+
         if (countdown === 0) {
             if (autoPlayA && betStatusRefA.current === 'none') {
                 handlePlaceBet('A');
@@ -386,7 +420,7 @@ export default function CrashGame({ balance = 0 }: { balance?: number }) {
                 handlePlaceBet('B');
             }
         }
-    }, [countdown, autoPlayA, autoPlayB]);
+    }, [countdown, autoPlayA, autoPlayB, isFlying]);
 
     useEffect(() => {
         return () => {
