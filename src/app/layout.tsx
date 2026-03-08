@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="ru" className="dark" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground select-none`}>
         <Providers>
-          <div className="min-h-screen max-w-md mx-auto relative overflow-hidden flex flex-col">
+          <div className="min-h-screen max-w-md mx-auto flex flex-col">
             {children}
           </div>
         </Providers>

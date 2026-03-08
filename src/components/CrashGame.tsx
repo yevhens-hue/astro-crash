@@ -6,8 +6,9 @@ import { Rocket, Users, TrendingUp } from 'lucide-react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { supabase } from '@/lib/supabase';
 import { SoundManager } from '@/lib/sounds';
+import { FEATURE_FLAGS } from '@/lib/flags';
 
-export default function CrashGame() {
+export default function CrashGame({ balance = 0 }: { balance?: number }) {
     const wallet = useTonWallet();
     const [tonConnectUI] = useTonConnectUI();
 
@@ -17,131 +18,255 @@ export default function CrashGame() {
     const [multiplier, setMultiplier] = useState(1.00);
     const [isFlying, setIsFlying] = useState(false);
     const [isCrashed, setIsCrashed] = useState(false);
-    const [betStatus, setBetStatus] = useState<'none' | 'betting' | 'cashed'>('none');
+    const [betStatusA, setBetStatusA] = useState<'none' | 'betting' | 'cashed'>('none');
+    const [betStatusB, setBetStatusB] = useState<'none' | 'betting' | 'cashed'>('none');
     const [lastWin, setLastWin] = useState<number | null>(null);
     const [currentSeed, setCurrentSeed] = useState<string>('hash_sha256_waiting...');
-    const [autoCashout, setAutoCashout] = useState<number>(2.00);
+    const [autoCashoutA, setAutoCashoutA] = useState<number>(2.00);
+    const [autoCashoutB, setAutoCashoutB] = useState<number>(2.00);
     const [isBetting, setIsBetting] = useState(false);
     const [squadSize, setSquadSize] = useState(1);
     const [isSquadActive, setIsSquadActive] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
+    const [betAmountA, setBetAmountA] = useState<number>(0.1);
+    const [betAmountB, setBetAmountB] = useState<number>(0.1);
+    const [autoPlayA, setAutoPlayA] = useState(false);
+    const [autoPlayB, setAutoPlayB] = useState(false);
+    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string }[]>([]);
+    const [activeTab, setActiveTab] = useState<'all' | 'my' | 'top'>('all');
+    const [allBets, setAllBets] = useState<any[]>([]);
+    const [myBets, setMyBets] = useState<any[]>([]);
+    const [topBets, setTopBets] = useState<any[]>([]);
 
     const multiplierRef = useRef(1.00);
-    const autoCashoutRef = useRef<number>(2.00);
+    const autoCashoutRefA = useRef<number>(2.00);
+    const autoCashoutRefB = useRef<number>(2.00);
     const requestRef = useRef<number | null>(null);
     const startTimeRef = useRef<number | null>(null);
-    const betStatusRef = useRef<'none' | 'betting' | 'cashed'>('none');
-    const currentBetIdRef = useRef<string | null>(null);
+    const betStatusRefA = useRef<'none' | 'betting' | 'cashed'>('none');
+    const betStatusRefB = useRef<'none' | 'betting' | 'cashed'>('none');
+    const currentBetIdRefA = useRef<string | null>(null);
+    const currentBetIdRefB = useRef<string | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
+        // Initial fetch
+        fetchRecentRounds();
+        fetchBets();
+
+        // Subscribe to real-time bets
+        const channel = supabase
+            .channel('public:bets')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bets' }, (payload) => {
+                setAllBets(prev => [payload.new, ...prev].slice(0, 10));
+            })
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bets' }, (payload) => {
+                setAllBets(prev => prev.map(b => b.id === payload.new.id ? payload.new : b));
+            })
+            .subscribe();
+
         // Simulate online users changing
         const interval = setInterval(() => {
             const size = Math.floor(Math.random() * 20) + 1;
             setSquadSize(size);
             setIsSquadActive(size > 5);
         }, 5000);
-        return () => clearInterval(interval);
-    }, []);
 
-    const startNewRound = async () => {
-        if (!wallet) {
+        return () => {
+            clearInterval(interval);
+            supabase.removeChannel(channel);
+        };
+    }, [wallet]);
+
+    const fetchBets = async () => {
+        // All bets
+        const { data: all } = await supabase
+            .from('bets')
+            .select('*, users(wallet_address)')
+            .order('created_at', { ascending: false })
+            .limit(10);
+        if (all) setAllBets(all);
+
+        // My bets
+        if (wallet) {
+            const { data: myUser } = await supabase
+                .from('users')
+                .select('id')
+                .eq('wallet_address', wallet.account.address)
+                .single();
+
+            if (myUser) {
+                const { data: my } = await supabase
+                    .from('bets')
+                    .select('*')
+                    .eq('user_id', myUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                if (my) setMyBets(my);
+            }
+        }
+
+        // Top bets
+        const { data: top } = await supabase
+            .from('bets')
+            .select('*, users(wallet_address)')
+            .eq('status', 'paid')
+            .order('win_amount', { ascending: false })
+            .limit(10);
+        if (top) setTopBets(top);
+    };
+
+    const fetchRecentRounds = async () => {
+        const { data, error } = await supabase
+            .from('rounds')
+            .select('id, crash_point')
+            .not('crash_point', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(15);
+
+        if (!error && data) {
+            setRecentMultipliers(data.map(r => ({
+                multiplier: parseFloat(r.crash_point),
+                id: r.id
+            })));
+        }
+    };
+
+    const handlePlaceBet = async (panel: 'A' | 'B') => {
+        const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
+
+        if (!address && !FEATURE_FLAGS.DEBUG_MODE) {
             alert("Please connect your wallet first!");
             return;
         }
 
+        const amount = panel === 'A' ? betAmountA : betAmountB;
+        const auto = panel === 'A' ? autoCashoutA : autoCashoutB;
+
+        if (balance < amount) {
+            alert("Insufficient balance! Please deposit TON.");
+            return;
+        }
+
         try {
+            console.log(`Starting bet for panel ${panel}... Amount:`, amount);
             setIsBetting(true);
+
             // 1. Fetch or create a synchronized round from backend
             const { data: roundData, error: roundError } = await supabase.functions.invoke('generate-round');
-            if (roundError || !roundData) throw new Error("Failed to sync round with server");
+            if (roundError || !roundData) throw new Error(roundError?.message || "Failed to sync round");
 
             const crashAt = parseFloat(roundData.crash_point);
             setCurrentSeed(roundData.server_seed);
 
-            // 2. Original transaction logic...
-            const transaction = {
-                validUntil: Math.floor(Date.now() / 1000) + 60,
-                messages: [
-                    {
-                        address: HOUSE_WALLET,
-                        amount: "100000000", // 0.1 TON
-                    },
-                ],
-            };
+            const txHash = `internal_tx_${Date.now()}`;
 
-            const sentTx = await tonConnectUI.sendTransaction(transaction);
+            // 2. Sync User
+            const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .upsert({
+                    wallet_address: address,
+                    telegram_id: tgUser?.id
+                }, { onConflict: 'wallet_address' })
+                .select().single();
 
-            if (sentTx && wallet) {
-                const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
-                const telegramId = tgUser?.id;
+            if (userError || !userData) throw userError || new Error("User sync failed");
 
-                const { data: userData } = await supabase
-                    .from('users')
-                    .upsert({
-                        wallet_address: wallet.account.address,
-                        telegram_id: telegramId
-                    }, { onConflict: 'wallet_address' })
-                    .select()
-                    .single();
+            // 3. Atomically subtract balance in DB
+            const { error: balError } = await supabase
+                .from('users')
+                .update({ balance: Number(userData.balance) - amount })
+                .eq('id', userData.id);
 
-                if (userData) {
-                    const { data: bData } = await supabase.from('bets').insert({
-                        round_id: roundData.id,
-                        user_id: userData.id,
-                        amount: 0.1,
-                        status: 'placed',
-                        tx_hash: sentTx.boc
-                    }).select().single();
+            if (balError) throw new Error("Balance update failed");
 
-                    if (bData) currentBetIdRef.current = bData.id;
-                }
+            const { data: bData, error: bError } = await supabase
+                .from('bets')
+                .insert({
+                    round_id: roundData.id,
+                    user_id: userData.id,
+                    amount: amount,
+                    status: 'confirmed', // Confirmed immediately since it's internal balance
+                    tx_hash: txHash
+                })
+                .select().single();
+
+            if (bError || !bData) throw bError || new Error("Bet record failed");
+
+            // Update local state
+            if (panel === 'A') {
+                currentBetIdRefA.current = bData.id;
+                setBetStatusA('betting');
+                betStatusRefA.current = 'betting';
+                autoCashoutRefA.current = auto;
+            } else {
+                currentBetIdRefB.current = bData.id;
+                setBetStatusB('betting');
+                betStatusRefB.current = 'betting';
+                autoCashoutRefB.current = auto;
             }
 
-            setIsFlying(true);
-            setIsCrashed(false);
-            setBetStatus('betting');
-            betStatusRef.current = 'betting';
-            setMultiplier(1.00);
-            multiplierRef.current = 1.00;
-            startTimeRef.current = Date.now();
-            autoCashoutRef.current = autoCashout;
-            SoundManager.playStart();
-
-            const update = () => {
-                const elapsed = (Date.now() - (startTimeRef.current || 0)) / 1000;
-                let newMultiplier = Math.pow(1.15, elapsed);
-
-                if (isSquadActive) {
-                    newMultiplier += 0.1;
-                }
-
-                if (newMultiplier >= crashAt) {
-                    crash();
-                } else {
-                    const oldM = multiplierRef.current;
-                    setMultiplier(newMultiplier);
-                    multiplierRef.current = newMultiplier;
-
-                    if (Math.floor(newMultiplier * 10) > Math.floor(oldM * 10)) {
-                        SoundManager.playClimb(newMultiplier);
-                    }
-
-                    if (betStatusRef.current === 'betting' && newMultiplier >= autoCashoutRef.current) {
-                        cashOut();
-                    }
-
-                    requestRef.current = requestAnimationFrame(update);
-                }
-            };
-
-            requestRef.current = requestAnimationFrame(update);
-        } catch (e) {
+            // If game is not flying and no countdown, start launch sequence
+            if (!isFlying && countdown === null) {
+                startLaunchSequence(crashAt);
+            }
+        } catch (e: any) {
             console.error("Bet failed:", e);
+            alert(`Bet failed: ${e.message || 'Check connection'}`);
         } finally {
             setIsBetting(false);
         }
+    };
+
+    const startLaunchSequence = (crashAt: number) => {
+        setIsFlying(true);
+        setIsCrashed(false);
+        setMultiplier(1.00);
+        multiplierRef.current = 1.00;
+        startTimeRef.current = Date.now();
+        SoundManager.playStart();
+
+        // Reset bet statuses for new round
+        if (betStatusRefA.current === 'cashed') {
+            setBetStatusA('none');
+            betStatusRefA.current = 'none';
+        }
+        if (betStatusRefB.current === 'cashed') {
+            setBetStatusB('none');
+            betStatusRefB.current = 'none';
+        }
+
+        const update = () => {
+            const elapsed = (Date.now() - (startTimeRef.current || 0)) / 1000;
+            let newMultiplier = Math.pow(1.15, elapsed);
+            if (isSquadActive) newMultiplier += 0.1;
+
+            if (newMultiplier >= crashAt) {
+                crash();
+            } else {
+                const oldM = multiplierRef.current;
+                setMultiplier(newMultiplier);
+                multiplierRef.current = newMultiplier;
+
+                if (Math.floor(newMultiplier * 10) > Math.floor(oldM * 10)) {
+                    SoundManager.playClimb(newMultiplier);
+                }
+
+                // Auto cashout checks
+                if (betStatusRefA.current === 'betting' && newMultiplier >= autoCashoutRefA.current) {
+                    cashOut('A');
+                }
+                if (betStatusRefB.current === 'betting' && newMultiplier >= autoCashoutRefB.current) {
+                    cashOut('B');
+                }
+
+                requestRef.current = requestAnimationFrame(update);
+            }
+        };
+
+        requestRef.current = requestAnimationFrame(update);
     };
 
     const crash = () => {
@@ -149,11 +274,23 @@ export default function CrashGame() {
         SoundManager.playCrash();
         setIsFlying(false);
         setIsCrashed(true);
-        setBetStatus('none');
-        betStatusRef.current = 'none';
+
+        // ONLY reset status if they haven't cashed out yet
+        // In Debug mode, they stay 'cashed' until next launch sequence
+        if (betStatusRefA.current === 'betting') {
+            setBetStatusA('none');
+            betStatusRefA.current = 'none';
+        }
+        if (betStatusRefB.current === 'betting') {
+            setBetStatusB('none');
+            betStatusRefB.current = 'none';
+        }
 
         // Start countdown to next round
         startCountdown(10);
+
+        // Refresh history
+        setTimeout(fetchRecentRounds, 1000);
     };
 
     const startCountdown = (seconds: number) => {
@@ -164,7 +301,6 @@ export default function CrashGame() {
             setCountdown(prev => {
                 if (prev !== null && prev <= 1) {
                     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-                    startNewRound();
                     return null;
                 }
                 return prev !== null ? prev - 1 : null;
@@ -172,37 +308,85 @@ export default function CrashGame() {
         }, 1000);
     };
 
-    const cashOut = async () => {
-        if (betStatusRef.current !== 'betting' || !multiplierRef.current || !currentBetIdRef.current) return;
-        SoundManager.playWin();
-        const winMult = multiplierRef.current;
-        const winAmount = 0.1 * winMult;
-
-        setLastWin(winMult);
-        setBetStatus('cashed');
-        betStatusRef.current = 'cashed';
-
-        // Update bet in DB
-        const { data: betData } = await supabase
-            .from('bets')
-            .update({
-                status: 'cashed',
-                cashout_at: winMult,
-                win_amount: winAmount
-            })
-            .eq('id', currentBetIdRef.current)
-            .select()
-            .single();
-
-        if (betData) {
-            // Trigger payout edge function (which also sends TG notification)
-            await supabase.functions.invoke('process-payout', {
-                body: { bet_id: betData.id }
-            });
+    const adjustBet = (panel: 'A' | 'B', delta: number) => {
+        if (panel === 'A') {
+            setBetAmountA(prev => Math.max(0.1, parseFloat((prev + delta).toFixed(1))));
+        } else {
+            setBetAmountB(prev => Math.max(0.1, parseFloat((prev + delta).toFixed(1))));
         }
-
-        currentBetIdRef.current = null;
     };
+
+    const cashOut = async (panel: 'A' | 'B') => {
+        const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
+        const betStatusRef = panel === 'A' ? betStatusRefA : betStatusRefB;
+        const currentBetIdRef = panel === 'A' ? currentBetIdRefA : currentBetIdRefB;
+        const setBetStatus = panel === 'A' ? setBetStatusA : setBetStatusB;
+        const amount = panel === 'A' ? betAmountA : betAmountB;
+
+        if (betStatusRef.current !== 'betting' || !multiplierRef.current || !currentBetIdRef.current) return;
+
+        try {
+            SoundManager.playWin();
+            const winMult = multiplierRef.current;
+            const winAmount = amount * winMult;
+
+            // Immediately update local state
+            setLastWin(winMult);
+            setBetStatus('cashed');
+            betStatusRef.current = 'cashed';
+
+            // Sync with DB
+            const { data: betData, error: updateError } = await supabase
+                .from('bets')
+                .update({
+                    status: 'cashed',
+                    cashout_at: winMult,
+                    win_amount: winAmount
+                })
+                .eq('id', currentBetIdRef.current)
+                .select().single();
+
+            if (betData) {
+                // Optimistic balance update in DB (Realtime will sync UI)
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('id, balance')
+                    .eq('wallet_address', address)
+                    .single();
+
+                if (userData) {
+                    await supabase
+                        .from('users')
+                        .update({ balance: Number(userData.balance) + winAmount })
+                        .eq('id', userData.id);
+                }
+
+                supabase.functions.invoke('process-payout', {
+                    body: { bet_id: betData.id }
+                }).catch(e => {
+                    console.error("Payout trigger error:", e);
+                    alert(`DEBUG: Payout trigger error: ${e.message}`);
+                });
+            }
+
+            currentBetIdRef.current = null;
+        } catch (error: any) {
+            console.error("Cash out process error:", error);
+            alert(`Cash out failed: ${error.message || 'Unknown error'}`);
+        }
+    };
+
+    useEffect(() => {
+        // Auto Play trigger
+        if (countdown === 0) {
+            if (autoPlayA && betStatusRefA.current === 'none') {
+                handlePlaceBet('A');
+            }
+            if (autoPlayB && betStatusRefB.current === 'none') {
+                handlePlaceBet('B');
+            }
+        }
+    }, [countdown, autoPlayA, autoPlayB]);
 
     useEffect(() => {
         return () => {
@@ -211,192 +395,255 @@ export default function CrashGame() {
     }, []);
 
     return (
-        <div className="flex flex-col items-center gap-6 w-full max-w-sm">
+        <div className="flex flex-col items-center gap-6 w-full max-w-sm pb-20">
+            {/* Recent Multipliers Ribbon */}
+            <div className="w-full overflow-hidden relative group">
+                <div className="flex gap-1 overflow-x-auto no-scrollbar py-2 px-1">
+                    {recentMultipliers.map((m, i) => {
+                        const colorClass = m.multiplier >= 10 ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' :
+                            m.multiplier >= 2 ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                                'bg-blue-500/20 text-blue-400 border-blue-500/30';
+                        return (
+                            <motion.div
+                                key={m.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className={`flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold border ${colorClass}`}
+                            >
+                                {m.multiplier.toFixed(2)}x
+                            </motion.div>
+                        );
+                    })}
+                </div>
+                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0a0a0a] to-transparent pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0a0a0a] to-transparent pointer-events-none" />
+            </div>
+
             {/* Game Screen */}
-            <motion.div
-                animate={isFlying ? {
-                    x: [0, -1, 1, -1, 1, 0],
-                    y: [0, 1, -1, 1, -1, 0]
-                } : {}}
-                transition={{
-                    repeat: Infinity,
-                    duration: Math.max(0.05, 0.2 / multiplier),
-                    ease: "linear"
-                }}
-                className="relative w-full aspect-video bg-black/40 rounded-3xl overflow-hidden border border-white/5 flex items-center justify-center p-8 group"
-            >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--gold-glow)_0%,_transparent_70%)] opacity-20" />
+            {/* Game Screen Container */}
+            <div className="relative z-0 w-full aspect-video">
+                <motion.div
+                    animate={isFlying ? {
+                        x: [0, -1, 1, -1, 1, 0],
+                        y: [0, 1, -1, 1, -1, 0]
+                    } : {}}
+                    transition={{
+                        repeat: Infinity,
+                        duration: Math.max(0.05, 0.2 / multiplier),
+                        ease: "linear"
+                    }}
+                    className="relative w-full h-full bg-black/40 rounded-3xl overflow-hidden border border-white/5 flex items-center justify-center p-8 group"
+                >
+                    {/* ... (rest of the game screen content remains same) */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--gold-glow)_0%,_transparent_70%)] opacity-20 pointer-events-none" />
 
-                <div className="absolute inset-0 overflow-hidden opacity-10">
-                    <div className="w-full h-full bg-[linear-gradient(to_right,_transparent_0%,_#fff_50%,_transparent_100%)] bg-[length:200%_1px] animate-[pulse_2s_infinite]" />
-                </div>
+                    <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
+                        <div className="w-full h-full bg-[linear-gradient(to_right,_transparent_0%,_#fff_50%,_transparent_100%)] bg-[length:200%_1px] animate-[pulse_2s_infinite]" />
+                    </div>
 
-                <div className="relative z-10 flex flex-col items-center">
-                    <motion.h3
-                        key={isCrashed ? 'crashed' : 'flying'}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className={`text-6xl font-black italic tracking-tighter ${isCrashed ? 'text-red-500' : 'gold-text'}`}
-                    >
-                        {multiplier.toFixed(2)}x
-                    </motion.h3>
-                    {isCrashed && <p className="text-red-500 font-bold uppercase tracking-widest mt-2 animate-bounce">Crashed!</p>}
-
-                    {countdown !== null && (
-                        <div className="flex flex-col items-center mt-2">
-                            <p className="text-gold/60 text-[10px] uppercase font-bold tracking-widest">Next Launch in</p>
-                            <span className="text-4xl font-black gold-text italic">{countdown}s</span>
-                        </div>
-                    )}
-
-                    {betStatus === 'cashed' && (
-                        <div className="flex flex-col items-center">
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                className="mt-2 bg-green-500/20 text-green-400 px-4 py-1 rounded-full text-sm font-bold border border-green-500/30"
-                            >
-                                Cashed Out: {lastWin?.toFixed(2)}x
-                            </motion.div>
-                            <motion.button
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                onClick={() => setShowShareModal(true)}
-                                className="mt-4 text-[10px] uppercase font-bold text-gold/60 hover:text-gold flex items-center gap-2 border border-gold/20 px-3 py-1 rounded-full transition-colors"
-                            >
-                                🚀 Share to Stories
-                            </motion.button>
-                        </div>
-                    )}
-                </div>
-
-                <AnimatePresence>
-                    {isFlying && (
-                        <motion.div
-                            initial={{ x: -100, y: 100, rotate: 45 }}
-                            animate={{
-                                x: 100, y: -100, rotate: 45,
-                                transition: { duration: 10, ease: "linear" }
-                            }}
-                            exit={{ scale: 2, opacity: 0, transition: { duration: 0.2 } }}
-                            className="absolute pointer-events-none"
+                    <div className="relative z-10 flex flex-col items-center pointer-events-none">
+                        <motion.h3
+                            key={isCrashed ? 'crashed' : 'flying'}
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className={`text-6xl font-black italic tracking-tighter ${isCrashed ? 'text-red-500' : 'gold-text'}`}
                         >
-                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
-                                {[...Array(5)].map((_, i) => (
-                                    <motion.div
-                                        key={i}
-                                        initial={{ opacity: 0.8, scale: 1, y: 0 }}
-                                        animate={{ opacity: 0, scale: 0, y: 40, x: (Math.random() - 0.5) * 20 }}
-                                        transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
-                                        className="w-2 h-2 bg-gold/60 rounded-full blur-[2px]"
-                                    />
-                                ))}
+                            {multiplier.toFixed(2)}x
+                        </motion.h3>
+                        {isCrashed && <p className="text-red-500 font-bold uppercase tracking-widest mt-2 animate-bounce">Crashed!</p>}
+
+                        {countdown !== null && (
+                            <div className="flex flex-col items-center mt-2">
+                                <p className="text-gold/60 text-[10px] uppercase font-bold tracking-widest">Next Launch in</p>
+                                <span className="text-4xl font-black gold-text italic">{countdown}s</span>
                             </div>
-                            <Rocket className="text-gold w-12 h-12 fill-gold/20" />
-                            <div className="absolute top-12 left-0 w-4 h-12 bg-gradient-to-t from-gold/40 to-transparent blur-md rotate-180" />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        )}
 
-                <AnimatePresence>
-                    {showShareModal && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
-                        >
+                        {(betStatusA === 'cashed' || betStatusB === 'cashed') && (
+                            <div className="flex flex-col items-center pointer-events-auto">
+                                <motion.div
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="mt-2 bg-green-500/20 text-green-400 px-4 py-1 rounded-full text-sm font-bold border border-green-500/30"
+                                >
+                                    Cashed Out: {lastWin?.toFixed(2)}x
+                                </motion.div>
+                                <motion.button
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ delay: 0.2 }}
+                                    onClick={() => setShowShareModal(true)}
+                                    className="mt-4 text-[10px] uppercase font-bold text-gold/60 hover:text-gold flex items-center gap-2 border border-gold/20 px-3 py-1 rounded-full transition-colors"
+                                >
+                                    🚀 Share to Stories
+                                </motion.button>
+                            </div>
+                        )}
+                    </div>
+
+                    <AnimatePresence>
+                        {isFlying && (
                             <motion.div
-                                initial={{ scale: 0.9, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                className="bg-[#1a1a1a] border border-gold/30 rounded-3xl p-6 w-full max-w-[280px] shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col items-center gap-4 text-center"
+                                initial={{ x: -100, y: 100, rotate: 45 }}
+                                animate={{
+                                    x: 100, y: -100, rotate: 45,
+                                    transition: { duration: 10, ease: "linear" }
+                                }}
+                                exit={{ scale: 2, opacity: 0, transition: { duration: 0.2 } }}
+                                className="absolute pointer-events-none"
                             >
-                                <div className="w-16 h-16 bg-gold/10 rounded-2xl flex items-center justify-center">
-                                    <Rocket className="w-8 h-8 text-gold" />
+                                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+                                    {[...Array(5)].map((_, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0.8, scale: 1, y: 0 }}
+                                            animate={{ opacity: 0, scale: 0, y: 40, x: (Math.random() - 0.5) * 20 }}
+                                            transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
+                                            className="w-2 h-2 bg-gold/60 rounded-full blur-[2px]"
+                                        />
+                                    ))}
                                 </div>
-                                <h4 className="text-xl font-black italic gold-text tracking-tighter">ASTRO VICTORY!</h4>
-                                <div className="text-4xl font-black text-white italic">{lastWin?.toFixed(2)}x</div>
-                                <div className="w-full h-px bg-white/5" />
-                                <p className="text-[8px] text-white/40 uppercase font-bold px-2">Share on Telegram Stories for 5% Bonus!</p>
-                                <button onClick={() => setShowShareModal(false)} className="gold-button w-full py-3 text-sm">Download Card</button>
-                                <button onClick={() => setShowShareModal(false)} className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40">Later</button>
+                                <Rocket className="text-gold w-12 h-12 fill-gold/20" />
+                                <div className="absolute top-12 left-0 w-4 h-12 bg-gradient-to-t from-gold/40 to-transparent blur-md rotate-180" />
                             </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        )}
+                    </AnimatePresence>
 
-                <div className={`absolute top-4 right-4 flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 px-3 py-1 rounded-full transition-all ${isSquadActive ? 'scale-110 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'opacity-60'}`}>
-                    <Users className={`w-3 h-3 ${isSquadActive ? 'text-purple-400' : 'text-white/40'}`} />
-                    <span className={`text-[10px] font-bold uppercase tracking-tighter ${isSquadActive ? 'text-purple-400' : 'text-white/40'}`}>
-                        {isSquadActive ? `Squad 1.1x Active (${squadSize})` : `Online: ${squadSize}`}
-                    </span>
-                </div>
-            </motion.div>
+                    <AnimatePresence>
+                        {showShareModal && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 pointer-events-auto"
+                            >
+                                <motion.div
+                                    initial={{ scale: 0.9, y: 20 }}
+                                    animate={{ scale: 1, y: 0 }}
+                                    className="bg-[#1a1a1a] border border-gold/30 rounded-3xl p-6 w-full max-w-[280px] shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col items-center gap-4 text-center"
+                                >
+                                    <div className="w-16 h-16 bg-gold/10 rounded-2xl flex items-center justify-center">
+                                        <Rocket className="w-8 h-8 text-gold" />
+                                    </div>
+                                    <h4 className="text-xl font-black italic gold-text tracking-tighter">ASTRO VICTORY!</h4>
+                                    <div className="text-4xl font-black text-white italic">{lastWin?.toFixed(2)}x</div>
+                                    <div className="w-full h-px bg-white/5" />
+                                    <p className="text-[8px] text-white/40 uppercase font-bold px-2">Share on Telegram Stories for 5% Bonus!</p>
+                                    <button onClick={() => setShowShareModal(false)} className="gold-button w-full py-3 text-sm">Download Card</button>
+                                    <button onClick={() => setShowShareModal(false)} className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40">Later</button>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <div className={`absolute top-4 right-4 flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 px-3 py-1 rounded-full transition-all ${isSquadActive ? 'scale-110 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'opacity-60'} pointer-events-none`}>
+                        <Users className={`w-3 h-3 ${isSquadActive ? 'text-purple-400' : 'text-white/40'}`} />
+                        <span className={`text-[10px] font-bold uppercase tracking-tighter ${isSquadActive ? 'text-purple-400' : 'text-white/40'}`}>
+                            {isSquadActive ? `Squad 1.1x Active (${squadSize})` : `Online: ${squadSize}`}
+                        </span>
+                    </div>
+                </motion.div>
+            </div>
 
             {/* Provably Fair Info */}
-            <div className="w-full px-2 mt-2 flex justify-between items-center text-[8px] uppercase font-bold text-white/20 tracking-widest">
+            <div className="relative z-10 w-full px-2 mt-2 flex justify-between items-center text-[8px] uppercase font-bold text-white/20 tracking-widest">
                 <span>Provably Fair Active</span>
                 <span className="truncate max-w-[150px]">Seed: {currentSeed}</span>
             </div>
 
             {/* Controls */}
-            <div className="w-full flex flex-col gap-4">
-                <div className="flex gap-2">
-                    <div className="flex-1 glass-card p-3 border-white/5 flex flex-col gap-1">
-                        <span className="text-[8px] uppercase font-bold text-white/40">Bet Amount</span>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-gold">10 TON</span>
-                            <div className="flex gap-1">
-                                <button className="w-5 h-5 bg-white/5 rounded flex items-center justify-center text-[10px]">-</button>
-                                <button className="w-5 h-5 bg-white/5 rounded flex items-center justify-center text-[10px]">+</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex-1 glass-card p-3 border-white/5 flex flex-col gap-1">
-                        <span className="text-[8px] uppercase font-bold text-white/40">Auto Cash Out</span>
-                        <div className="flex items-center justify-between">
-                            <input
-                                type="number"
-                                step="0.1"
-                                min="1.1"
-                                value={autoCashout}
-                                onChange={(e) => setAutoCashout(parseFloat(e.target.value) || 1.1)}
-                                className="bg-transparent border-none outline-none text-sm font-bold text-gold w-12"
-                            />
-                            <span className="text-[10px] font-bold text-white/20">x</span>
-                        </div>
-                    </div>
+            <div className="relative z-20 w-full flex flex-col gap-4">
+                <div className="flex flex-col gap-4">
+                    <BettingPanel
+                        panel="A"
+                        status={betStatusA}
+                        amount={betAmountA}
+                        autoCashout={autoCashoutA}
+                        autoPlay={autoPlayA}
+                        onAdjust={(d) => adjustBet('A', d)}
+                        onAutoCashoutChange={setAutoCashoutA}
+                        onAutoPlayToggle={() => setAutoPlayA(!autoPlayA)}
+                        onPlaceBet={() => handlePlaceBet('A')}
+                        onCashOut={() => cashOut('A')}
+                        isFlying={isFlying}
+                        isBetting={isBetting}
+                    />
+                    <BettingPanel
+                        panel="B"
+                        status={betStatusB}
+                        amount={betAmountB}
+                        autoCashout={autoCashoutB}
+                        autoPlay={autoPlayB}
+                        onAdjust={(d) => adjustBet('B', d)}
+                        onAutoCashoutChange={setAutoCashoutB}
+                        onAutoPlayToggle={() => setAutoPlayB(!autoPlayB)}
+                        onPlaceBet={() => handlePlaceBet('B')}
+                        onCashOut={() => cashOut('B')}
+                        isFlying={isFlying}
+                        isBetting={isBetting}
+                    />
                 </div>
 
-                {betStatus === 'betting' && isFlying ? (
-                    <button onClick={cashOut} className="gold-button w-full text-2xl py-6 shadow-[0_10px_30px_-10px_rgba(212,175,55,0.6)]">Cash Out</button>
-                ) : (
-                    <button
-                        onClick={startNewRound}
-                        disabled={isFlying || isBetting}
-                        className={`gold-button w-full text-2xl py-6 shadow-[0_10px_30px_-10px_rgba(212,175,55,0.6)] ${isFlying || isBetting ? 'opacity-50 grayscale' : ''}`}
-                    >
-                        {isBetting ? 'Processing...' : isFlying ? 'Waiting...' : 'Place Bet (0.1 TON)'}
-                    </button>
-                )}
-
-                {!wallet && (
-                    <p className="text-[10px] text-center text-red-400/60 uppercase font-bold tracking-widest animate-pulse">
-                        Please Connect Wallet to Play
-                    </p>
-                )}
-
-                <div className="glass-card p-4 w-full">
-                    <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-[10px] uppercase font-bold text-white/40 flex items-center gap-2">
-                            <TrendingUp className="w-3 h-3" /> Live Wins
-                        </h4>
-                        <span className="text-[10px] text-gold font-bold">142 Playing</span>
+                {!wallet && !FEATURE_FLAGS.GUEST_MODE && (
+                    <div className="w-full mt-2">
+                        <button
+                            onClick={() => tonConnectUI.openModal()}
+                            className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-tight transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2 group"
+                        >
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                            Connect Wallet to Play
+                        </button>
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <LiveWinRow user="@starry_rider" x="2.14x" win="+21.4 TON" />
-                        <LiveWinRow user="@crypto_king" x="1.85x" win="+185 TON" />
+                )}
+
+                <div className="glass-card w-full overflow-hidden flex flex-col">
+                    <div className="flex border-b border-white/5">
+                        {['all', 'my', 'top'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as any)}
+                                className={`flex-1 py-3 text-[10px] uppercase font-bold tracking-widest transition-all ${activeTab === tab ? 'text-gold bg-white/5 border-b-2 border-gold' : 'text-white/20'}`}
+                            >
+                                {tab === 'all' ? 'All Bets' : tab === 'my' ? 'My Bets' : 'Top Wins'}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="p-4 flex flex-col gap-2 min-h-[200px]">
+                        {activeTab === 'all' && allBets.map((bet) => (
+                            <LiveWinRow
+                                key={bet.id}
+                                user={bet.users?.wallet_address ? `${bet.users.wallet_address.slice(0, 4)}...${bet.users.wallet_address.slice(-4)}` : 'Anonymous'}
+                                x={bet.cashout_at ? `${bet.cashout_at.toFixed(2)}x` : '-'}
+                                win={bet.win_amount ? `+${bet.win_amount.toFixed(2)} TON` : `${bet.amount} TON`}
+                                status={bet.status}
+                            />
+                        ))}
+                        {activeTab === 'my' && myBets.map((bet) => (
+                            <LiveWinRow
+                                key={bet.id}
+                                user="Me"
+                                x={bet.cashout_at ? `${bet.cashout_at.toFixed(2)}x` : '-'}
+                                win={bet.win_amount ? `+${bet.win_amount.toFixed(2)} TON` : `${bet.amount} TON`}
+                                status={bet.status}
+                            />
+                        ))}
+                        {activeTab === 'top' && topBets.map((bet) => (
+                            <LiveWinRow
+                                key={bet.id}
+                                user={bet.users?.wallet_address ? `${bet.users.wallet_address.slice(0, 4)}...${bet.users.wallet_address.slice(-4)}` : 'Anonymous'}
+                                x={bet.cashout_at ? `${bet.cashout_at.toFixed(2)}x` : '-'}
+                                win={`+${bet.win_amount.toFixed(2)} TON`}
+                                status={bet.status}
+                            />
+                        ))}
+                        {((activeTab === 'all' && allBets.length === 0) ||
+                            (activeTab === 'my' && myBets.length === 0) ||
+                            (activeTab === 'top' && topBets.length === 0)) && (
+                                <div className="flex-1 flex flex-center justify-center items-center opacity-20 text-[10px] uppercase font-bold tracking-widest py-10 text-center">
+                                    No data available
+                                </div>
+                            )}
                     </div>
                 </div>
             </div>
@@ -404,13 +651,103 @@ export default function CrashGame() {
     );
 }
 
-function LiveWinRow({ user, x, win }: { user: string, x: string, win: string }) {
+function BettingPanel({
+    panel, status, amount, autoCashout, autoPlay,
+    onAdjust, onAutoCashoutChange, onAutoPlayToggle,
+    onPlaceBet, onCashOut, isFlying, isBetting
+}: {
+    panel: 'A' | 'B',
+    status: 'none' | 'betting' | 'cashed',
+    amount: number,
+    autoCashout: number,
+    autoPlay: boolean,
+    onAdjust: (d: number) => void,
+    onAutoCashoutChange: (v: number) => void,
+    onAutoPlayToggle: () => void,
+    onPlaceBet: () => void,
+    onCashOut: () => void,
+    isFlying: boolean,
+    isBetting: boolean
+}) {
+    return (
+        <div className="glass-card p-5 border-white/5 flex flex-col gap-4 shadow-xl rounded-[2rem]">
+            <div className="flex gap-3">
+                <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
+                    <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Bet Amount</span>
+                    <div className="flex items-center justify-between">
+                        <span className="text-lg font-black text-gold tracking-tight">{amount.toFixed(1)} <span className="text-xs opacity-50">TON</span></span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => onAdjust(-0.1)}
+                                className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg"
+                            >
+                                -
+                            </button>
+                            <button
+                                onClick={() => onAdjust(0.1)}
+                                className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
+                    <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Auto Cash</span>
+                        <button
+                            onClick={onAutoPlayToggle}
+                            className={`text-[10px] font-black px-3 py-1 rounded-lg ${autoPlay ? 'bg-gold text-black shadow-gold' : 'bg-white/10 text-white/40'} transition-all`}
+                        >
+                            AUTO
+                        </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <input
+                            type="number"
+                            step="0.1"
+                            min="1.1"
+                            value={autoCashout}
+                            onChange={(e) => onAutoCashoutChange(parseFloat(e.target.value) || 1.1)}
+                            className="bg-transparent border-none outline-none text-lg font-black text-gold w-16"
+                        />
+                        <span className="text-xs font-black text-white/20 italic">x</span>
+                    </div>
+                </div>
+            </div>
+
+            {status === 'betting' && isFlying ? (
+                <button
+                    onClick={onCashOut}
+                    className="gold-button w-full py-5 text-2xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] active:scale-95 transition-all animate-pulse rounded-2xl font-black italic"
+                >
+                    CASH OUT
+                </button>
+            ) : status === 'cashed' ? (
+                <div className="w-full py-5 text-center rounded-2xl bg-green-500/20 text-green-400 border border-green-500/40 text-2xl font-black italic shadow-[0_0_25px_rgba(34,197,94,0.2)]">
+                    WON!
+                </div>
+            ) : (
+                <button
+                    onClick={onPlaceBet}
+                    disabled={isFlying || isBetting || status === 'betting'}
+                    className={`gold-button w-full py-5 text-2xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] rounded-2xl font-black italic ${(isFlying || isBetting || status === 'betting') ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95 transition-all'}`}
+                >
+                    {isBetting ? 'WAIT...' : status === 'betting' ? 'BET PLACED' : `BET ${amount.toFixed(1)}`}
+                </button>
+            )}
+        </div>
+    );
+}
+
+function LiveWinRow({ user, x, win, status }: { user: string, x: string, win: string, status?: string }) {
+    const isWin = status === 'cashed' || status === 'paid';
     return (
         <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/5 transition-all hover:bg-white/10">
             <span className="text-xs font-medium text-white/60">{user}</span>
             <div className="flex gap-3">
                 <span className="text-xs font-bold text-gold">{x}</span>
-                <span className="text-xs font-bold text-green-400">{win}</span>
+                <span className={`text-xs font-bold ${isWin ? 'text-green-400' : 'text-white/40'}`}>{win}</span>
             </div>
         </div>
     );

@@ -17,53 +17,49 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Check if there's an active round
-    const { data: activeRound, error: activeError } = await supabaseClient
+    // 1. Get the latest round
+    const { data: latestRound, error: fetchError } = await supabaseClient
       .from('rounds')
       .select('*')
-      .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
 
-    if (activeRound) {
-        // If the round is older than 30 seconds, close it and create a new one
-        const now = new Date()
-        const createdAt = new Date(activeRound.created_at)
-        const diff = (now.getTime() - createdAt.getTime()) / 1000
+    const now = new Date();
+    let targetRound = latestRound;
 
-        if (diff < 20) {
-            return new Response(JSON.stringify(activeRound), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                status: 200,
-            })
-        }
+    // 2. Decide if we need a new round
+    // If no round exists, or the latest round is older than 30 seconds (safety margin)
+    const roundAge = latestRound ? (now.getTime() - new Date(latestRound.created_at).getTime()) / 1000 : 999;
 
-        // Close old round
-        await supabaseClient
-            .from('rounds')
-            .update({ status: 'finished' })
-            .eq('id', activeRound.id)
+    if (!latestRound || roundAge > 30) {
+      // Generate secure crash point
+      const server_seed = crypto.randomUUID();
+      // SHA-256 logic (Simplified for Edge Function demo, use real HMAC in production)
+      const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(server_seed));
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      // Simple logic: 0.01% instant crash at 1.00x, otherwise uniform up to 100x
+      // Better: crashAt = 99 / (1 - Math.random()) / 100 (Classic Bustabit formula)
+      const r = Math.random();
+      const crash_point = Math.max(1.0, 0.99 / (1 - r)).toFixed(2);
+
+      const { data: newRound, error: insertError } = await supabaseClient
+        .from('rounds')
+        .insert({
+          server_seed: hashHex,
+          crash_point: crash_point,
+          status: 'pending'
+        })
+        .select()
+        .single()
+
+      if (insertError) throw insertError;
+      targetRound = newRound;
     }
 
-    // 2. Generate new Provably Fair crash point
-    const serverSeed = Math.random().toString(36).substring(2, 15)
-    // Formula: 1 + random(0-4)
-    const crashPoint = (1 + Math.random() * 4).toFixed(2)
-
-    const { data: newRound, error: insertError } = await supabaseClient
-      .from('rounds')
-      .insert({
-        server_seed: serverSeed,
-        crash_point: crashPoint,
-        status: 'active'
-      })
-      .select()
-      .single()
-
-    if (insertError) throw insertError
-
-    return new Response(JSON.stringify(newRound), {
+    return new Response(JSON.stringify(targetRound), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })

@@ -13,8 +13,12 @@
 }
 
 :root {
-  --background: #050505;
-  --foreground: #ffffff;
+  --background: var(--tg-theme-bg-color, #050505);
+  --foreground: var(--tg-theme-text-color, #ffffff);
+  --hint-color: var(--tg-theme-hint-color, #999999);
+  --link-color: var(--tg-theme-link-color, #d4af37);
+  --button-color: var(--tg-theme-button-color, #d4af37);
+  --button-text-color: var(--tg-theme-button-text-color, #000000);
   --gold-glow: rgba(212, 175, 55, 0.3);
 }
 

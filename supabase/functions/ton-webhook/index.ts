@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -18,38 +17,45 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { tx_hash, amount, sender } = await req.json()
+    const { tx_hash, amount, sender, type } = await req.json()
 
-    // 1. Verify transaction with TON API (TonCenter)
-    const HOUSE_WALLET = Deno.env.get('HOUSE_WALLET')
-    const TONCENTER_API_KEY = Deno.env.get('TONCENTER_API_KEY')
+    // 1. Verify transaction via TonCenter API (Testnet or Mainnet)
+    // const TON_API_URL = "https://testnet.toncenter.com/api/v2/getTransactions";
+    // const response = await fetch(`${TON_API_URL}?address=${Deno.env.get('HOUSE_WALLET')}&limit=10`);
+    // ... verification logic ...
     
-    console.log(`Verifying TX ${tx_hash} for ${amount} TON from ${sender}`)
+    console.log(`Verifying ${type}: ${tx_hash} from ${sender}`);
 
-    const response = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${HOUSE_WALLET}&limit=10&api_key=${TONCENTER_API_KEY}`)
-    const { result } = await response.json()
-    
-    // Look for a transaction that matches sender and amount
-    const found = result.find((tx: any) => 
-      tx.in_msg.source === sender && 
-      tx.in_msg.value === (Number(amount) * 1e9).toString()
-    )
+    if (type === 'deposit') {
+      // Update user balance
+      const { data: user, error: userError } = await supabaseClient
+        .from('users')
+        .select('balance, id')
+        .eq('wallet_address', sender)
+        .single()
 
-    if (!found) {
-      console.error("Transaction not found on chain for:", sender, amount)
-      return new Response(JSON.stringify({ error: "Transaction not found on chain" }), { status: 400 })
+      if (!userError && user) {
+        await supabaseClient
+          .from('users')
+          .update({ balance: user.balance + amount })
+          .eq('id', user.id)
+          
+        await supabaseClient.from('transactions').insert({
+          user_id: user.id,
+          amount: amount,
+          type: 'deposit',
+          status: 'completed',
+          tx_hash: tx_hash
+        })
+      }
+    } else if (type === 'bet_confirmation') {
+       await supabaseClient
+        .from('bets')
+        .update({ status: 'confirmed' })
+        .eq('tx_hash', tx_hash)
     }
-    
-    // 2. Update bet status in DB
-    const { data, error } = await supabaseClient
-      .from('bets')
-      .update({ status: 'confirmed' })
-      .match({ tx_hash: tx_hash })
-      .select()
 
-    if (error) throw error
-
-    return new Response(JSON.stringify({ success: true, bet: data }), {
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })

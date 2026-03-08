@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
+import { useTonWallet } from '@tonconnect/ui-react';
 import { Send, MessageSquare, Smile, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 interface Message {
     id: string;
-    user: string;
+    username: string;
     text: string;
     time: string;
     isSystem?: boolean;
@@ -19,36 +21,68 @@ interface FlyingEmoji {
     x: number;
 }
 
+interface RainReward {
+    id: string;
+    amount: number;
+    claimed: boolean;
+}
+
 export default function LiveChat() {
-    const [messages, setMessages] = useState<Message[]>([
-        { id: '1', user: 'System', text: 'Welcome to Astro Crash! 🚀', time: '12:00', isSystem: true },
-        { id: '2', user: '@raj_crypto', text: 'Just won 5x! 💎', time: '12:01' },
-        { id: '3', user: '@amit_100', text: 'Wait for 10x guys', time: '12:02' },
-    ]);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [flyingEmojis, setFlyingEmojis] = useState<FlyingEmoji[]>([]);
+    const [activeRain, setActiveRain] = useState<RainReward | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const wallet = useTonWallet();
 
     const hypeEmojis = ['🚀', '💎', '🔥', '🙌', '🤑'];
 
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [messages]);
+        fetchMessages();
 
-    const handleSendMessage = (text: string = inputText, isHype: boolean = false) => {
+        const channel = supabase
+            .channel('chat_messages')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+                setMessages(prev => [...prev.slice(-49), payload.new as Message]);
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'rewards' }, (payload) => {
+                const reward = payload.new;
+                if (reward.type === 'rain') {
+                    setActiveRain({
+                        id: reward.id,
+                        amount: reward.amount,
+                        claimed: false
+                    });
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
+
+    const fetchMessages = async () => {
+        const { data } = await supabase
+            .from('messages')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+        if (data) setMessages(data.reverse());
+    };
+
+    const handleSendMessage = async (text: string = inputText, isHype: boolean = false) => {
         const msgText = text.trim();
         if (!msgText) return;
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            user: '@Bhavish_R',
+        const userName = wallet?.account.address ? `@${wallet.account.address.slice(0, 4)}...` : '@Guest';
+
+        await supabase.from('messages').insert({
+            username: userName,
             text: msgText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isHype
-        };
-        setMessages(prev => [...prev, newMessage]);
+            is_hype: isHype
+        });
+
         if (!isHype) setInputText('');
     };
 
@@ -58,10 +92,47 @@ export default function LiveChat() {
         setFlyingEmojis(prev => [...prev, { id, emoji, x }]);
         handleSendMessage(emoji, true);
 
+        // Randomly trigger Rain for demo (1 in 5 hype messages)
+        if (Math.random() > 0.8 && !activeRain) {
+            triggerRain();
+        }
+
         // Cleanup flying emoji
         setTimeout(() => {
             setFlyingEmojis(prev => prev.filter(e => e.id !== id));
         }, 2000);
+    };
+
+    const triggerRain = () => {
+        const rain = {
+            id: Date.now().toString(),
+            amount: 0.1,
+            claimed: false
+        };
+        setActiveRain(rain);
+
+        const newMessage: Message = {
+            id: 'rain-' + rain.id,
+            username: 'System',
+            text: '🎁 FREE BET RAIN! Click to claim 0.1 TON!',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isSystem: true
+        };
+        setMessages(prev => [...prev, newMessage]);
+    };
+
+    const handleClaimRain = () => {
+        if (!activeRain) return;
+        setActiveRain(null);
+        alert("🎉 Claimed 0.1 TON Free Bet! (Simulated)");
+
+        setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            username: 'System',
+            text: '🎊 @Bhavish_R claimed the Free Bet!',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isSystem: true
+        }]);
     };
 
     return (
@@ -100,23 +171,33 @@ export default function LiveChat() {
                 {messages.map((msg) => (
                     <div key={msg.id} className={`flex flex-col ${msg.isSystem ? 'items-center' : ''}`}>
                         {msg.isSystem ? (
-                            <span className="text-[10px] text-gold/60 font-medium bg-gold/5 px-3 py-1 rounded-full border border-gold/10">
-                                {msg.text}
-                            </span>
+                            <div className="flex flex-col items-center gap-2">
+                                <span className={`text-[10px] font-medium px-3 py-1 rounded-full border ${msg.id.startsWith('rain') ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 animate-pulse' : 'bg-gold/5 text-gold/60 border-gold/10'}`}>
+                                    {msg.text}
+                                </span>
+                                {msg.id.startsWith('rain') && activeRain && (
+                                    <button
+                                        onClick={handleClaimRain}
+                                        className="bg-blue-500 hover:bg-blue-400 text-white text-[10px] font-bold px-4 py-1 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] active:scale-95 transition-all"
+                                    >
+                                        CLAIM NOW
+                                    </button>
+                                )}
+                            </div>
                         ) : msg.isHype ? (
                             <div className="flex items-center gap-2 bg-gold/5 self-start px-2 py-1 rounded-lg border border-gold/10">
-                                <span className="text-[10px] font-bold text-gold/60">{msg.user}:</span>
+                                <span className="text-[10px] font-bold text-gold/60">{msg.username}:</span>
                                 <span className="text-sm">{msg.text}</span>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-0.5 max-w-[85%]">
                                 <div className="flex items-center gap-2">
-                                    <span className={`text-[10px] font-bold ${msg.user === '@Bhavish_R' ? 'text-gold' : 'text-white/40'}`}>
-                                        {msg.user}
+                                    <span className={`text-[10px] font-bold ${msg.username === '@Bhavish_R' ? 'text-gold' : 'text-white/40'}`}>
+                                        {msg.username}
                                     </span>
                                     <span className="text-[8px] text-white/20">{msg.time}</span>
                                 </div>
-                                <div className={`p-2 rounded-xl text-xs ${msg.user === '@Bhavish_R' ? 'bg-gold/10 border border-gold/10 text-gold-light' : 'bg-white/5 border border-white/5 text-white/80'}`}>
+                                <div className={`p-2 rounded-xl text-xs ${msg.username === '@Bhavish_R' ? 'bg-gold/10 border border-gold/10 text-gold-light' : 'bg-white/5 border border-white/5 text-white/80'}`}>
                                     {msg.text}
                                 </div>
                             </div>

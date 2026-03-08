@@ -18,6 +18,7 @@ serve(async (req) => {
     )
 
     const { bet_id } = await req.json()
+    console.log(`[PAYOUT] Processing bet_id: ${bet_id}`)
 
     // 1. Fetch bet and user info
     const { data: bet, error: betError } = await supabaseClient
@@ -26,8 +27,10 @@ serve(async (req) => {
       .eq('id', bet_id)
       .single()
 
-    if (betError || !bet) throw new Error("Bet not found")
-    if (bet.status !== 'cashed') throw new Error("Bet is not in 'cashed' status")
+    if (betError) throw new Error(`Bet query error: ${betError.message}`)
+    if (!bet) throw new Error("Bet not found")
+    if (!bet.users) throw new Error("User data missing for this bet")
+    if (bet.status !== 'cashed') throw new Error(`Invalid bet status: ${bet.status}`)
 
     // 2. Send Telegram Notification
     const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
@@ -76,13 +79,31 @@ serve(async (req) => {
         console.log(`[PAYOUT] Simulated payout of ${bet.win_amount} TON to ${bet.users.wallet_address} (No Hot Wallet Seed)`);
     }
 
-    // 4. Update bet status to 'paid'
+    // 4. Update bet status to 'paid' AND increment user balance
     const { error: updateError } = await supabaseClient
       .from('bets')
       .update({ status: 'paid' })
       .eq('id', bet.id)
 
     if (updateError) throw updateError
+
+    /* 
+    // 5. Increment balance in 'users' table - MOVED TO CLIENT FOR RESPONSIVE UI
+    const { data: userData, error: userFetchError } = await supabaseClient
+      .from('users')
+      .select('balance')
+      .eq('wallet_address', bet.users.wallet_address)
+      .single()
+
+    if (!userFetchError && userData) {
+        const newBalance = Number(userData.balance) + Number(bet.win_amount)
+        await supabaseClient
+            .from('users')
+            .update({ balance: newBalance })
+            .eq('wallet_address', bet.users.wallet_address)
+        console.log(`[BALANCE] Updated ${bet.users.wallet_address} balance to ${newBalance}`)
+    }
+    */
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
