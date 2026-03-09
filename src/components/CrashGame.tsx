@@ -39,11 +39,12 @@ export default function CrashGame({
     const [betAmountB, setBetAmountB] = useState<number>(0.1);
     const [autoPlayA, setAutoPlayA] = useState(false);
     const [autoPlayB, setAutoPlayB] = useState(false);
-    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string }[]>([]);
+    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string }>([]);
     const [activeTab, setActiveTab] = useState<'all' | 'my' | 'top'>('all');
     const [allBets, setAllBets] = useState<any[]>([]);
     const [myBets, setMyBets] = useState<any[]>([]);
     const [topBets, setTopBets] = useState<any[]>([]);
+    const [localMyBets, setLocalMyBets] = useState<any[]>([]); // Guest mode session history
 
     const multiplierRef = useRef(1.00);
     const autoCashoutRefA = useRef<number>(2.00);
@@ -356,7 +357,7 @@ export default function CrashGame({
         }
     };
 
-    const cashOut = async (panel: 'A' | 'B') => {
+    const cashOut = (panel: 'A' | 'B') => {
         const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
         const betStatusRef = panel === 'A' ? betStatusRefA : betStatusRefB;
         const currentBetIdRef = panel === 'A' ? currentBetIdRefA : currentBetIdRefB;
@@ -365,58 +366,58 @@ export default function CrashGame({
 
         if (betStatusRef.current !== 'betting' || !multiplierRef.current || !currentBetIdRef.current) return;
 
-        try {
-            SoundManager.playWin();
-            const winMult = multiplierRef.current;
-            const winAmount = amount * winMult;
+        // Immediately update UI (synchronous — no awaits, no INP block)
+        SoundManager.playWin();
+        const winMult = multiplierRef.current;
+        const winAmount = amount * winMult;
+        setLastWin(winMult);
+        setBetStatus('cashed');
+        betStatusRef.current = 'cashed';
+        if (onBalanceUpdate) onBalanceUpdate(prev => prev + winAmount);
 
-            // Immediately update local state
-            setLastWin(winMult);
-            setBetStatus('cashed');
-            betStatusRef.current = 'cashed';
+        // Track in local session history (for My Bets tab in guest mode)
+        setLocalMyBets(prev => [{
+            id: `local_${Date.now()}`,
+            amount,
+            cashout_at: winMult,
+            win_amount: winAmount,
+            status: 'cashed',
+            created_at: new Date().toISOString()
+        }, ...prev].slice(0, 10));
 
-            // Optimistically update parent balance
-            if (onBalanceUpdate) onBalanceUpdate(prev => prev + winAmount);
+        const betId = currentBetIdRef.current;
+        currentBetIdRef.current = null;
 
-            // Sync with DB
-            const { data: betData, error: updateError } = await supabase
-                .from('bets')
-                .update({
-                    status: 'cashed',
-                    cashout_at: winMult,
-                    win_amount: winAmount
-                })
-                .eq('id', currentBetIdRef.current)
-                .select().single();
+        // All DB operations deferred — won't block UI thread
+        setTimeout(async () => {
+            try {
+                if (address === 'guest_test_wallet') return; // skip DB for guest
 
-            if (betData) {
-                // Optimistic balance update in DB (Realtime will sync UI)
-                const { data: userData } = await supabase
-                    .from('users')
-                    .select('id, balance')
-                    .eq('wallet_address', address)
-                    .single();
+                const { data: betData } = await supabase
+                    .from('bets')
+                    .update({ status: 'cashed', cashout_at: winMult, win_amount: winAmount })
+                    .eq('id', betId)
+                    .select().single();
 
-                if (userData) {
-                    await supabase
+                if (betData) {
+                    const { data: userData } = await supabase
                         .from('users')
-                        .update({ balance: Number(userData.balance) + winAmount })
-                        .eq('id', userData.id);
+                        .select('id, balance')
+                        .eq('wallet_address', address)
+                        .single();
+                    if (userData) {
+                        await supabase
+                            .from('users')
+                            .update({ balance: Number(userData.balance) + winAmount })
+                            .eq('id', userData.id);
+                    }
+                    supabase.functions.invoke('process-payout', { body: { bet_id: betData.id } })
+                        .catch(e => console.error("Payout trigger error:", e));
                 }
-
-                supabase.functions.invoke('process-payout', {
-                    body: { bet_id: betData.id }
-                }).catch(e => {
-                    console.error("Payout trigger error:", e);
-                    alert(`DEBUG: Payout trigger error: ${e.message}`);
-                });
+            } catch (error: any) {
+                console.error("Cash out DB sync error:", error);
             }
-
-            currentBetIdRef.current = null;
-        } catch (error: any) {
-            console.error("Cash out process error:", error);
-            alert(`Cash out failed: ${error.message || 'Unknown error'}`);
-        }
+        }, 0);
     };
 
     useEffect(() => {
@@ -671,8 +672,8 @@ export default function CrashGame({
                             <LiveWinRow
                                 key={bet.id}
                                 user="Me"
-                                x={bet.cashout_at ? `${bet.cashout_at.toFixed(2)}x` : '-'}
-                                win={bet.win_amount ? `+${bet.win_amount.toFixed(2)} TON` : `${bet.amount} TON`}
+                                x={bet.cashout_at ? `${parseFloat(bet.cashout_at).toFixed(2)}x` : '-'}
+                                win={bet.win_amount ? `+${parseFloat(bet.win_amount).toFixed(2)} TON` : `${bet.amount} TON`}
                                 status={bet.status}
                             />
                         ))}
@@ -686,7 +687,7 @@ export default function CrashGame({
                             />
                         ))}
                         {((activeTab === 'all' && allBets.length === 0) ||
-                            (activeTab === 'my' && myBets.length === 0) ||
+                            (activeTab === 'my' && myBets.length === 0 && localMyBets.length === 0) ||
                             (activeTab === 'top' && topBets.length === 0)) && (
                                 <div className="flex-1 flex flex-center justify-center items-center opacity-20 text-[10px] uppercase font-bold tracking-widest py-10 text-center">
                                     No data available
