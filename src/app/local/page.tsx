@@ -15,10 +15,11 @@ export default function Page() {
   const [balance, setBalance] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'home' | 'referral' | 'leaderboard' | 'chat'>('home');
   const [activeGame, setActiveGame] = useState<'crash' | 'slots'>('crash');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [tonConnectUI] = useTonConnectUI();
 
   // Mock local state for testing
-  const FEATURE_FLAGS = { GUEST_MODE: true, HOUSE_WALLET: 'UQ...', DEBUG_MODE: true };
+  const FEATURE_FLAGS = { GUEST_MODE: true, HOUSE_WALLET: 'UQB0ZVYU321cleF9B5TwQc0KZ3h2L2sIAwPrQFODCWHPDoFA', DEBUG_MODE: true };
   const wallet = null;
   const address = "guest_test_wallet";
 
@@ -80,13 +81,20 @@ export default function Page() {
   }, [wallet, address]);
 
   const handleDeposit = async () => {
-    if (!wallet) {
+    if (!wallet && !FEATURE_FLAGS.GUEST_MODE) {
       alert("Please connect your wallet first!");
       return;
     }
 
     const amount = prompt("Enter amount to deposit (TON):", "1.0");
     if (!amount || isNaN(parseFloat(amount))) return;
+
+    if (FEATURE_FLAGS.GUEST_MODE) {
+      // Optimistic update for guest mode
+      setBalance(prev => prev + parseFloat(amount));
+      alert("Guest Deposit Success! (Test Mode)");
+      return;
+    }
 
     try {
       const amountInNano = (parseFloat(amount) * 1e9).toString();
@@ -97,22 +105,7 @@ export default function Page() {
 
       const sentTx = await tonConnectUI.sendTransaction(transaction);
       if (sentTx) {
-        // Optimistically update balance for testing/demo if GUEST_MODE is active
-        if (FEATURE_FLAGS.GUEST_MODE && address) {
-          const { data: userData } = await supabase
-            .from('users')
-            .select('id, balance')
-            .eq('wallet_address', address)
-            .single();
-
-          if (userData) {
-            await supabase
-              .from('users')
-              .update({ balance: Number(userData.balance) + parseFloat(amount) })
-              .eq('id', userData.id);
-          }
-        }
-        alert("Deposit transaction sent! Balance will update (Test Mode).");
+        alert("Deposit transaction sent! Balance will update.");
       }
     } catch (e) {
       console.error("Deposit failed:", e);
@@ -120,7 +113,7 @@ export default function Page() {
   };
 
   const handleWithdraw = async () => {
-    if (!wallet) {
+    if (!wallet && !FEATURE_FLAGS.GUEST_MODE) {
       alert("Please connect your wallet first!");
       return;
     }
@@ -128,6 +121,12 @@ export default function Page() {
     const amount = prompt("Enter amount to withdraw (TON):", "1.0");
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) > balance) {
       alert("Invalid amount or insufficient balance");
+      return;
+    }
+
+    if (FEATURE_FLAGS.GUEST_MODE) {
+      setBalance(prev => prev - parseFloat(amount));
+      alert("Guest Withdrawal Success! (Test Mode)");
       return;
     }
 
@@ -159,11 +158,35 @@ export default function Page() {
           </div>
         </div>
         <div className="flex gap-4">
-          <div className="p-2 glass-card border-none hover:bg-white/10 transition-colors">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 glass-card border-none hover:bg-white/10 transition-colors relative z-50"
+          >
             <Menu className="w-6 h-6" />
-          </div>
+          </button>
         </div>
       </header>
+
+      {/* Burger Menu Overlay */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] p-6 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-300">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold gold-text italic">ASTRO MENU</h2>
+            <button onClick={() => setIsMenuOpen(false)} className="text-white/60 uppercase text-xs font-bold border border-white/10 px-3 py-1 rounded-full">Close</button>
+          </div>
+          <div className="flex flex-col gap-4 mt-8">
+            {['Profile', 'Settings', 'Transactions', 'Support', 'Fairness'].map(item => (
+              <button key={item} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all group">
+                <span className="text-sm font-bold uppercase tracking-wider group-hover:text-gold">{item}</span>
+                <ArrowUpRight className="w-4 h-4 text-white/20 group-hover:text-gold" />
+              </button>
+            ))}
+          </div>
+          <div className="mt-auto pb-10 text-center">
+            <span className="text-[10px] text-white/20 uppercase font-black tracking-[0.3em]">Astro Hub v1.0.2</span>
+          </div>
+        </div>
+      )}
 
       {/* Hero Stats */}
       <div className="glass-card p-6 flex flex-col items-center gap-2 relative overflow-hidden group">
@@ -251,7 +274,7 @@ export default function Page() {
                 </div>
                 {activeGame === 'crash' && <div className="absolute -right-2 -bottom-2 w-12 h-12 bg-gold/20 blur-2xl rounded-full" />}
               </button>
-
+              |
               <button
                 onClick={() => setActiveGame('slots')}
                 className={`flex-1 p-4 rounded-3xl border transition-all flex flex-col gap-3 relative overflow-hidden group ${activeGame === 'slots' ? 'bg-purple-500/10 border-purple-500/40 shadow-[0_0_30px_rgba(168,85,247,0.1)]' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
@@ -282,7 +305,11 @@ export default function Page() {
 
             {/* Active Game Display */}
             <div className="w-full flex justify-center">
-              {activeGame === 'crash' ? <CrashGame balance={balance} /> : <SlotMachine balance={balance} />}
+              {activeGame === 'crash' ? (
+                <CrashGame balance={balance} onBalanceUpdate={setBalance} />
+              ) : (
+                <SlotMachine balance={balance} onBalanceUpdate={setBalance} />
+              )}
             </div>
           </div>
         )}

@@ -8,7 +8,13 @@ import { supabase } from '@/lib/supabase';
 import { SoundManager } from '@/lib/sounds';
 import { FEATURE_FLAGS } from '@/lib/flags';
 
-export default function CrashGame({ balance = 0 }: { balance?: number }) {
+export default function CrashGame({
+    balance = 0,
+    onBalanceUpdate
+}: {
+    balance?: number,
+    onBalanceUpdate?: (updater: (prev: number) => number) => void
+}) {
     const wallet = useTonWallet();
     const [tonConnectUI] = useTonConnectUI();
 
@@ -228,10 +234,15 @@ export default function CrashGame({ balance = 0 }: { balance?: number }) {
             // Game Logic: If already flying, we are betting for NEXT round if possible (not implemented yet)
             // or we just wait for countdown to finish.
             if (!isFlying && countdown === null) {
+                // Optimistically subtract from parent balance if callback exists
+                if (onBalanceUpdate) onBalanceUpdate(prev => prev - amount);
                 startLaunchSequence(crashAt);
             } else {
                 // Store crashAt for when countdown ends
                 pendingCrashAtRef.current = crashAt;
+                // If betting for next round, we'll subtract then. 
+                // For now, let's subtract immediately since it's "BET PLACED"
+                if (onBalanceUpdate) onBalanceUpdate(prev => prev - amount);
             }
         } catch (e: any) {
             console.error("Bet failed:", e);
@@ -363,6 +374,9 @@ export default function CrashGame({ balance = 0 }: { balance?: number }) {
             setLastWin(winMult);
             setBetStatus('cashed');
             betStatusRef.current = 'cashed';
+
+            // Optimistically update parent balance
+            if (onBalanceUpdate) onBalanceUpdate(prev => prev + winAmount);
 
             // Sync with DB
             const { data: betData, error: updateError } = await supabase
