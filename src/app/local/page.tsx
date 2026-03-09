@@ -146,7 +146,7 @@ export default function Page() {
   };
 
   return (
-    <main className="flex-1 flex flex-col p-4 gap-6 min-h-screen bg-black text-white">
+    <main className="flex-1 flex flex-col px-3 pt-3 pb-4 gap-4 min-h-screen bg-black text-white overflow-x-hidden">
       {/* Header */}
       <header className="flex justify-between items-center pt-2">
         <div className="flex items-center gap-2">
@@ -236,18 +236,20 @@ export default function Page() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5">
+      <div className="flex gap-1 p-1 bg-white/5 rounded-2xl border border-white/5">
         {['home', 'referral', 'leaderboard', 'chat'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`flex-1 py-3 px-2 rounded-xl flex flex-col items-center gap-1 transition-all ${activeTab === tab ? 'bg-gold text-black shadow-gold' : 'text-white/40 hover:text-white/60'}`}
+            className={`flex-1 py-2.5 px-1 rounded-xl flex flex-col items-center gap-1 transition-all min-w-0 ${activeTab === tab ? 'bg-gold text-black shadow-gold' : 'text-white/40 hover:text-white/60'}`}
           >
-            {tab === 'home' && <Home className="w-5 h-5" />}
-            {tab === 'referral' && <Users className="w-5 h-5" />}
-            {tab === 'leaderboard' && <Trophy className="w-5 h-5" />}
-            {tab === 'chat' && <MessageSquare className="w-5 h-5" />}
-            <span className="text-[8px] uppercase font-black tracking-widest">{tab}</span>
+            {tab === 'home' && <Home className="w-4 h-4 shrink-0" />}
+            {tab === 'referral' && <Users className="w-4 h-4 shrink-0" />}
+            {tab === 'leaderboard' && <Trophy className="w-4 h-4 shrink-0" />}
+            {tab === 'chat' && <MessageSquare className="w-4 h-4 shrink-0" />}
+            <span className="text-[7px] uppercase font-black truncate w-full text-center leading-none px-0.5">
+              {tab === 'leaderboard' ? 'Top' : tab}
+            </span>
           </button>
         ))}
       </div>
