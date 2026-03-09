@@ -157,7 +157,7 @@ export default function Page() {
           </div>
         </div>
         <div className="flex gap-4 items-center">
-          <a href="/local" className="text-[8px] text-white/20 hover:text-white/40 uppercase font-bold">Local Test</a>
+          <a href="/local" className="px-2 py-1 bg-blue-500 rounded text-[8px] text-white uppercase font-bold animate-pulse">TEST VERSION (REDEPLOYED)</a>
           <div className="p-2 glass-card border-none hover:bg-white/10 transition-colors">
             <Menu className="w-6 h-6" />
           </div>
