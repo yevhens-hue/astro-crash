@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { Address } from "https://esm.sh/@ton/core"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,7 +28,10 @@ serve(async (req) => {
     // 1. Verify transaction via TonCenter API
     // Using mainnet for production
     const TON_API_URL = "https://toncenter.com/api/v2/getTransactions";
-    const response = await fetch(`${TON_API_URL}?address=${HOUSE_WALLET}&limit=20`);
+    const cacheBuster = Date.now();
+    const response = await fetch(`${TON_API_URL}?address=${HOUSE_WALLET}&limit=50&timestamp=${cacheBuster}`, {
+        headers: { "Cache-Control": "no-cache" }
+    });
     
     if (!response.ok) {
         throw new Error("TonCenter API error: " + response.statusText);
@@ -39,12 +43,20 @@ serve(async (req) => {
     let onChainTx = null;
     let finalTxHash = tx_hash;
 
+    const expectedSenderRaw = Address.parse(sender).toRawString();
+
     for (const tx of tonData.result || []) {
         // Skip outgoing messages
         if (!tx.in_msg) continue;
         
         const val = parseFloat(tx.in_msg.value) / 1e9;
         
+        // Ensure sender matches
+        if (!tx.in_msg.source) continue;
+        const txSourceRaw = Address.parse(tx.in_msg.source).toRawString();
+        
+        if (expectedSenderRaw !== txSourceRaw) continue;
+
         // 1. Match by exact tx_hash if provided
         if (finalTxHash && tx.transaction_id.hash === finalTxHash) {
             onChainTx = tx;

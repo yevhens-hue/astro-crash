@@ -605,8 +605,17 @@ export default function CrashGame({
                                     <h4 className="text-xl font-black italic gold-text tracking-tighter">ASTRO VICTORY!</h4>
                                     <div className="text-4xl font-black text-white italic">{lastWin?.toFixed(2)}x</div>
                                     <div className="w-full h-px bg-white/5" />
-                                    <p className="text-[8px] text-white/40 uppercase font-bold px-2">Share on Telegram Stories for 5% Bonus!</p>
-                                    <button onClick={() => setShowShareModal(false)} className="gold-button w-full py-3 text-sm">Download Card</button>
+                                    <p className="text-[8px] text-white/40 uppercase font-bold px-2">Show off your Astro victory to the community!</p>
+                                    <button
+                                        onClick={() => {
+                                            const text = `🚀 I just hit ${lastWin?.toFixed(2)}x on Astro Crash! Try to beat my score! Play now: https://t.me/AstroCrashGame_bot`;
+                                            window.open(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/AstroCrashGame_bot')}&text=${encodeURIComponent(text)}`, '_blank');
+                                            setShowShareModal(false);
+                                        }}
+                                        className="gold-button w-full py-3 text-sm"
+                                    >
+                                        Share on Telegram
+                                    </button>
                                     <button onClick={() => setShowShareModal(false)} className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40">Later</button>
                                 </motion.div>
                             </motion.div>
@@ -748,21 +757,21 @@ function BettingPanel({
 }) {
     return (
         <div className="glass-card p-5 border-white/5 flex flex-col gap-4 shadow-xl rounded-[2rem]">
-            <div className="flex gap-3">
+            <div className="flex gap-2">
                 <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
-                    <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Bet Amount</span>
+                    <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">Bet Amount</span>
                     <div className="flex items-center justify-between">
-                        <span className="text-lg font-black text-gold tracking-tight">{amount.toFixed(1)} <span className="text-xs opacity-50">TON</span></span>
-                        <div className="flex gap-2">
+                        <span className="text-base font-black text-gold tracking-tight">{amount.toFixed(1)} <span className="text-[10px] opacity-50">TON</span></span>
+                        <div className="flex gap-1">
                             <button
                                 onClick={() => onAdjust(-0.1)}
-                                className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg"
+                                className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-lg font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg"
                             >
                                 -
                             </button>
                             <button
                                 onClick={() => onAdjust(0.1)}
-                                className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg"
+                                className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-lg font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg"
                             >
                                 +
                             </button>
@@ -771,10 +780,10 @@ function BettingPanel({
                 </div>
                 <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
                     <div className="flex justify-between items-center">
-                        <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Auto Cash</span>
+                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">Auto Cash</span>
                         <button
                             onClick={onAutoCashToggle}
-                            className={`text-[10px] font-black px-3 py-1 rounded-lg ${isAutoCash ? 'bg-gold text-black shadow-gold' : 'bg-white/10 text-white/40'} transition-all`}
+                            className={`text-[9px] font-black px-2 py-1 rounded-lg ${isAutoCash ? 'bg-gold text-black shadow-gold' : 'bg-white/10 text-white/40'} transition-all`}
                         >
                             AUTO
                         </button>
@@ -786,9 +795,9 @@ function BettingPanel({
                             min="1.1"
                             value={autoCashout}
                             onChange={(e) => onAutoCashoutChange(parseFloat(e.target.value) || 1.1)}
-                            className="bg-transparent border-none outline-none text-lg font-black text-gold w-16"
+                            className="bg-transparent border-none outline-none text-base font-black text-gold w-12"
                         />
-                        <span className="text-xs font-black text-white/20 italic">x</span>
+                        <span className="text-[10px] font-black text-white/20 italic">x</span>
                     </div>
                 </div>
             </div>
@@ -796,19 +805,19 @@ function BettingPanel({
             {status === 'betting' && isFlying ? (
                 <button
                     onClick={onCashOut}
-                    className="gold-button w-full py-5 text-2xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] active:scale-95 transition-all animate-pulse rounded-2xl font-black italic"
+                    className="gold-button w-full py-4 text-xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] active:scale-95 transition-all animate-pulse rounded-2xl font-black italic"
                 >
                     CASH OUT
                 </button>
             ) : status === 'cashed' ? (
-                <div className="w-full py-5 text-center rounded-2xl bg-green-500/20 text-green-400 border border-green-500/40 text-2xl font-black italic shadow-[0_0_25px_rgba(34,197,94,0.2)]">
+                <div className="w-full py-4 text-center rounded-2xl bg-green-500/20 text-green-400 border border-green-500/40 text-xl font-black italic shadow-[0_0_25px_rgba(34,197,94,0.2)]">
                     WON!
                 </div>
             ) : (
                 <button
                     onClick={onPlaceBet}
                     disabled={isFlying || isBetting || status === 'betting'}
-                    className={`gold-button w-full py-5 text-2xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] rounded-2xl font-black italic ${(isFlying || isBetting || status === 'betting') ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95 transition-all'}`}
+                    className={`gold-button w-full py-4 text-xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] rounded-2xl font-black italic ${(isFlying || isBetting || status === 'betting') ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95 transition-all'}`}
                 >
                     {isBetting ? 'WAIT...' : status === 'betting' ? 'BET PLACED' : `BET ${amount.toFixed(1)}`}
                 </button>
