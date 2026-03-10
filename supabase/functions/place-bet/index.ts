@@ -52,17 +52,8 @@ serve(async (req) => {
 
     // Optional: if (round.status !== 'pending') throw new Error("Round already started")
     
-    // 3. Prevent duplicate bets by same user in same round
-    const { data: existingBet } = await supabaseClient
-        .from('bets')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('round_id', round_id)
-        .single();
-        
-    if (existingBet) {
-        throw new Error("User already bet on this round");
-    }
+    // 3. User can bet multiple times (e.g., Panel A and Panel B) on the same round.
+    // Removed duplicate bet restriction flag.
 
     // 4. Atomically deduct the balance
     const { error: balanceError } = await supabaseClient
