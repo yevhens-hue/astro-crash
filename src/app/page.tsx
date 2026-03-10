@@ -279,6 +279,17 @@ export default function Page() {
             })
             .eq('wallet_address', userAddress);
         }
+
+        // Auto-recover any stuck deposits quietly in the background
+        if (!FEATURE_FLAGS.GUEST_MODE) {
+          supabase.functions.invoke('ton-webhook', {
+            body: { sender: userAddress, type: 'deposit' } // No amount specified, forces full sweep
+          }).then(res => {
+            if (res.data?.success && res.data?.processed > 0) {
+              console.log(`Auto-recovered ${res.data.processed} stuck deposits!`);
+            }
+          }).catch(console.error);
+        }
       } else if (error && error.code === 'PGRST116') {
         // Enforce balance=0 in production to pass RLS, otherwise grant 10.0 for guest testing
         const initialBalance = FEATURE_FLAGS.GUEST_MODE ? 10.0 : 0.0;
