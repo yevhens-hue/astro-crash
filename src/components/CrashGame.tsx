@@ -56,6 +56,8 @@ export default function CrashGame({
     const currentBetIdRefB = useRef<string | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const pendingCrashAtRef = useRef<number | null>(null);
+    const currentRoundIdRef = useRef<string | null>(null);
+    const currentCrashAtRef = useRef<number | null>(null);
 
     useEffect(() => {
         // Initial fetch
@@ -169,18 +171,26 @@ export default function CrashGame({
             let roundId: string;
             let serverSeed: string;
 
-            // 1. Fetch or simulate round
-            if (address === 'guest_test_wallet' || FEATURE_FLAGS.DEBUG_MODE) {
-                // Simulation mode for guest/debug
-                crashAt = Math.max(1.1, 0.99 / (1 - Math.random()));
-                roundId = `mock_round_${Date.now()}`;
-                serverSeed = "local_simulation_seed";
+            // 1. Fetch or simulate round ONLY if we haven't already generated one for this launch
+            if (currentRoundIdRef.current && currentCrashAtRef.current) {
+                roundId = currentRoundIdRef.current;
+                crashAt = currentCrashAtRef.current;
+                serverSeed = currentSeed || ""; // reused
             } else {
-                const { data: roundData, error: roundError } = await supabase.functions.invoke('generate-round');
-                if (roundError || !roundData) throw new Error(roundError?.message || "Failed to sync round");
-                crashAt = parseFloat(roundData.crash_point);
-                roundId = roundData.id;
-                serverSeed = roundData.server_seed;
+                if (address === 'guest_test_wallet' || FEATURE_FLAGS.DEBUG_MODE) {
+                    crashAt = Math.max(1.1, 0.99 / (1 - Math.random()));
+                    roundId = `mock_round_${Date.now()}`;
+                    serverSeed = "local_simulation_seed";
+                } else {
+                    const { data: roundData, error: roundError } = await supabase.functions.invoke('generate-round');
+                    if (roundError || !roundData) throw new Error(roundError?.message || "Failed to sync round");
+                    crashAt = parseFloat(roundData.crash_point);
+                    roundId = roundData.id;
+                    serverSeed = roundData.server_seed;
+                }
+
+                currentRoundIdRef.current = roundId;
+                currentCrashAtRef.current = crashAt;
             }
 
             setCurrentSeed(serverSeed);
@@ -222,17 +232,19 @@ export default function CrashGame({
                 autoCashoutRefB.current = auto;
             }
 
-            // Game Logic: If already flying, we are betting for NEXT round if possible (not implemented yet)
-            // or we just wait for countdown to finish.
-            if (!isFlying && countdown === null) {
-                // Optimistically subtract from parent balance if callback exists
+            // Game Logic: If already flying, we throw (though UI disables the button)
+            if (isFlying) {
+                throw new Error("Round already flying, cannot bet now!");
+            }
+
+            if (countdown === null) {
+                // IDLE mode -> Start immediately
                 if (onBalanceUpdate) onBalanceUpdate(prev => prev - amount);
                 startLaunchSequence(crashAt);
             } else {
-                // Store crashAt for when countdown ends
+                // COUNTDOWN mode -> Store it, wait for 0
                 pendingCrashAtRef.current = crashAt;
-                // If betting for next round, we'll subtract then. 
-                // For now, let's subtract immediately since it's "BET PLACED"
+                // Subtract immediately since it's "BET PLACED"
                 if (onBalanceUpdate) onBalanceUpdate(prev => prev - amount);
             }
 
@@ -286,7 +298,6 @@ export default function CrashGame({
         const update = () => {
             const elapsed = (Date.now() - (startTimeRef.current || 0)) / 1000;
             let newMultiplier = Math.pow(1.15, elapsed);
-            if (isSquadActive) newMultiplier += 0.1;
 
             if (newMultiplier >= crashAt) {
                 crash();
@@ -319,6 +330,8 @@ export default function CrashGame({
         SoundManager.playCrash();
         setIsFlying(false);
         setIsCrashed(true);
+        currentRoundIdRef.current = null;
+        currentCrashAtRef.current = null;
 
         // ONLY reset status if they haven't cashed out yet
         // In Debug mode, they stay 'cashed' until next launch sequence
