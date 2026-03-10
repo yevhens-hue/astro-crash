@@ -132,7 +132,7 @@ export default function CrashGame({
         const { data: top } = await supabase
             .from('bets')
             .select('*, users(wallet_address)')
-            .eq('status', 'paid')
+            .eq('status', 'cashed')
             .order('win_amount', { ascending: false })
             .limit(10);
         if (top) setTopBets(top);
@@ -485,7 +485,7 @@ export default function CrashGame({
                                 key={m.id}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className={`flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold border ${colorClass}`}
+                                className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold border ${colorClass}`}
                             >
                                 {m.multiplier.toFixed(2)}x
                             </motion.div>
@@ -523,11 +523,11 @@ export default function CrashGame({
                             key={isCrashed ? 'crashed' : 'flying'}
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className={`text-6xl font-black italic tracking-tighter ${isCrashed ? 'text-red-500' : 'gold-text'}`}
+                            className={`text-5xl font-black italic tracking-tighter ${isCrashed ? 'text-red-500' : 'gold-text'}`}
                         >
                             {multiplier.toFixed(2)}x
                         </motion.h3>
-                        {isCrashed && <p className="text-red-500 font-bold uppercase tracking-widest mt-2 animate-bounce">Crashed!</p>}
+                        {isCrashed && <p className="text-red-500 text-sm font-bold uppercase tracking-widest mt-1 animate-bounce">Crashed!</p>}
 
                         {countdown !== null && (
                             <div className="flex flex-col items-center mt-2">
@@ -597,26 +597,26 @@ export default function CrashGame({
                                 <motion.div
                                     initial={{ scale: 0.9, y: 20 }}
                                     animate={{ scale: 1, y: 0 }}
-                                    className="bg-[#1a1a1a] border border-gold/30 rounded-3xl p-6 w-full max-w-[280px] shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col items-center gap-4 text-center"
+                                    className="bg-[#1a1a1a] border border-gold/30 rounded-3xl p-5 w-[90%] max-w-[260px] shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col items-center gap-3 text-center max-h-[90vh] overflow-y-auto"
                                 >
-                                    <div className="w-16 h-16 bg-gold/10 rounded-2xl flex items-center justify-center">
-                                        <Rocket className="w-8 h-8 text-gold" />
+                                    <div className="w-12 h-12 bg-gold/10 rounded-2xl flex items-center justify-center shrink-0">
+                                        <Rocket className="w-6 h-6 text-gold" />
                                     </div>
-                                    <h4 className="text-xl font-black italic gold-text tracking-tighter">ASTRO VICTORY!</h4>
-                                    <div className="text-4xl font-black text-white italic">{lastWin?.toFixed(2)}x</div>
-                                    <div className="w-full h-px bg-white/5" />
-                                    <p className="text-[8px] text-white/40 uppercase font-bold px-2">Show off your Astro victory to the community!</p>
+                                    <h4 className="text-lg font-black italic gold-text tracking-tighter">ASTRO VICTORY!</h4>
+                                    <div className="text-3xl font-black text-white italic leading-none">{lastWin?.toFixed(2)}x</div>
+                                    <div className="w-full h-px bg-white/5 shrink-0" />
+                                    <p className="text-[8px] text-white/40 uppercase font-bold px-1">Show off your Astro victory to the community!</p>
                                     <button
                                         onClick={() => {
                                             const text = `🚀 I just hit ${lastWin?.toFixed(2)}x on Astro Crash! Try to beat my score! Play now: https://t.me/AstroCrashGame_bot`;
                                             window.open(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/AstroCrashGame_bot')}&text=${encodeURIComponent(text)}`, '_blank');
                                             setShowShareModal(false);
                                         }}
-                                        className="gold-button w-full py-3 text-sm"
+                                        className="gold-button w-full py-2.5 text-xs shrink-0"
                                     >
                                         Share on Telegram
                                     </button>
-                                    <button onClick={() => setShowShareModal(false)} className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40">Later</button>
+                                    <button onClick={() => setShowShareModal(false)} className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40 shrink-0">Later</button>
                                 </motion.div>
                             </motion.div>
                         )}

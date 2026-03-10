@@ -183,7 +183,7 @@ function BurgerMenu({
             <div className="flex justify-between items-end">
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Total Balance</span>
-                <span className="text-lg font-black gold-text leading-none">{balance.toFixed(2)} TON</span>
+                <span className="text-base font-black gold-text leading-none">{balance.toFixed(2)} TON</span>
               </div>
             </div>
           </div>
@@ -208,6 +208,21 @@ function BurgerMenu({
                 Every game round result is generated using a secure SHA-256 hash before bets are placed. This guarantees the server cannot secretly change the result after you bet.
               </div>
             )}
+
+            <button
+              onClick={() => {
+                alert("Balance History detailed view will be implemented in the next update. You can currently see your recent game bets in the 'My Bets' tab below the game.");
+              }}
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
+            >
+              <div className="p-2 bg-green-500/10 rounded-xl group-hover:bg-green-500/20 transition-colors">
+                <TrendingUp className="w-5 h-5 text-green-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">Balance History</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">View Transactions</span>
+              </div>
+            </button>
 
             <button
               onClick={() => {
@@ -386,12 +401,23 @@ export default function Page() {
     if (!wallet) throw new Error("Please connect your wallet first");
     if (amount > balance) throw new Error("Insufficient balance");
 
-    const response = await supabase.functions.invoke('process-withdrawal', {
-      body: { amount, wallet_address: wallet.account.address }
-    });
+    // Optimistically update the UI to feel instant
+    setBalance(prev => prev - amount);
 
-    if (!response.data?.success) {
-      throw new Error(response.error?.message || response.data?.error || "Withdrawal failed");
+    try {
+      const response = await supabase.functions.invoke('process-withdrawal', {
+        body: { amount, wallet_address: wallet.account.address }
+      });
+
+      if (!response.data?.success) {
+        throw new Error(response.error?.message || response.data?.error || "Withdrawal failed");
+      }
+
+      alert(`Withdrawal of ${amount} TON initiated successfully! Your funds will arrive in your wallet shortly.`);
+    } catch (err: any) {
+      // Revert optimistic update on failure
+      setBalance(prev => prev + amount);
+      throw err;
     }
   }, [wallet, balance]);
 
@@ -522,7 +548,7 @@ export default function Page() {
                 {activeGame === 'crash' && <div className="absolute -right-2 -bottom-2 w-12 h-12 bg-gold/20 blur-2xl rounded-full" />}
               </button>
 
-              <button
+              {/* <button
                 onClick={() => setActiveGame('slots')}
                 className={`flex-1 p-4 rounded-3xl border transition-all flex flex-col gap-3 relative overflow-hidden group ${activeGame === 'slots' ? 'bg-purple-500/10 border-purple-500/40 shadow-[0_0_30px_rgba(168,85,247,0.1)]' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
               >
@@ -537,7 +563,7 @@ export default function Page() {
                   <span className="text-[9px] font-bold text-white/40 uppercase">Jackpot 500x</span>
                 </div>
                 {activeGame === 'slots' && <div className="absolute -right-2 -bottom-2 w-12 h-12 bg-purple-500/20 blur-2xl rounded-full" />}
-              </button>
+              </button> */}
             </div>
 
             {FEATURE_FLAGS.GUEST_MODE && !wallet && (
