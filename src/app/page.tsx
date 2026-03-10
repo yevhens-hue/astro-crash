@@ -273,7 +273,8 @@ export default function Page() {
             .eq('wallet_address', userAddress);
         }
       } else if (error && error.code === 'PGRST116') {
-        const initialBalance = FEATURE_FLAGS.GUEST_MODE ? 10.0 : 0.1;
+        // Enforce balance=0 in production to pass RLS, otherwise grant 10.0 for guest testing
+        const initialBalance = FEATURE_FLAGS.GUEST_MODE ? 10.0 : 0.0;
         await supabase
           .from('users')
           .insert({
