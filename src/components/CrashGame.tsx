@@ -58,6 +58,13 @@ export default function CrashGame({
     const pendingCrashAtRef = useRef<number | null>(null);
     const currentRoundIdRef = useRef<string | null>(null);
     const currentCrashAtRef = useRef<number | null>(null);
+    const latestCountdownRef = useRef<number | null>(null);
+    const isFlyingRef = useRef(false);
+    const isCrashedRef = useRef(true);
+
+    useEffect(() => {
+        latestCountdownRef.current = countdown;
+    }, [countdown]);
 
     useEffect(() => {
         // Initial fetch
@@ -233,11 +240,11 @@ export default function CrashGame({
             }
 
             // Game Logic: If already flying, we throw (though UI disables the button)
-            if (isFlying) {
+            if (isFlyingRef.current) {
                 throw new Error("Round already flying, cannot bet now!");
             }
 
-            if (countdown === null) {
+            if (latestCountdownRef.current === null || latestCountdownRef.current === 0) {
                 // IDLE mode -> Start immediately
                 if (onBalanceUpdate) onBalanceUpdate(prev => prev - amount);
                 startLaunchSequence(crashAt);
@@ -279,7 +286,9 @@ export default function CrashGame({
 
     const startLaunchSequence = (crashAt: number) => {
         setIsFlying(true);
+        isFlyingRef.current = true;
         setIsCrashed(false);
+        isCrashedRef.current = false;
         setMultiplier(1.00);
         multiplierRef.current = 1.00;
         startTimeRef.current = Date.now();
@@ -329,7 +338,9 @@ export default function CrashGame({
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
         SoundManager.playCrash();
         setIsFlying(false);
+        isFlyingRef.current = false;
         setIsCrashed(true);
+        isCrashedRef.current = true;
         currentRoundIdRef.current = null;
         currentCrashAtRef.current = null;
 
