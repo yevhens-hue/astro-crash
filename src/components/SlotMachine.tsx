@@ -9,7 +9,13 @@ import { FEATURE_FLAGS } from '@/lib/flags';
 const SYMBOLS = ['💎', '🎭', '👑', '777', '🍒', '🔔', '🍋'];
 const REEL_COUNT = 3;
 
-export default function SlotMachine({ balance = 0 }: { balance?: number }) {
+export default function SlotMachine({
+    balance = 0,
+    onBalanceUpdate
+}: {
+    balance?: number,
+    onBalanceUpdate?: (updater: (prev: number) => number) => void
+}) {
     const wallet = useTonWallet();
     const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
     const [reels, setReels] = useState(Array(REEL_COUNT).fill(SYMBOLS[0]));
@@ -41,6 +47,9 @@ export default function SlotMachine({ balance = 0 }: { balance?: number }) {
                 .single();
 
             if (userError || !userData) throw new Error("User not found");
+
+            // Optimistic UI update
+            if (onBalanceUpdate) onBalanceUpdate(prev => prev - cost);
 
             await supabase
                 .from('users')
@@ -87,11 +96,13 @@ export default function SlotMachine({ balance = 0 }: { balance?: number }) {
             setReels(spinResults);
 
             if (isWin) {
+                if (onBalanceUpdate) onBalanceUpdate(prev => prev + winAmount);
                 alert(`🎰 BIG WIN! You won ${winAmount} TON!`);
             }
 
         } catch (e: any) {
             console.error("Spin failed:", e);
+            if (onBalanceUpdate) onBalanceUpdate(prev => prev + cost); // Refund on failure
             alert(`Spin failed: ${e.message || 'Check connection'}`);
         } finally {
             setIsSpinning(false);

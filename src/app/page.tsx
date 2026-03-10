@@ -506,7 +506,7 @@ export default function Page() {
 
             {/* Active Game Display */}
             <div className="w-full flex justify-center">
-              {activeGame === 'crash' ? <CrashGame balance={balance} /> : <SlotMachine balance={balance} />}
+              {activeGame === 'crash' ? <CrashGame balance={balance} onBalanceUpdate={setBalance} /> : <SlotMachine balance={balance} onBalanceUpdate={setBalance} />}
             </div>
           </div>
         )}
