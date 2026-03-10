@@ -26,7 +26,7 @@ export default function Leaderboard() {
                 // Fetch top 10 winners
                 const { data: bets, error } = await supabase
                     .from('bets')
-                    .select('win_amount, cashout_at, users(wallet_address)')
+                    .select('win_amount, cashout_at, users(wallet_address, username)')
                     .eq('status', 'cashed')
                     .order('win_amount', { ascending: false })
                     .limit(10);
@@ -35,12 +35,24 @@ export default function Leaderboard() {
 
                 if (!isMounted) return;
 
-                const processed: LeaderboardEntry[] = (bets || []).map((b: any, i: number) => ({
-                    rank: i + 1,
-                    user: b.users?.wallet_address ? `@${b.users.wallet_address.slice(0, 6)}...${b.users.wallet_address.slice(-4)}` : 'Unknown',
-                    profit: `${b.win_amount || 0} TON`,
-                    multiplier: `${b.cashout_at || 0}x`,
-                }));
+                const processed: LeaderboardEntry[] = (bets || []).map((b: any, i: number) => {
+                    let displayName = 'Unknown';
+                    const u = b.users;
+                    if (u) {
+                        if (u.username) {
+                            displayName = u.username; // Already formatted with '@' in page.tsx if applicable
+                        } else if (u.wallet_address) {
+                            displayName = `@${u.wallet_address.slice(0, 6)}...${u.wallet_address.slice(-4)}`;
+                        }
+                    }
+
+                    return {
+                        rank: i + 1,
+                        user: displayName,
+                        profit: `${b.win_amount || 0} TON`,
+                        multiplier: `${b.cashout_at || 0}x`,
+                    };
+                });
 
                 setTopPlayers(processed);
             } catch (e) {

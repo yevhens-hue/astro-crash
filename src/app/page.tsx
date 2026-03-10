@@ -146,6 +146,7 @@ function BurgerMenu({
   address: string | null;
 }) {
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showProvablyTooltip, setShowProvablyTooltip] = useState(false);
 
   return (
     <>
@@ -189,18 +190,32 @@ function BurgerMenu({
 
           {/* Menu Items */}
           <div className="flex flex-col gap-2 flex-1">
-            <button className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left">
+            <button
+              onClick={() => setShowProvablyTooltip(!showProvablyTooltip)}
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left relative"
+            >
               <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
                 <Shield className="w-5 h-5 text-blue-400" />
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-white/80">Provably Fair</span>
-                <span className="text-[10px] text-white/30 uppercase font-bold">Verify Every Round</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">What is this?</span>
               </div>
             </button>
 
+            {showProvablyTooltip && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-xs text-blue-200/80 mx-2 animate-in fade-in slide-in-from-top-2">
+                Every game round result is generated using a secure SHA-256 hash before bets are placed. This guarantees the server cannot secretly change the result after you bet.
+              </div>
+            )}
+
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={() => {
+                const newSoundEnabled = !soundEnabled;
+                setSoundEnabled(newSoundEnabled);
+                // Assume SoundManager global toggle exists or map accordingly
+                import('@/lib/sounds').then(m => m.SoundManager.init(newSoundEnabled));
+              }}
               className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
             >
               <div className="p-2 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
@@ -211,21 +226,6 @@ function BurgerMenu({
                 <span className="text-[10px] text-white/30 uppercase font-bold">{soundEnabled ? 'Enabled' : 'Muted'}</span>
               </div>
             </button>
-
-            <a
-              href="https://t.me/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group"
-            >
-              <div className="p-2 bg-gold/10 rounded-xl group-hover:bg-gold/20 transition-colors">
-                <Send className="w-5 h-5 text-gold" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-white/80">Telegram Stats</span>
-                <span className="text-[10px] text-white/30 uppercase font-bold">Join Community</span>
-              </div>
-            </a>
           </div>
 
           {/* Bottom Footer */}
@@ -257,19 +257,26 @@ export default function Page() {
     const fetchBalance = async (userAddress: string) => {
       const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
       const telegramId = tgUser?.id;
+      const tgUsername = tgUser?.username
+        ? `@${tgUser.username}`
+        : (tgUser?.first_name || null);
 
       const { data, error } = await supabase
         .from('users')
-        .select('balance')
+        .select('balance, username')
         .eq('wallet_address', userAddress)
         .single();
 
       if (data) {
         setBalance(Number(data.balance));
-        if (telegramId) {
+        // Update username or ID if missing/changed
+        if (telegramId || (tgUsername && data.username !== tgUsername)) {
           await supabase
             .from('users')
-            .update({ telegram_id: telegramId })
+            .update({
+              telegram_id: telegramId,
+              ...(tgUsername ? { username: tgUsername } : {})
+            })
             .eq('wallet_address', userAddress);
         }
       } else if (error && error.code === 'PGRST116') {
@@ -280,7 +287,8 @@ export default function Page() {
           .insert({
             wallet_address: userAddress,
             balance: initialBalance,
-            telegram_id: telegramId
+            telegram_id: telegramId,
+            username: tgUsername
           });
         setBalance(initialBalance);
       }
