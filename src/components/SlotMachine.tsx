@@ -39,49 +39,37 @@ export default function SlotMachine({
         try {
             setIsSpinning(true);
 
-            // 1. Sync User & Subtract Balance
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('id, balance')
-                .eq('wallet_address', address)
-                .single();
-
-            if (userError || !userData) throw new Error("User not found");
-
             // Optimistic UI update
             if (onBalanceUpdate) onBalanceUpdate(prev => prev - cost);
 
-            await supabase
-                .from('users')
-                .update({ balance: Number(userData.balance) - cost })
-                .eq('id', userData.id);
+            let finalSymbols: string[];
+            let finalWinAmount = 0;
 
-            const spinResults = reels.map(() =>
-                SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]
-            );
+            if (address !== 'guest_test_wallet' || !FEATURE_FLAGS.GUEST_MODE) {
+                // Call Secure Edge Function
+                const { data, error } = await supabase.functions.invoke('spin-slot', {
+                    body: { wallet_address: address }
+                });
 
-            const txHash = `slot_tx_${Date.now()}`;
-            const isWin = spinResults.every(s => s === spinResults[0]);
-            const winAmount = isWin ? 1.0 : 0;
+                if (error || !data?.success) {
+                    throw new Error(error?.message || data?.error || 'Failed to spin');
+                }
 
-            await supabase.from('slot_spins').insert({
-                user_id: userData.id,
-                wallet_address: address,
-                amount: cost,
-                result_symbols: spinResults,
-                win_amount: winAmount,
-                tx_hash: txHash,
-                status: 'confirmed'
-            });
-
-            if (isWin) {
-                await supabase
-                    .from('users')
-                    .update({ balance: Number(userData.balance) - cost + winAmount })
-                    .eq('id', userData.id);
+                finalSymbols = data.spinResults;
+                finalWinAmount = data.winAmount;
+            } else {
+                // Local simulation for purely guest/debug mode without a DB account
+                finalSymbols = reels.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+                const isWin = finalSymbols.every(s => s === finalSymbols[0]);
+                if (isWin) {
+                    if (finalSymbols[0] === '777') finalWinAmount = 100.0;
+                    else if (finalSymbols[0] === '💎') finalWinAmount = 50.0;
+                    else if (finalSymbols[0] === '👑') finalWinAmount = 20.0;
+                    else finalWinAmount = 5.0;
+                }
             }
 
-            // Start animations
+            // Start animations while we have the result
             const animations = controls.map((control, i) => {
                 return control.start({
                     y: [0, -500, 0],
@@ -93,11 +81,11 @@ export default function SlotMachine({
             });
 
             await Promise.all(animations);
-            setReels(spinResults);
+            setReels(finalSymbols);
 
-            if (isWin) {
-                if (onBalanceUpdate) onBalanceUpdate(prev => prev + winAmount);
-                alert(`🎰 BIG WIN! You won ${winAmount} TON!`);
+            if (finalWinAmount > 0) {
+                if (onBalanceUpdate) onBalanceUpdate(prev => prev + finalWinAmount);
+                alert(`🎰 BIG WIN! You won ${finalWinAmount} TON!`);
             }
 
         } catch (e: any) {

@@ -18,9 +18,6 @@ export default function CrashGame({
     const wallet = useTonWallet();
     const [tonConnectUI] = useTonConnectUI();
 
-    // House Wallet Address
-    const HOUSE_WALLET = "UQB0ZVYU321cleF9B5TwQc0KZ3h2L2sIAwPrQFODCWHPDoFA";
-
     const [multiplier, setMultiplier] = useState(1.00);
     const [isFlying, setIsFlying] = useState(false);
     const [isCrashed, setIsCrashed] = useState(false);
@@ -192,48 +189,34 @@ export default function CrashGame({
             // 2. Sync User (only if real supabase)
             let userId = "guest_id";
             let currentUserBalance = balance;
+            let dbBetId: string | null = null;
 
-            if (address !== 'guest_test_wallet') {
-                const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
-                const { data: userData, error: userError } = await supabase
-                    .from('users')
-                    .upsert({
+            if (address !== 'guest_test_wallet' && !roundId.startsWith('mock_round')) {
+                // Call Secure Edge Function
+                const { data, error } = await supabase.functions.invoke('place-bet', {
+                    body: {
                         wallet_address: address,
-                        telegram_id: tgUser?.id
-                    }, { onConflict: 'wallet_address' })
-                    .select().single();
-
-                if (userError || !userData) throw userError || new Error("User sync failed");
-                userId = userData.id;
-                currentUserBalance = Number(userData.balance);
-
-                // 3. Atomically subtract balance in DB
-                const { error: balError } = await supabase
-                    .from('users')
-                    .update({ balance: currentUserBalance - amount })
-                    .eq('id', userId);
-
-                if (balError) throw new Error("Balance update failed");
-
-                await supabase
-                    .from('bets')
-                    .insert({
                         round_id: roundId,
-                        user_id: userId,
-                        amount: amount,
-                        status: 'confirmed',
-                        tx_hash: txHash
-                    });
+                        amount: amount
+                    }
+                });
+
+                if (error || !data?.success) {
+                    throw new Error(error?.message || data?.error || 'Failed to place bet securely on server');
+                }
+
+                userId = data.bet.user_id;
+                dbBetId = data.bet.id;
             }
 
             // Update local state
             if (panel === 'A') {
-                currentBetIdRefA.current = `bet_a_${Date.now()}`;
+                currentBetIdRefA.current = dbBetId || `bet_a_${Date.now()}`;
                 setBetStatusA('betting');
                 betStatusRefA.current = 'betting';
                 autoCashoutRefA.current = auto;
             } else {
-                currentBetIdRefB.current = `bet_b_${Date.now()}`;
+                currentBetIdRefB.current = dbBetId || `bet_b_${Date.now()}`;
                 setBetStatusB('betting');
                 betStatusRefB.current = 'betting';
                 autoCashoutRefB.current = auto;
@@ -422,29 +405,22 @@ export default function CrashGame({
         // All DB operations deferred — won't block UI thread
         setTimeout(async () => {
             try {
-                if (address === 'guest_test_wallet') return; // skip DB for guest
+                if (address === 'guest_test_wallet' || !betId) return; // skip DB for guest
 
-                const { data: betData } = await supabase
-                    .from('bets')
-                    .update({ status: 'cashed', cashout_at: winMult, win_amount: winAmount })
-                    .eq('id', betId)
-                    .select().single();
+                // 1. Secure Cashout
+                const { data: cashoutData, error: cashoutError } = await supabase.functions.invoke('cashout-bet', {
+                    body: { bet_id: betId, cashout_at: winMult }
+                });
 
-                if (betData) {
-                    const { data: userData } = await supabase
-                        .from('users')
-                        .select('id, balance')
-                        .eq('wallet_address', address)
-                        .single();
-                    if (userData) {
-                        await supabase
-                            .from('users')
-                            .update({ balance: Number(userData.balance) + winAmount })
-                            .eq('id', userData.id);
-                    }
-                    supabase.functions.invoke('process-payout', { body: { bet_id: betData.id } })
-                        .catch(e => console.error("Payout trigger error:", e));
+                if (cashoutError || !cashoutData?.success) {
+                    console.error("Cashout securely failed:", cashoutError || cashoutData);
+                    return; // Reverting optimistic UI on failure could be implemented here
                 }
+
+                // 2. Trigger Blockchain Payout
+                supabase.functions.invoke('process-payout', { body: { bet_id: betId } })
+                    .catch(e => console.error("Payout trigger error:", e));
+
             } catch (error: any) {
                 console.error("Cash out DB sync error:", error);
             }

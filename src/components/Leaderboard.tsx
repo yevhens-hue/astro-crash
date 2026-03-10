@@ -19,6 +19,8 @@ export default function Leaderboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchLeaderboard = async () => {
             try {
                 // Fetch top 10 winners
@@ -31,6 +33,8 @@ export default function Leaderboard() {
 
                 if (error) throw error;
 
+                if (!isMounted) return;
+
                 const processed: LeaderboardEntry[] = (bets || []).map((b: any, i: number) => ({
                     rank: i + 1,
                     user: b.users?.wallet_address ? `@${b.users.wallet_address.slice(0, 6)}...${b.users.wallet_address.slice(-4)}` : 'Unknown',
@@ -42,19 +46,36 @@ export default function Leaderboard() {
             } catch (e) {
                 console.error("Leaderboard fetch failed:", e);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
         fetchLeaderboard();
 
-        // Polling for updates every 30s
-        const interval = setInterval(fetchLeaderboard, 30000);
-        return () => clearInterval(interval);
+        // Subscribe to real-time changes
+        const channel = supabase
+            .channel('leaderboard_updates')
+            .on('postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'bets',
+                    filter: 'status=eq.cashed'
+                },
+                () => {
+                    // Refetch totally on update to preserve accurate ordering/ranks
+                    fetchLeaderboard();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(channel);
+        };
     }, []);
 
-    // Placeholder for myRank until dynamic fetching is implemented for it
-    // The instruction only provided fetching logic for topPlayers.
+    // Future enhancement: Fetch the user's actual rank dynamically instead of placeholder
     useEffect(() => {
         setMyRank({ rank: 142, user: '@Bhavish_R', profit: '12.5 TON', multiplier: '2.1x', isMe: true });
     }, []);

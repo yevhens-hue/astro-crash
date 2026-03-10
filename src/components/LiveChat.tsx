@@ -5,6 +5,7 @@ import { useTonWallet } from '@tonconnect/ui-react';
 import { Send, MessageSquare, Smile, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { useTelegram } from '@/hooks/useTelegram';
 
 interface Message {
     id: string;
@@ -33,6 +34,7 @@ export default function LiveChat() {
     const [flyingEmojis, setFlyingEmojis] = useState<FlyingEmoji[]>([]);
     const [activeRain, setActiveRain] = useState<RainReward | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const { user } = useTelegram();
     const wallet = useTonWallet();
 
     const hypeEmojis = ['🚀', '💎', '🔥', '🙌', '🤑'];
@@ -75,7 +77,14 @@ export default function LiveChat() {
         const msgText = text.trim();
         if (!msgText) return;
 
-        const userName = wallet?.account.address ? `@${wallet.account.address.slice(0, 4)}...` : '@Guest';
+        let userName = '@Guest';
+        if (user?.username) {
+            userName = `@${user.username}`;
+        } else if (user?.first_name) {
+            userName = user.first_name;
+        } else if (wallet?.account.address) {
+            userName = `@${wallet.account.address.slice(0, 4)}...`;
+        }
 
         await supabase.from('messages').insert({
             username: userName,

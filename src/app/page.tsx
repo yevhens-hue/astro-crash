@@ -308,7 +308,7 @@ export default function Page() {
     } else {
       setBalance(0);
     }
-  }, [wallet, address]);
+  }, [address]);
 
   const handleDeposit = useCallback(async (amount: number) => {
     if (!wallet) throw new Error("Please connect your wallet first");

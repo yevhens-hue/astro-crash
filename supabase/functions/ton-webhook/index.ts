@@ -19,15 +19,58 @@ serve(async (req) => {
 
     const { tx_hash, amount, sender, type } = await req.json()
 
-    // 1. Verify transaction via TonCenter API (Testnet or Mainnet)
-    // const TON_API_URL = "https://testnet.toncenter.com/api/v2/getTransactions";
-    // const response = await fetch(`${TON_API_URL}?address=${Deno.env.get('HOUSE_WALLET')}&limit=10`);
-    // ... verification logic ...
-    
     console.log(`Verifying ${type}: ${tx_hash} from ${sender}`);
 
+    // House Wallet Address
+    const HOUSE_WALLET = "UQB0ZVYU321cleF9B5TwQc0KZ3h2L2sIAwPrQFODCWHPDoFA";
+
+    // 1. Verify transaction via TonCenter API
+    // Using mainnet for production
+    const TON_API_URL = "https://toncenter.com/api/v2/getTransactions";
+    const response = await fetch(`${TON_API_URL}?address=${HOUSE_WALLET}&limit=20`);
+    
+    if (!response.ok) {
+        throw new Error("TonCenter API error: " + response.statusText);
+    }
+    
+    const tonData = await response.json();
+    
+    // Find the matching transaction by hash
+    // Note: tx_hash passed by client might need formatting depending on how it's generated, 
+    // but assuming standard base64/hex match for now
+    const onChainTx = tonData.result?.find((tx: any) => tx.transaction_id.hash === tx_hash);
+    
+    if (!onChainTx) {
+        throw new Error("Transaction hash not found on-chain");
+    }
+
+    // Verify amount (TonCenter returns in nanoTON for in_msg)
+    const inMsg = onChainTx.in_msg;
+    if (!inMsg || inMsg.source !== sender) {
+        throw new Error("Transaction mismatch: sender does not match");
+    }
+
+    // Amount comes in as a string of nanoTONs
+    const onChainAmount = parseFloat(inMsg.value) / 1e9;
+    
+    // Allow small rounding differences but basically verify they match
+    if (Math.abs(onChainAmount - amount) > 0.01) {
+        throw new Error(`Amount mismatch: claimed ${amount}, actual ${onChainAmount}`);
+    }
+
     if (type === 'deposit') {
-      // Update user balance
+      // 2. Prevent double-crediting
+      const { data: existingTx } = await supabaseClient
+        .from('transactions')
+        .select('id')
+        .eq('tx_hash', tx_hash)
+        .single();
+        
+      if (existingTx) {
+          throw new Error("Transaction already processed");
+      }
+
+      // 3. Update user balance
       const { data: user, error: userError } = await supabaseClient
         .from('users')
         .select('balance, id')
@@ -37,15 +80,16 @@ serve(async (req) => {
       if (!userError && user) {
         await supabaseClient
           .from('users')
-          .update({ balance: user.balance + amount })
+          .update({ balance: Number(user.balance) + onChainAmount })
           .eq('id', user.id)
           
         await supabaseClient.from('transactions').insert({
           user_id: user.id,
-          amount: amount,
+          amount: onChainAmount,
           type: 'deposit',
           status: 'completed',
-          tx_hash: tx_hash
+          tx_hash: tx_hash,
+          wallet_address: sender
         })
       }
     } else if (type === 'bet_confirmation') {
