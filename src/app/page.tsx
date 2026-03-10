@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTonWallet, TonConnectButton, useTonConnectUI } from '@tonconnect/ui-react';
-import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft, X, Loader2, Shield, Send, Volume2, VolumeX } from 'lucide-react';
 import { FEATURE_FLAGS } from '@/lib/flags';
 import { supabase } from '@/lib/supabase';
 import CrashGame from '@/components/CrashGame';
@@ -11,12 +11,245 @@ import ReferralSystem from '@/components/ReferralSystem';
 import LiveChat from '@/components/LiveChat';
 import Leaderboard from '@/components/Leaderboard';
 
+// ─── Modal Component ──────────────────────────────────────────────────────────
+function TxModal({
+  type,
+  balance,
+  onClose,
+  onConfirm,
+}: {
+  type: 'deposit' | 'withdraw';
+  balance: number;
+  onClose: () => void;
+  onConfirm: (amount: number) => Promise<void>;
+}) {
+  const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const isDeposit = type === 'deposit';
+  const presets = isDeposit ? [0.5, 1, 2, 5] : [0.5, 1, Math.min(2, balance), Math.min(5, balance)].filter((v, i, a) => a.indexOf(v) === i);
+
+  const handleConfirm = async () => {
+    const val = parseFloat(amount);
+    if (!val || val <= 0) { setError('Enter a valid amount'); return; }
+    if (!isDeposit && val > balance) { setError('Insufficient balance'); return; }
+    if (val < 0.1) { setError('Minimum 0.1 TON'); return; }
+    setError('');
+    setLoading(true);
+    try {
+      await onConfirm(val);
+      onClose();
+    } catch (e: any) {
+      setError(e.message || 'Transaction failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="w-full max-w-sm bg-[#111] border border-white/10 rounded-t-[2rem] p-6 pb-10 flex flex-col gap-5 animate-[slideUp_0.25s_ease]">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${isDeposit ? 'bg-green-500/20' : 'bg-gold/20'}`}>
+              {isDeposit
+                ? <ArrowDownLeft className="w-5 h-5 text-green-400" />
+                : <ArrowUpRight className="w-5 h-5 text-gold" />
+              }
+            </div>
+            <div>
+              <h3 className="text-base font-black uppercase tracking-tight">
+                {isDeposit ? 'Deposit TON' : 'Withdraw TON'}
+              </h3>
+              {!isDeposit && (
+                <p className="text-[10px] text-white/40 font-bold">
+                  Available: {balance.toFixed(2)} TON
+                </p>
+              )}
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+            <X className="w-5 h-5 text-white/40" />
+          </button>
+        </div>
+
+        {/* Amount Input */}
+        <div className="bg-black/40 rounded-2xl p-4 border border-white/5 flex flex-col gap-2">
+          <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Amount (TON)</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => { setAmount(e.target.value); setError(''); }}
+              className="flex-1 bg-transparent text-3xl font-black text-white outline-none placeholder:text-white/20"
+              autoFocus
+            />
+            <span className="text-sm font-black text-white/30">TON</span>
+          </div>
+        </div>
+
+        {/* Presets */}
+        <div className="flex gap-2">
+          {presets.map((p) => (
+            <button
+              key={p}
+              onClick={() => { setAmount(p.toString()); setError(''); }}
+              className="flex-1 py-2 text-[11px] font-black uppercase rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-white/60"
+            >
+              {p} TON
+            </button>
+          ))}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <p className="text-[11px] font-bold text-red-400 text-center">{error}</p>
+        )}
+
+        {/* Confirm */}
+        <button
+          onClick={handleConfirm}
+          disabled={loading || !amount}
+          className={`gold-button w-full py-4 text-base rounded-2xl flex items-center justify-center gap-2 ${(loading || !amount) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          {loading ? 'Processing...' : isDeposit ? 'Deposit' : 'Withdraw'}
+        </button>
+
+        {isDeposit && (
+          <p className="text-[9px] text-white/20 text-center font-bold uppercase tracking-widest">
+            TON will be credited after blockchain confirmation
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Burger Menu Component ──────────────────────────────────────────────────
+function BurgerMenu({
+  isOpen,
+  onClose,
+  balance,
+  address,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  balance: number;
+  address: string | null;
+}) {
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={onClose}
+      />
+
+      {/* Drawer */}
+      <div
+        className={`fixed right-0 top-0 bottom-0 z-[70] w-full max-w-[280px] bg-[#0a0a0a] border-l border-white/10 shadow-2xl transition-transform duration-300 ease-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        <div className="flex flex-col h-full p-6">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-xl font-black uppercase italic gold-text">Menu</h3>
+            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
+              <X className="w-6 h-6 text-white/40" />
+            </button>
+          </div>
+
+          {/* User Profile Summary */}
+          <div className="glass-card p-4 mb-6 border-white/10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center text-black font-bold">
+                {address ? address.slice(2, 4).toUpperCase() : 'G'}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none">Status</span>
+                <span className="text-xs font-black text-white italic">Elite Explorer</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-end">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Total Balance</span>
+                <span className="text-lg font-black gold-text leading-none">{balance.toFixed(2)} TON</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Menu Items */}
+          <div className="flex flex-col gap-2 flex-1">
+            <button className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left">
+              <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
+                <Shield className="w-5 h-5 text-blue-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">Provably Fair</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">Verify Every Round</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
+            >
+              <div className="p-2 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
+                {soundEnabled ? <Volume2 className="w-5 h-5 text-purple-400" /> : <VolumeX className="w-5 h-5 text-white/40" />}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">Audio Effects</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">{soundEnabled ? 'Enabled' : 'Muted'}</span>
+              </div>
+            </button>
+
+            <a
+              href="https://t.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group"
+            >
+              <div className="p-2 bg-gold/10 rounded-xl group-hover:bg-gold/20 transition-colors">
+                <Send className="w-5 h-5 text-gold" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">Telegram Stats</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">Join Community</span>
+              </div>
+            </a>
+          </div>
+
+          {/* Bottom Footer */}
+          <div className="mt-auto pt-6 border-t border-white/5">
+            {!address?.includes('guest') && <TonConnectButton />}
+            <p className="text-[8px] text-white/20 text-center mt-4 uppercase font-bold tracking-[0.3em]">
+              Astro Hub v1.0.4
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Page() {
   const [balance, setBalance] = useState<number>(0);
   const wallet = useTonWallet();
   const [activeTab, setActiveTab] = useState<'home' | 'referral' | 'leaderboard' | 'chat'>('home');
   const [activeGame, setActiveGame] = useState<'crash' | 'slots'>('crash');
   const [tonConnectUI] = useTonConnectUI();
+  const [txModal, setTxModal] = useState<'deposit' | 'withdraw' | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
 
@@ -77,75 +310,65 @@ export default function Page() {
     }
   }, [wallet, address]);
 
-  const handleDeposit = async () => {
-    if (!wallet) {
-      alert("Please connect your wallet first!");
-      return;
-    }
+  const handleDeposit = useCallback(async (amount: number) => {
+    if (!wallet) throw new Error("Please connect your wallet first");
 
-    const amount = prompt("Enter amount to deposit (TON):", "1.0");
-    if (!amount || isNaN(parseFloat(amount))) return;
+    const amountInNano = (amount * 1e9).toString();
+    const transaction = {
+      validUntil: Math.floor(Date.now() / 1000) + 60,
+      messages: [{ address: FEATURE_FLAGS.HOUSE_WALLET, amount: amountInNano }],
+    };
 
-    try {
-      const amountInNano = (parseFloat(amount) * 1e9).toString();
-      const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 60,
-        messages: [{ address: FEATURE_FLAGS.HOUSE_WALLET, amount: amountInNano }],
-      };
-
-      const sentTx = await tonConnectUI.sendTransaction(transaction);
-      if (sentTx) {
-        // Optimistically update balance for testing/demo if GUEST_MODE is active
-        if (FEATURE_FLAGS.GUEST_MODE && address) {
-          const { data: userData } = await supabase
-            .from('users')
-            .select('id, balance')
-            .eq('wallet_address', address)
-            .single();
-
-          if (userData) {
-            await supabase
-              .from('users')
-              .update({ balance: Number(userData.balance) + parseFloat(amount) })
-              .eq('id', userData.id);
-          }
-        }
-        alert("Deposit transaction sent! Balance will update (Test Mode).");
+    const sentTx = await tonConnectUI.sendTransaction(transaction);
+    if (sentTx && FEATURE_FLAGS.GUEST_MODE && address) {
+      // Optimistic balance update for guest/demo mode
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id, balance')
+        .eq('wallet_address', address)
+        .single();
+      if (userData) {
+        await supabase
+          .from('users')
+          .update({ balance: Number(userData.balance) + amount })
+          .eq('id', userData.id);
       }
-    } catch (e) {
-      console.error("Deposit failed:", e);
     }
-  };
+  }, [wallet, tonConnectUI, address]);
 
-  const handleWithdraw = async () => {
-    if (!wallet) {
-      alert("Please connect your wallet first!");
-      return;
+  const handleWithdraw = useCallback(async (amount: number) => {
+    if (!wallet) throw new Error("Please connect your wallet first");
+    if (amount > balance) throw new Error("Insufficient balance");
+
+    const response = await supabase.functions.invoke('process-withdrawal', {
+      body: { amount, wallet_address: wallet.account.address }
+    });
+
+    if (!response.data?.success) {
+      throw new Error(response.error?.message || response.data?.error || "Withdrawal failed");
     }
-
-    const amount = prompt("Enter amount to withdraw (TON):", "1.0");
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) > balance) {
-      alert("Invalid amount or insufficient balance");
-      return;
-    }
-
-    try {
-      const response = await supabase.functions.invoke('process-withdrawal', {
-        body: { amount: parseFloat(amount), wallet_address: wallet.account.address }
-      });
-
-      if (response.data?.success) {
-        alert(`Withdrawal of ${amount} TON initiated!`);
-      } else {
-        alert(`Withdrawal failed: ${response.error?.message || "Internal error"}`);
-      }
-    } catch (e) {
-      console.error("Withdrawal failed:", e);
-    }
-  };
+  }, [wallet, balance]);
 
   return (
     <main className="flex-1 flex flex-col p-4 gap-6 min-h-screen bg-black text-white">
+      {/* Deposit / Withdraw Modal */}
+      {txModal && (
+        <TxModal
+          type={txModal}
+          balance={balance}
+          onClose={() => setTxModal(null)}
+          onConfirm={txModal === 'deposit' ? handleDeposit : handleWithdraw}
+        />
+      )}
+
+      {/* Burger Menu drawer */}
+      <BurgerMenu
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        balance={balance}
+        address={address}
+      />
+
       {/* Header */}
       <header className="flex justify-between items-center pt-2">
         <div className="flex items-center gap-2">
@@ -157,10 +380,12 @@ export default function Page() {
           </div>
         </div>
         <div className="flex gap-4 items-center">
-          <a href="/local" className="px-2 py-1 bg-blue-600 rounded text-[8px] text-white uppercase font-bold animate-pulse shadow-lg shadow-blue-500/20">LIVE TEST PAGE</a>
-          <div className="p-2 glass-card border-none hover:bg-white/10 transition-colors">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="p-2 glass-card border-none hover:bg-white/10 transition-colors"
+          >
             <Menu className="w-6 h-6" />
-          </div>
+          </button>
         </div>
       </header>
 
@@ -194,15 +419,15 @@ export default function Page() {
         {address && (
           <div className="flex gap-3 mt-6 w-full">
             <button
-              onClick={handleDeposit}
-              className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center gap-2 transition-all border border-white/5"
+              onClick={() => setTxModal('deposit')}
+              className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center gap-2 transition-all border border-white/5 active:scale-95"
             >
               <ArrowDownLeft className="w-4 h-4 text-green-400" />
               <span className="text-xs font-bold uppercase">Deposit</span>
             </button>
             <button
-              onClick={handleWithdraw}
-              className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center gap-2 transition-all border border-white/5"
+              onClick={() => setTxModal('withdraw')}
+              className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center gap-2 transition-all border border-white/5 active:scale-95"
             >
               <ArrowUpRight className="w-4 h-4 text-gold" />
               <span className="text-xs font-bold uppercase">Withdraw</span>
@@ -213,10 +438,10 @@ export default function Page() {
 
       {/* Navigation Tabs */}
       <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5">
-        {['home', 'referral', 'leaderboard', 'chat'].map((tab) => (
+        {(['home', 'referral', 'leaderboard', 'chat'] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab as any)}
+            onClick={() => setActiveTab(tab)}
             className={`flex-1 py-3 px-2 rounded-xl flex flex-col items-center gap-1 transition-all ${activeTab === tab ? 'bg-gold text-black shadow-gold' : 'text-white/40 hover:text-white/60'}`}
           >
             {tab === 'home' && <Home className="w-5 h-5" />}
@@ -290,6 +515,13 @@ export default function Page() {
         {activeTab === 'leaderboard' && <Leaderboard />}
         {activeTab === 'chat' && <LiveChat />}
       </div>
+
+      <style jsx global>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
     </main>
   );
 }

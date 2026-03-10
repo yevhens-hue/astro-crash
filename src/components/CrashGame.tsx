@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rocket, Users, TrendingUp } from 'lucide-react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
@@ -37,9 +37,9 @@ export default function CrashGame({
     const [countdown, setCountdown] = useState<number | null>(null);
     const [betAmountA, setBetAmountA] = useState<number>(0.1);
     const [betAmountB, setBetAmountB] = useState<number>(0.1);
-    const [autoPlayA, setAutoPlayA] = useState(false);
-    const [autoPlayB, setAutoPlayB] = useState(false);
-    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string }>([]);
+    const [isAutoCashA, setIsAutoCashA] = useState(false);
+    const [isAutoCashB, setIsAutoCashB] = useState(false);
+    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string }[]>([]);
     const [activeTab, setActiveTab] = useState<'all' | 'my' | 'top'>('all');
     const [allBets, setAllBets] = useState<any[]>([]);
     const [myBets, setMyBets] = useState<any[]>([]);
@@ -49,6 +49,8 @@ export default function CrashGame({
     const multiplierRef = useRef(1.00);
     const autoCashoutRefA = useRef<number>(2.00);
     const autoCashoutRefB = useRef<number>(2.00);
+    const isAutoCashRefA = useRef(false);
+    const isAutoCashRefB = useRef(false);
     const requestRef = useRef<number | null>(null);
     const startTimeRef = useRef<number | null>(null);
     const betStatusRefA = useRef<'none' | 'betting' | 'cashed'>('none');
@@ -86,6 +88,11 @@ export default function CrashGame({
             supabase.removeChannel(channel);
         };
     }, [wallet]);
+
+    useEffect(() => {
+        isAutoCashRefA.current = isAutoCashA;
+        isAutoCashRefB.current = isAutoCashB;
+    }, [isAutoCashA, isAutoCashB]);
 
     const fetchBets = async () => {
         // All bets
@@ -245,6 +252,20 @@ export default function CrashGame({
                 // For now, let's subtract immediately since it's "BET PLACED"
                 if (onBalanceUpdate) onBalanceUpdate(prev => prev - amount);
             }
+
+            // Move this after balance subtraction to ensure UI shows bet from both panels
+            if (address === 'guest_test_wallet') {
+                const guestBet = {
+                    id: panel === 'A' ? currentBetIdRefA.current : currentBetIdRefB.current,
+                    user_id: userId,
+                    amount: amount,
+                    status: 'confirmed',
+                    created_at: new Date().toISOString(),
+                    users: { wallet_address: "Guest Explorer" }
+                };
+                setAllBets(prev => [guestBet, ...prev].slice(0, 10));
+                setLocalMyBets(prev => [guestBet, ...prev].slice(0, 10));
+            }
         } catch (e: any) {
             console.error("Bet failed:", e);
             alert(`Bet failed: ${e.message || 'Check connection'}`);
@@ -296,10 +317,10 @@ export default function CrashGame({
                 }
 
                 // Auto cashout checks
-                if (betStatusRefA.current === 'betting' && newMultiplier >= autoCashoutRefA.current) {
+                if (isAutoCashRefA.current && betStatusRefA.current === 'betting' && newMultiplier >= autoCashoutRefA.current) {
                     cashOut('A');
                 }
-                if (betStatusRefB.current === 'betting' && newMultiplier >= autoCashoutRefB.current) {
+                if (isAutoCashRefB.current && betStatusRefB.current === 'betting' && newMultiplier >= autoCashoutRefB.current) {
                     cashOut('B');
                 }
 
@@ -334,6 +355,12 @@ export default function CrashGame({
         setTimeout(fetchRecentRounds, 1000);
     };
 
+    const autoStartRound = useCallback(() => {
+        // Generate a fresh local round when no bet was placed
+        const crashAt = Math.max(1.05, 0.99 / (1 - Math.random()));
+        startLaunchSequence(crashAt);
+    }, []);
+
     const startCountdown = (seconds: number) => {
         setCountdown(seconds);
         if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
@@ -342,7 +369,8 @@ export default function CrashGame({
             setCountdown(prev => {
                 if (prev !== null && prev <= 1) {
                     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-                    return null;
+                    // Use 0 as sentinel so the effect below can detect "just finished"
+                    return 0;
                 }
                 return prev !== null ? prev - 1 : null;
             });
@@ -375,18 +403,21 @@ export default function CrashGame({
         betStatusRef.current = 'cashed';
         if (onBalanceUpdate) onBalanceUpdate(prev => prev + winAmount);
 
-        // Track in local session history (for My Bets tab in guest mode)
-        setLocalMyBets(prev => [{
-            id: `local_${Date.now()}`,
-            amount,
-            cashout_at: winMult,
-            win_amount: winAmount,
-            status: 'cashed',
-            created_at: new Date().toISOString()
-        }, ...prev].slice(0, 10));
-
         const betId = currentBetIdRef.current;
         currentBetIdRef.current = null;
+
+        setLocalMyBets(prev => prev.map(b =>
+            b.id === betId
+                ? { ...b, status: 'cashed', cashout_at: winMult, win_amount: winAmount }
+                : b
+        ));
+
+        // Also update allBets feed for immediate UI feedback in guest/debug mode
+        setAllBets(prev => prev.map(b =>
+            b.id === betId
+                ? { ...b, status: 'cashed', cashout_at: winMult, win_amount: winAmount }
+                : b
+        ));
 
         // All DB operations deferred — won't block UI thread
         setTimeout(async () => {
@@ -421,21 +452,18 @@ export default function CrashGame({
     };
 
     useEffect(() => {
-        // Auto Play trigger or start pending round
-        if (countdown === null && !isFlying && pendingCrashAtRef.current !== null) {
+        if (countdown !== 0) return;
+
+        // countdown just hit 0
+        setCountdown(null);
+        if (pendingCrashAtRef.current !== null) {
             startLaunchSequence(pendingCrashAtRef.current);
             pendingCrashAtRef.current = null;
+        } else {
+            // Stop automatic demo rounds as requested
+            console.log("Countdown ended, no bets placed. Waiting for manual bet.");
         }
-
-        if (countdown === 0) {
-            if (autoPlayA && betStatusRefA.current === 'none') {
-                handlePlaceBet('A');
-            }
-            if (autoPlayB && betStatusRefB.current === 'none') {
-                handlePlaceBet('B');
-            }
-        }
-    }, [countdown, autoPlayA, autoPlayB, isFlying]);
+    }, [countdown]);
 
     useEffect(() => {
         return () => {
@@ -608,10 +636,10 @@ export default function CrashGame({
                         status={betStatusA}
                         amount={betAmountA}
                         autoCashout={autoCashoutA}
-                        autoPlay={autoPlayA}
+                        isAutoCash={isAutoCashA}
                         onAdjust={(d) => adjustBet('A', d)}
                         onAutoCashoutChange={setAutoCashoutA}
-                        onAutoPlayToggle={() => setAutoPlayA(!autoPlayA)}
+                        onAutoCashToggle={() => setIsAutoCashA(!isAutoCashA)}
                         onPlaceBet={() => handlePlaceBet('A')}
                         onCashOut={() => cashOut('A')}
                         isFlying={isFlying}
@@ -622,10 +650,10 @@ export default function CrashGame({
                         status={betStatusB}
                         amount={betAmountB}
                         autoCashout={autoCashoutB}
-                        autoPlay={autoPlayB}
+                        isAutoCash={isAutoCashB}
                         onAdjust={(d) => adjustBet('B', d)}
                         onAutoCashoutChange={setAutoCashoutB}
-                        onAutoPlayToggle={() => setAutoPlayB(!autoPlayB)}
+                        onAutoCashToggle={() => setIsAutoCashB(!isAutoCashB)}
                         onPlaceBet={() => handlePlaceBet('B')}
                         onCashOut={() => cashOut('B')}
                         isFlying={isFlying}
@@ -668,7 +696,7 @@ export default function CrashGame({
                                 status={bet.status}
                             />
                         ))}
-                        {activeTab === 'my' && myBets.map((bet) => (
+                        {activeTab === 'my' && [...localMyBets, ...myBets].slice(0, 10).map((bet) => (
                             <LiveWinRow
                                 key={bet.id}
                                 user="Me"
@@ -701,18 +729,18 @@ export default function CrashGame({
 }
 
 function BettingPanel({
-    panel, status, amount, autoCashout, autoPlay,
-    onAdjust, onAutoCashoutChange, onAutoPlayToggle,
+    panel, status, amount, autoCashout, isAutoCash,
+    onAdjust, onAutoCashoutChange, onAutoCashToggle,
     onPlaceBet, onCashOut, isFlying, isBetting
 }: {
     panel: 'A' | 'B',
     status: 'none' | 'betting' | 'cashed',
     amount: number,
     autoCashout: number,
-    autoPlay: boolean,
+    isAutoCash: boolean,
     onAdjust: (d: number) => void,
     onAutoCashoutChange: (v: number) => void,
-    onAutoPlayToggle: () => void,
+    onAutoCashToggle: () => void,
     onPlaceBet: () => void,
     onCashOut: () => void,
     isFlying: boolean,
@@ -745,8 +773,8 @@ function BettingPanel({
                     <div className="flex justify-between items-center">
                         <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Auto Cash</span>
                         <button
-                            onClick={onAutoPlayToggle}
-                            className={`text-[10px] font-black px-3 py-1 rounded-lg ${autoPlay ? 'bg-gold text-black shadow-gold' : 'bg-white/10 text-white/40'} transition-all`}
+                            onClick={onAutoCashToggle}
+                            className={`text-[10px] font-black px-3 py-1 rounded-lg ${isAutoCash ? 'bg-gold text-black shadow-gold' : 'bg-white/10 text-white/40'} transition-all`}
                         >
                             AUTO
                         </button>
