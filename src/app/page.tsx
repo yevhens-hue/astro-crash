@@ -339,13 +339,18 @@ export default function Page() {
         // Production: Poll backend to verify transaction via TonCenter
         let attempts = 0;
         const pollVerification = async () => {
-          if (attempts >= 4) return; // Stop after ~40s
+          if (attempts >= 10) {
+            alert('Network is busy. Your deposit is still confirming on the blockchain and will appear in your balance automatically soon.');
+            return;
+          }
           attempts++;
           try {
             const res = await supabase.functions.invoke('ton-webhook', {
               body: { sender: address, amount: amount, type: 'deposit' }
             });
-            if (!res.data?.success) {
+            if (res.data?.success) {
+              alert(`Deposit Confirmed! +${amount} TON added to your balance.`);
+            } else {
               setTimeout(pollVerification, 10000); // Retry in 10s if not found yet
             }
           } catch (e) {
