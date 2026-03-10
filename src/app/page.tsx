@@ -321,18 +321,39 @@ export default function Page() {
     };
 
     const sentTx = await tonConnectUI.sendTransaction(transaction);
-    if (sentTx && FEATURE_FLAGS.GUEST_MODE && address) {
-      // Optimistic balance update for guest/demo mode
-      const { data: userData } = await supabase
-        .from('users')
-        .select('id, balance')
-        .eq('wallet_address', address)
-        .single();
-      if (userData) {
-        await supabase
+    if (sentTx) {
+      if (FEATURE_FLAGS.GUEST_MODE && address) {
+        // Optimistic balance update for guest/demo mode
+        const { data: userData } = await supabase
           .from('users')
-          .update({ balance: Number(userData.balance) + amount })
-          .eq('id', userData.id);
+          .select('id, balance')
+          .eq('wallet_address', address)
+          .single();
+        if (userData) {
+          await supabase
+            .from('users')
+            .update({ balance: Number(userData.balance) + amount })
+            .eq('id', userData.id);
+        }
+      } else if (address) {
+        // Production: Poll backend to verify transaction via TonCenter
+        let attempts = 0;
+        const pollVerification = async () => {
+          if (attempts >= 4) return; // Stop after ~40s
+          attempts++;
+          try {
+            const res = await supabase.functions.invoke('ton-webhook', {
+              body: { sender: address, amount: amount, type: 'deposit' }
+            });
+            if (!res.data?.success) {
+              setTimeout(pollVerification, 10000); // Retry in 10s if not found yet
+            }
+          } catch (e) {
+            setTimeout(pollVerification, 10000);
+          }
+        };
+        // Wait 10s for the first block confirmation before checking
+        setTimeout(pollVerification, 10000);
       }
     }
   }, [wallet, tonConnectUI, address]);

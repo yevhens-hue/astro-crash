@@ -35,35 +35,51 @@ serve(async (req) => {
     
     const tonData = await response.json();
     
-    // Find the matching transaction by hash
-    // Note: tx_hash passed by client might need formatting depending on how it's generated, 
-    // but assuming standard base64/hex match for now
-    const onChainTx = tonData.result?.find((tx: any) => tx.transaction_id.hash === tx_hash);
+    // Find the matching transaction
+    let onChainTx = null;
+    let finalTxHash = tx_hash;
+
+    for (const tx of tonData.result || []) {
+        // Skip outgoing messages
+        if (!tx.in_msg) continue;
+        
+        const val = parseFloat(tx.in_msg.value) / 1e9;
+        
+        // 1. Match by exact tx_hash if provided
+        if (finalTxHash && tx.transaction_id.hash === finalTxHash) {
+            onChainTx = tx;
+            break;
+        }
+
+        // 2. Or match by approximate amount (within 0.01 TON due to gas) if no tx_hash provided
+        if (!finalTxHash && Math.abs(val - amount) <= 0.01) {
+            // Ensure this transaction hasn't been credited yet
+            const { data: existing } = await supabaseClient
+                .from('transactions')
+                .select('id')
+                .eq('tx_hash', tx.transaction_id.hash)
+                .single();
+                
+            if (!existing) {
+                onChainTx = tx;
+                finalTxHash = tx.transaction_id.hash;
+                break;
+            }
+        }
+    }
     
     if (!onChainTx) {
-        throw new Error("Transaction hash not found on-chain");
+        throw new Error("Deposit transaction not found on-chain yet or already processed.");
     }
 
-    // Verify amount (TonCenter returns in nanoTON for in_msg)
-    const inMsg = onChainTx.in_msg;
-    if (!inMsg || inMsg.source !== sender) {
-        throw new Error("Transaction mismatch: sender does not match");
-    }
-
-    // Amount comes in as a string of nanoTONs
-    const onChainAmount = parseFloat(inMsg.value) / 1e9;
-    
-    // Allow small rounding differences but basically verify they match
-    if (Math.abs(onChainAmount - amount) > 0.01) {
-        throw new Error(`Amount mismatch: claimed ${amount}, actual ${onChainAmount}`);
-    }
+    const onChainAmount = parseFloat(onChainTx.in_msg.value) / 1e9;
 
     if (type === 'deposit') {
       // 2. Prevent double-crediting
       const { data: existingTx } = await supabaseClient
         .from('transactions')
         .select('id')
-        .eq('tx_hash', tx_hash)
+        .eq('tx_hash', finalTxHash)
         .single();
         
       if (existingTx) {
@@ -88,7 +104,7 @@ serve(async (req) => {
           amount: onChainAmount,
           type: 'deposit',
           status: 'completed',
-          tx_hash: tx_hash,
+          tx_hash: finalTxHash,
           wallet_address: sender
         })
       }
@@ -96,17 +112,17 @@ serve(async (req) => {
        await supabaseClient
         .from('bets')
         .update({ status: 'confirmed' })
-        .eq('tx_hash', tx_hash)
+        .eq('tx_hash', finalTxHash)
     }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
-  } catch (error) {
+  } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: 200,
     })
   }
 })
