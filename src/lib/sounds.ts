@@ -1,5 +1,13 @@
 export class SoundManager {
   private static ctx: AudioContext | null = null;
+  private static engineOsc: OscillatorNode | null = null;
+  private static engineGain: GainNode | null = null;
+  private static isMuted: boolean = false;
+
+  public static init(enabled: boolean) {
+    this.isMuted = !enabled;
+    if (!enabled) this.stopEngine();
+  }
 
   private static getCtx() {
     if (!this.ctx) {
@@ -12,6 +20,7 @@ export class SoundManager {
   }
 
   static playStart() {
+    if (this.isMuted) return;
     const ctx = this.getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -30,7 +39,52 @@ export class SoundManager {
     osc.stop(ctx.currentTime + 0.1);
   }
 
+  static startEngine() {
+    if (this.isMuted) return;
+    const ctx = this.getCtx();
+    if (this.engineOsc) this.stopEngine();
+
+    this.engineOsc = ctx.createOscillator();
+    this.engineGain = ctx.createGain();
+
+    this.engineOsc.type = 'sawtooth';
+    this.engineOsc.frequency.setValueAtTime(50, ctx.currentTime); // Low rumble
+
+    this.engineGain.gain.setValueAtTime(0.0, ctx.currentTime);
+    this.engineGain.gain.linearRampToValueAtTime(0.03, ctx.currentTime + 1);
+
+    this.engineOsc.connect(this.engineGain);
+    this.engineGain.connect(ctx.destination);
+    this.engineOsc.start();
+  }
+
+  static updateEngine(multiplier: number) {
+    if (this.isMuted || !this.engineOsc || !this.engineGain) return;
+    const ctx = this.getCtx();
+    
+    // Pitch goes up logarithmically with multiplier (e.g. 1x -> 50Hz, 10x -> 300Hz, 100x -> 800Hz)
+    const targetFreq = 50 + Math.log10(multiplier) * 400;
+    this.engineOsc.frequency.setTargetAtTime(targetFreq, ctx.currentTime, 0.1);
+    
+    // Slightly increase volume as it goes higher
+    const targetVol = Math.min(0.08, 0.03 + Math.log10(multiplier) * 0.03);
+    this.engineGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1);
+  }
+
+  static stopEngine() {
+    if (this.engineOsc) {
+      try { this.engineOsc.stop(); } catch(e) {}
+      this.engineOsc.disconnect();
+      this.engineOsc = null;
+    }
+    if (this.engineGain) {
+      this.engineGain.disconnect();
+      this.engineGain = null;
+    }
+  }
+
   static playClimb(multiplier: number) {
+    if (this.isMuted) return;
     const ctx = this.getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -49,6 +103,8 @@ export class SoundManager {
   }
 
   static playCrash() {
+    this.stopEngine();
+    if (this.isMuted) return;
     const ctx = this.getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -81,6 +137,7 @@ export class SoundManager {
   }
 
   static playWin() {
+    if (this.isMuted) return;
     const ctx = this.getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();

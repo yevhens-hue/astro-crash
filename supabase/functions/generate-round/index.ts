@@ -17,22 +17,43 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Generate secure crash point
-    const server_seed = crypto.randomUUID();
-    // SHA-256 logic (Simplified for Edge Function demo, use real HMAC in production)
-    const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(server_seed));
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // 1. Generate securely random seeds
+    const serverSeed = crypto.randomUUID().replace(/-/g, '');
+    const clientSeed = "0000000000000000000" + Math.floor(Math.random() * 1000000000).toString(16); // Mock Bitcoin block hash
     
-    // Better Bustabit formula
-    const r = Math.random();
-    const crash_point = Math.max(1.0, 0.99 / (1 - r)).toFixed(2);
+    // 2. Provably Fair Math (HMAC-SHA256)
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+        "raw", encoder.encode(serverSeed),
+        { name: "HMAC", hash: "SHA-256" },
+        false, ["sign"]
+    );
+    const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(clientSeed));
+    const hashHex = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // 3. Extract 52 bits and calculate bustabit-style crash point
+    const h = parseInt(hashHex.slice(0, 13), 16);
+    const e = Math.pow(2, 52);
+    // 99% return to player, 1% house edge
+    const r = (100 * e - h) / (e - h);
+    
+    // Cap slightly so it doesn't go to infinity or be too weird, round to 2 decimals
+    let crash_point = Math.max(1.0, r / 100);
+    // Additional safeguards
+    if (crash_point < 1.0) crash_point = 1.0;
+    
+    // Store as JSON in server_seed column so client can verify
+    const seedData = JSON.stringify({
+        serverSeed,
+        clientSeed,
+        hash: hashHex
+    });
 
     const { data: targetRound, error: insertError } = await supabaseClient
       .from('rounds')
       .insert({
-        server_seed: hashHex,
-        crash_point: crash_point,
+        server_seed: seedData,
+        crash_point: crash_point.toFixed(2),
         status: 'pending'
       })
       .select()

@@ -10,6 +10,7 @@ import SlotMachine from '@/components/SlotMachine';
 import ReferralSystem from '@/components/ReferralSystem';
 import LiveChat from '@/components/LiveChat';
 import Leaderboard from '@/components/Leaderboard';
+import BalanceHistoryModal from '@/components/BalanceHistoryModal';
 
 // ─── Modal Component ──────────────────────────────────────────────────────────
 function TxModal({
@@ -17,13 +18,16 @@ function TxModal({
   balance,
   onClose,
   onConfirm,
+  defaultAddress,
 }: {
   type: 'deposit' | 'withdraw';
   balance: number;
   onClose: () => void;
-  onConfirm: (amount: number) => Promise<void>;
+  onConfirm: (amount: number, address?: string) => Promise<void>;
+  defaultAddress?: string;
 }) {
   const [amount, setAmount] = useState('');
+  const [recipientAddress, setRecipientAddress] = useState(defaultAddress || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -35,10 +39,12 @@ function TxModal({
     if (!val || val <= 0) { setError('Enter a valid amount'); return; }
     if (!isDeposit && val > balance) { setError('Insufficient balance'); return; }
     if (val < 0.1) { setError('Minimum 0.1 TON'); return; }
+    if (!isDeposit && !recipientAddress) { setError('Enter recipient address'); return; }
+    
     setError('');
     setLoading(true);
     try {
-      await onConfirm(val);
+      await onConfirm(val, recipientAddress);
       onClose();
     } catch (e: any) {
       setError(e.message || 'Transaction failed');
@@ -108,6 +114,20 @@ function TxModal({
           ))}
         </div>
 
+        {/* Recipient Address (Only for Withdraw) */}
+        {!isDeposit && (
+          <div className="bg-black/40 rounded-2xl p-4 border border-white/5 flex flex-col gap-2">
+            <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Recipient Address</span>
+            <input
+              type="text"
+              placeholder="UQ..."
+              value={recipientAddress}
+              onChange={(e) => { setRecipientAddress(e.target.value); setError(''); }}
+              className="bg-transparent text-sm font-bold text-white outline-none placeholder:text-white/20 break-all"
+            />
+          </div>
+        )}
+
         {/* Error */}
         {error && (
           <p className="text-[11px] font-bold text-red-400 text-center">{error}</p>
@@ -147,9 +167,11 @@ function BurgerMenu({
 }) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showProvablyTooltip, setShowProvablyTooltip] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   return (
     <>
+      <BalanceHistoryModal isOpen={showHistoryModal} onClose={() => setShowHistoryModal(false)} walletAddress={address || ''} />
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -210,9 +232,7 @@ function BurgerMenu({
             )}
 
             <button
-              onClick={() => {
-                alert("Balance History detailed view will be implemented in the next update. You can currently see your recent game bets in the 'My Bets' tab below the game.");
-              }}
+              onClick={() => setShowHistoryModal(true)}
               className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
             >
               <div className="p-2 bg-green-500/10 rounded-xl group-hover:bg-green-500/20 transition-colors">
@@ -265,6 +285,7 @@ export default function Page() {
   const [tonConnectUI] = useTonConnectUI();
   const [txModal, setTxModal] = useState<'deposit' | 'withdraw' | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
 
   const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
 
@@ -278,7 +299,7 @@ export default function Page() {
 
       const { data, error } = await supabase
         .from('users')
-        .select('balance, username')
+        .select('id, balance, username')
         .eq('wallet_address', userAddress)
         .single();
 
@@ -289,12 +310,13 @@ export default function Page() {
           await supabase
             .from('users')
             .update({
-              telegram_id: telegramId,
+              ...(telegramId ? { telegram_id: telegramId } : {}),
               ...(tgUsername ? { username: tgUsername } : {})
             })
-            .eq('wallet_address', userAddress);
+            .eq('id', data.id);
         }
-
+        setBalance(Number(data.balance));
+        if (data.username || tgUsername) setUsername(data.username || tgUsername);
         // Auto-recover any stuck deposits quietly in the background
         if (!FEATURE_FLAGS.GUEST_MODE) {
           supabase.functions.invoke('ton-webhook', {
@@ -308,15 +330,19 @@ export default function Page() {
       } else if (error && error.code === 'PGRST116') {
         // Enforce balance=0 in production to pass RLS, otherwise grant 10.0 for guest testing
         const initialBalance = FEATURE_FLAGS.GUEST_MODE ? 10.0 : 0.0;
-        await supabase
+        const { data: newData } = await supabase
           .from('users')
           .insert({
-            wallet_address: userAddress,
+            wallet_address: address,
             balance: initialBalance,
             telegram_id: telegramId,
             username: tgUsername
-          });
+          })
+          .select()
+          .single();
+
         setBalance(initialBalance);
+        if (tgUsername) setUsername(tgUsername);
       }
     };
 
@@ -397,16 +423,19 @@ export default function Page() {
     }
   }, [wallet, tonConnectUI, address]);
 
-  const handleWithdraw = useCallback(async (amount: number) => {
+  const handleWithdraw = useCallback(async (amount: number, customAddress?: string) => {
     if (!wallet) throw new Error("Please connect your wallet first");
     if (amount > balance) throw new Error("Insufficient balance");
+    
+    const targetAddress = customAddress || wallet.account.address;
+    if (!targetAddress) throw new Error("Recipient address is required");
 
     // Optimistically update the UI to feel instant
     setBalance(prev => prev - amount);
 
     try {
       const response = await supabase.functions.invoke('process-withdrawal', {
-        body: { amount, wallet_address: wallet.account.address }
+        body: { amount, wallet_address: targetAddress }
       });
 
       if (!response.data?.success) {
@@ -430,6 +459,7 @@ export default function Page() {
           balance={balance}
           onClose={() => setTxModal(null)}
           onConfirm={txModal === 'deposit' ? handleDeposit : handleWithdraw}
+          defaultAddress={wallet?.account.address}
         />
       )}
 
@@ -585,7 +615,7 @@ export default function Page() {
 
         {activeTab === 'referral' && <ReferralSystem />}
         {activeTab === 'leaderboard' && <Leaderboard />}
-        {activeTab === 'chat' && <LiveChat />}
+        {activeTab === 'chat' && <LiveChat currentUsername={username} />}
       </div>
 
       <style jsx global>{`

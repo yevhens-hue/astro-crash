@@ -7,6 +7,7 @@ import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { supabase } from '@/lib/supabase';
 import { SoundManager } from '@/lib/sounds';
 import { FEATURE_FLAGS } from '@/lib/flags';
+import ProvablyFairModal from '@/components/ProvablyFairModal';
 
 export default function CrashGame({
     balance = 0,
@@ -22,21 +23,27 @@ export default function CrashGame({
     const [isFlying, setIsFlying] = useState(false);
     const [isCrashed, setIsCrashed] = useState(false);
     const [betStatusA, setBetStatusA] = useState<'none' | 'betting' | 'cashed'>('none');
-    const [betStatusB, setBetStatusB] = useState<'none' | 'betting' | 'cashed'>('none');
     const [lastWin, setLastWin] = useState<number | null>(null);
     const [currentSeed, setCurrentSeed] = useState<string>('hash_sha256_waiting...');
-    const [autoCashoutA, setAutoCashoutA] = useState<number>(2.00);
-    const [autoCashoutB, setAutoCashoutB] = useState<number>(2.00);
     const [isBetting, setIsBetting] = useState(false);
     const [squadSize, setSquadSize] = useState(1);
     const [isSquadActive, setIsSquadActive] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
-    const [betAmountA, setBetAmountA] = useState<number>(0.1);
-    const [betAmountB, setBetAmountB] = useState<number>(0.1);
+
+    const [betAmountA, setBetAmountA] = useState(1.0);
+    const [autoCashoutA, setAutoCashoutA] = useState(2.0);
     const [isAutoCashA, setIsAutoCashA] = useState(false);
+    const [isAutoBetA, setIsAutoBetA] = useState(false);
+
+    const [betStatusB, setBetStatusB] = useState<'none' | 'betting' | 'cashed'>('none');
+    const [betAmountB, setBetAmountB] = useState(5.0);
+    const [autoCashoutB, setAutoCashoutB] = useState(1.5);
     const [isAutoCashB, setIsAutoCashB] = useState(false);
-    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string }[]>([]);
+    const [isAutoBetB, setIsAutoBetB] = useState(false);
+
+    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string, serverSeed?: string, clientSeed?: string, hash?: string }[]>([]);
+    const [selectedRound, setSelectedRound] = useState<any | null>(null);
     const [activeTab, setActiveTab] = useState<'all' | 'my' | 'top'>('all');
     const [allBets, setAllBets] = useState<any[]>([]);
     const [myBets, setMyBets] = useState<any[]>([]);
@@ -100,6 +107,24 @@ export default function CrashGame({
         isAutoCashRefB.current = isAutoCashB;
     }, [isAutoCashA, isAutoCashB]);
 
+    // Auto-Bet Logic
+    useEffect(() => {
+        if (countdown !== null && countdown > 2) {
+            if (isAutoBetA && betStatusA === 'none' && !isBetting && !isFlyingRef.current) {
+                handlePlaceBet('A').catch(e => {
+                    console.error("Auto bet A failed", e);
+                    setIsAutoBetA(false);
+                });
+            }
+            if (isAutoBetB && betStatusB === 'none' && !isBetting && !isFlyingRef.current) {
+                handlePlaceBet('B').catch(e => {
+                    console.error("Auto bet B failed", e);
+                    setIsAutoBetB(false);
+                });
+            }
+        }
+    }, [countdown, isAutoBetA, isAutoBetB, betStatusA, betStatusB, isBetting]);
+
     const fetchBets = async () => {
         // All bets
         const { data: all } = await supabase
@@ -141,16 +166,25 @@ export default function CrashGame({
     const fetchRecentRounds = async () => {
         const { data, error } = await supabase
             .from('rounds')
-            .select('id, crash_point')
+            .select('id, crash_point, server_seed')
             .not('crash_point', 'is', null)
             .order('created_at', { ascending: false })
             .limit(15);
 
         if (!error && data) {
-            setRecentMultipliers(data.map(r => ({
-                multiplier: parseFloat(r.crash_point),
-                id: r.id
-            })));
+            setRecentMultipliers(data.map(r => {
+                let seedObj = null;
+                try {
+                    seedObj = JSON.parse(r.server_seed);
+                } catch (e) { }
+                return {
+                    multiplier: parseFloat(r.crash_point),
+                    id: r.id,
+                    serverSeed: seedObj?.serverSeed,
+                    clientSeed: seedObj?.clientSeed,
+                    hash: seedObj?.hash || r.server_seed
+                };
+            }));
         }
     };
 
@@ -293,6 +327,7 @@ export default function CrashGame({
         multiplierRef.current = 1.00;
         startTimeRef.current = Date.now();
         SoundManager.playStart();
+        SoundManager.startEngine();
 
         // Reset bet statuses for new round
         if (betStatusRefA.current === 'cashed') {
@@ -314,6 +349,8 @@ export default function CrashGame({
                 const oldM = multiplierRef.current;
                 setMultiplier(newMultiplier);
                 multiplierRef.current = newMultiplier;
+
+                SoundManager.updateEngine(newMultiplier);
 
                 if (Math.floor(newMultiplier * 10) > Math.floor(oldM * 10)) {
                     SoundManager.playClimb(newMultiplier);
@@ -468,11 +505,23 @@ export default function CrashGame({
     useEffect(() => {
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
+            SoundManager.stopEngine();
         };
     }, []);
 
     return (
         <div className="flex flex-col items-center gap-6 w-full max-w-sm pb-20">
+            <ProvablyFairModal
+                isOpen={!!selectedRound}
+                onClose={() => setSelectedRound(null)}
+                roundData={selectedRound ? {
+                    id: selectedRound.id,
+                    crashPoint: selectedRound.multiplier.toFixed(2),
+                    serverSeed: selectedRound.serverSeed || '',
+                    clientSeed: selectedRound.clientSeed || '',
+                    hash: selectedRound.hash || ''
+                } : null}
+            />
             {/* Recent Multipliers Ribbon */}
             <div className="w-full overflow-hidden relative group">
                 <div className="flex gap-1 overflow-x-auto no-scrollbar py-2 px-1">
@@ -481,14 +530,15 @@ export default function CrashGame({
                             m.multiplier >= 2 ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
                                 'bg-blue-500/20 text-blue-400 border-blue-500/30';
                         return (
-                            <motion.div
+                            <motion.button
                                 key={m.id}
+                                onClick={() => setSelectedRound(m)}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold border ${colorClass}`}
+                                className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold border hover:brightness-125 transition-all ${colorClass}`}
                             >
                                 {m.multiplier.toFixed(2)}x
-                            </motion.div>
+                            </motion.button>
                         );
                     })}
                 </div>
@@ -646,9 +696,11 @@ export default function CrashGame({
                         amount={betAmountA}
                         autoCashout={autoCashoutA}
                         isAutoCash={isAutoCashA}
+                        isAutoBet={isAutoBetA}
                         onAdjust={(d) => adjustBet('A', d)}
                         onAutoCashoutChange={setAutoCashoutA}
                         onAutoCashToggle={() => setIsAutoCashA(!isAutoCashA)}
+                        onAutoBetToggle={() => setIsAutoBetA(!isAutoBetA)}
                         onPlaceBet={() => handlePlaceBet('A')}
                         onCashOut={() => cashOut('A')}
                         isFlying={isFlying}
@@ -660,9 +712,11 @@ export default function CrashGame({
                         amount={betAmountB}
                         autoCashout={autoCashoutB}
                         isAutoCash={isAutoCashB}
+                        isAutoBet={isAutoBetB}
                         onAdjust={(d) => adjustBet('B', d)}
                         onAutoCashoutChange={setAutoCashoutB}
                         onAutoCashToggle={() => setIsAutoCashB(!isAutoCashB)}
+                        onAutoBetToggle={() => setIsAutoBetB(!isAutoBetB)}
                         onPlaceBet={() => handlePlaceBet('B')}
                         onCashOut={() => cashOut('B')}
                         isFlying={isFlying}
@@ -738,8 +792,8 @@ export default function CrashGame({
 }
 
 function BettingPanel({
-    panel, status, amount, autoCashout, isAutoCash,
-    onAdjust, onAutoCashoutChange, onAutoCashToggle,
+    panel, status, amount, autoCashout, isAutoCash, isAutoBet,
+    onAdjust, onAutoCashoutChange, onAutoCashToggle, onAutoBetToggle,
     onPlaceBet, onCashOut, isFlying, isBetting
 }: {
     panel: 'A' | 'B',
@@ -747,17 +801,35 @@ function BettingPanel({
     amount: number,
     autoCashout: number,
     isAutoCash: boolean,
+    isAutoBet: boolean,
     onAdjust: (d: number) => void,
     onAutoCashoutChange: (v: number) => void,
     onAutoCashToggle: () => void,
+    onAutoBetToggle: () => void,
     onPlaceBet: () => void,
     onCashOut: () => void,
     isFlying: boolean,
     isBetting: boolean
 }) {
     return (
-        <div className="glass-card p-5 border-white/5 flex flex-col gap-4 shadow-xl rounded-[2rem]">
-            <div className="flex gap-2">
+        <motion.div
+            animate={{
+                scale: status === 'cashed' ? 1.02 : 1,
+                boxShadow: status === 'cashed' ? '0 0 40px rgba(34,197,94,0.2)' :
+                    status === 'betting' ? '0 0 20px rgba(212,175,55,0.1)' : '0 10px 30px rgba(0,0,0,0.5)'
+            }}
+            transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+            className={`glass-card p-5 relative overflow-hidden flex flex-col gap-4 rounded-[2rem] border transition-colors ${status === 'cashed' ? 'border-green-500/40 bg-green-500/5' : status === 'betting' ? 'border-gold/30 bg-gold/5' : 'border-white/5'}`}
+        >
+            {/* Background animated gradient for active states */}
+            {status === 'betting' && (
+                <div className="absolute inset-0 bg-gradient-to-t from-gold/10 to-transparent opacity-50 pointer-events-none" />
+            )}
+            {status === 'cashed' && (
+                <div className="absolute inset-0 bg-gradient-to-t from-green-500/20 to-transparent opacity-50 pointer-events-none" />
+            )}
+
+            <div className="flex gap-2 relative z-10">
                 <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
                     <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">Bet Amount</span>
                     <div className="flex items-center justify-between">
@@ -779,11 +851,21 @@ function BettingPanel({
                     </div>
                 </div>
                 <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">Auto Bet</span>
+                        <button
+                            onClick={onAutoBetToggle}
+                            className={`text-[9px] font-black px-2 py-1 rounded-lg flex items-center gap-1 ${isAutoBet ? 'bg-blue-500 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-white/10 text-white/40 hover:bg-white/20'} transition-all`}
+                        >
+                            <div className={`w-1.5 h-1.5 rounded-full ${isAutoBet ? 'bg-white animate-pulse' : 'bg-white/20'}`} />
+                            AUTO
+                        </button>
+                    </div>
+                    <div className="flex justify-between items-center pt-1">
                         <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">Auto Cash</span>
                         <button
                             onClick={onAutoCashToggle}
-                            className={`text-[9px] font-black px-2 py-1 rounded-lg ${isAutoCash ? 'bg-gold text-black shadow-gold' : 'bg-white/10 text-white/40'} transition-all`}
+                            className={`text-[9px] font-black px-2 py-1 rounded-lg ${isAutoCash ? 'bg-gold text-black shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-white/10 text-white/40 hover:bg-white/20'} transition-all`}
                         >
                             AUTO
                         </button>
@@ -822,19 +904,23 @@ function BettingPanel({
                     {isBetting ? 'WAIT...' : status === 'betting' ? 'BET PLACED' : `BET ${amount.toFixed(1)}`}
                 </button>
             )}
-        </div>
+        </motion.div>
     );
 }
 
 function LiveWinRow({ user, x, win, status }: { user: string, x: string, win: string, status?: string }) {
     const isWin = status === 'cashed' || status === 'paid';
     return (
-        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/5 transition-all hover:bg-white/10">
+        <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`flex justify-between items-center bg-white/5 p-2 rounded-lg border transition-all hover:bg-white/10 ${isWin ? 'border-green-500/20 bg-green-500/10' : 'border-white/5'}`}
+        >
             <span className="text-xs font-medium text-white/60">{user}</span>
             <div className="flex gap-3">
                 <span className="text-xs font-bold text-gold">{x}</span>
                 <span className={`text-xs font-bold ${isWin ? 'text-green-400' : 'text-white/40'}`}>{win}</span>
             </div>
-        </div>
+        </motion.div>
     );
 }
