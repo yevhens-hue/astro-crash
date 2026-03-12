@@ -564,48 +564,13 @@ export default function Page() {
         ))}
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 pb-24">
-        {activeTab === 'home' && (
-          <div className="flex flex-col gap-6">
-            {/* Game Selector */}
-            <div className="flex gap-4">
-              <button
-                onClick={() => setActiveGame('crash')}
-                className={`flex-1 p-4 rounded-3xl border transition-all flex flex-col gap-3 relative overflow-hidden group ${activeGame === 'crash' ? 'bg-gold/10 border-gold/40 shadow-[0_0_30px_rgba(212,175,55,0.1)]' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className={`p-2 rounded-xl ${activeGame === 'crash' ? 'bg-gold text-black' : 'bg-white/10 text-white/40'}`}>
-                    <TrendingUp className="w-5 h-5" />
-                  </div>
-                  <span className="text-[10px] font-black gold-text italic">LIVE</span>
-                </div>
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-black italic tracking-tight uppercase">Astro Crash</span>
-                  <span className="text-[9px] font-bold text-white/40 uppercase">High Multipliers</span>
-                </div>
-                {activeGame === 'crash' && <div className="absolute -right-2 -bottom-2 w-12 h-12 bg-gold/20 blur-2xl rounded-full" />}
-              </button>
-
-              {/* <button
-                onClick={() => setActiveGame('slots')}
-                className={`flex-1 p-4 rounded-3xl border transition-all flex flex-col gap-3 relative overflow-hidden group ${activeGame === 'slots' ? 'bg-purple-500/10 border-purple-500/40 shadow-[0_0_30px_rgba(168,85,247,0.1)]' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className={`p-2 rounded-xl ${activeGame === 'slots' ? 'bg-purple-500 text-white' : 'bg-white/10 text-white/40'}`}>
-                    <Trophy className="w-5 h-5" />
-                  </div>
-                  <span className="text-[10px] font-black text-purple-400 italic">NEW</span>
-                </div>
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-black italic tracking-tight uppercase">Galaxy Slots</span>
-                  <span className="text-[9px] font-bold text-white/40 uppercase">Jackpot 500x</span>
-                </div>
-                {activeGame === 'slots' && <div className="absolute -right-2 -bottom-2 w-12 h-12 bg-purple-500/20 blur-2xl rounded-full" />}
-              </button> */}
-            </div>
-
-            {FEATURE_FLAGS.GUEST_MODE && !wallet && (
+            {/* Tab Content */}
+            <div className="flex-1 pb-24">
+              {activeTab === 'home' && (
+                <div className="flex flex-col gap-6">
+                  {/* Game Selector hidden as requested */}
+                  
+                  {FEATURE_FLAGS.GUEST_MODE && !wallet && (
               <div className="w-full bg-blue-500/10 border border-blue-500/20 p-3 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
