@@ -286,8 +286,17 @@ export default function Page() {
   const [txModal, setTxModal] = useState<'deposit' | 'withdraw' | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
-  const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
+  useEffect(() => {
+    // Check for demo or guest mode in URL
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('demo') === 'true' || searchParams.get('guest') === 'true') {
+      setIsDemoMode(true);
+    }
+  }, []);
+
+  const address = wallet?.account.address || (isDemoMode || FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
 
   useEffect(() => {
     const fetchBalance = async (userAddress: string) => {
@@ -329,11 +338,11 @@ export default function Page() {
         }
       } else if (error && error.code === 'PGRST116') {
         // Enforce balance=0 in production to pass RLS, otherwise grant 10.0 for guest testing
-        const initialBalance = FEATURE_FLAGS.GUEST_MODE ? 10.0 : 0.0;
+        const initialBalance = (isDemoMode || FEATURE_FLAGS.GUEST_MODE) ? 10.0 : 0.0;
         const { data: newData } = await supabase
           .from('users')
           .insert({
-            wallet_address: address,
+            wallet_address: userAddress,
             balance: initialBalance,
             telegram_id: telegramId,
             username: tgUsername
