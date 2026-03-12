@@ -244,6 +244,36 @@ function BurgerMenu({
               </div>
             </button>
 
+            <a
+              href="https://luckybetvip.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
+            >
+              <div className="p-2 bg-gold/10 rounded-xl group-hover:bg-gold/20 transition-colors">
+                <TrendingUp className="w-5 h-5 text-gold" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">Aviator Strategies</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">LuckyBetVIP PBN</span>
+              </div>
+            </a>
+
+            <a
+              href="https://game-income.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
+            >
+              <div className="p-2 bg-green-500/10 rounded-xl group-hover:bg-green-500/20 transition-colors">
+                <Trophy className="w-5 h-5 text-green-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">Best Bonuses</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">Games-Income.com</span>
+              </div>
+            </a>
+
             <button
               onClick={() => {
                 const newSoundEnabled = !soundEnabled;
