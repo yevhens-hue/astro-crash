@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Trophy, Medal, Crown, TrendingUp, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { useI18n } from '@/lib/i18n';
 
 interface LeaderboardEntry {
     rank: number;
@@ -14,6 +15,7 @@ interface LeaderboardEntry {
 }
 
 export default function Leaderboard() {
+    const { t } = useI18n();
     const [topPlayers, setTopPlayers] = useState<LeaderboardEntry[]>([]);
     const [myRank, setMyRank] = useState<LeaderboardEntry | null>(null);
     const [loading, setLoading] = useState(true);
@@ -119,7 +121,7 @@ export default function Leaderboard() {
             {/* Leaderboard Header */}
             <div className="flex justify-between items-center px-4 mb-1">
                 <h3 className="text-[10px] uppercase font-bold text-white/40 flex items-center gap-2">
-                    <TrendingUp className="w-3 h-3 text-gold" /> Weekly Top Profit
+                    <TrendingUp className="w-3 h-3 text-gold" /> {t('top_bets')}
                 </h3>
                 <span className="text-[8px] text-white/20 uppercase font-black italic">Resets in 2d 14h</span>
             </div>
@@ -127,7 +129,7 @@ export default function Leaderboard() {
             {/* Players List */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-hide min-h-[300px]">
                 {loading ? (
-                    <div className="text-center py-10 text-white/20 animate-pulse uppercase font-bold text-[10px]">Loading Rankings...</div>
+                    <div className="text-center py-10 text-white/20 animate-pulse uppercase font-bold text-[10px]">{t('processing')}</div>
                 ) : topPlayers.length === 0 ? (
                     <div className="text-center py-10 text-white/20 uppercase font-bold text-[10px]">No winners yet today</div>
                 ) : (
@@ -144,7 +146,7 @@ export default function Leaderboard() {
                         <span className="text-xs font-black text-gold">#--</span>
                         <div className="flex flex-col">
                             <span className="text-xs font-bold text-white uppercase tracking-tighter italic">@Bhavish_R</span>
-                            <span className="text-[8px] text-gold/60 uppercase font-bold">Your Rank</span>
+                            <span className="text-[8px] text-gold/60 uppercase font-bold">{t('status')}</span>
                         </div>
                     </div>
                 </div>

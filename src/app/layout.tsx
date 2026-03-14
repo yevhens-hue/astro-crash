@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className="dark" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground select-none`}>
         <Providers>
           <div className="min-h-screen max-w-md mx-auto flex flex-col">
