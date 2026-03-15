@@ -50,28 +50,18 @@ serve(async (req) => {
     // 3. Calculate Win Amount
     const winAmount = Number(bet.amount) * requestedCashout;
 
-    // 4. Update the bet
-    const { error: updateBetError } = await supabaseClient
-        .from('bets')
-        .update({ 
-            status: 'cashed', 
-            cashout_at: requestedCashout,
-            win_amount: winAmount
-        })
-        .eq('id', bet.id);
+    // 4. Execute atomic cashout via RPC to prevent race conditions
+    const { data: result, error: rpcError } = await supabaseClient.rpc('cashout_bet_atomic', {
+        p_bet_id: bet_id,
+        p_cashout_at: requestedCashout,
+        p_win_amount: winAmount
+    });
 
-    if (updateBetError) {
-        throw new Error("Failed to update bet status: " + updateBetError.message);
+    if (rpcError) {
+        throw new Error("RPC Error: " + rpcError.message);
     }
-
-    // 5. Update user balance atomically
-    const { error: balanceError } = await supabaseClient
-        .from('users')
-        .update({ balance: Number(bet.users.balance) + winAmount })
-        .eq('id', bet.users.id);
-
-    if (balanceError) {
-        throw new Error("Failed to credit balance: " + balanceError.message);
+    if (!result.success) {
+        throw new Error(result.error);
     }
 
     return new Response(JSON.stringify({ 
@@ -86,7 +76,7 @@ serve(async (req) => {
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      status: 400,
     })
   }
 })

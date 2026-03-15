@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { verifyTelegramAuth } from "../_shared/telegram-auth.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-telegram-init-data',
 }
 
 serve(async (req) => {
@@ -17,76 +18,43 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { wallet_address, round_id, amount } = await req.json()
+    const initData = req.headers.get('x-telegram-init-data')
+    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
+
+    // 1. Verify Telegram Auth
+    if (!botToken) throw new Error('Bot token not configured');
+    
+    // In production, we MUST verify. In local dev, we might skip if debugging.
+    if (initData) {
+      const isValid = await verifyTelegramAuth(initData, botToken);
+      if (!isValid) throw new Error('Unauthorized: Invalid Telegram Auth');
+    } else {
+        // Only allow missing initData if FEATURE_FLAGS.DEBUG_MODE is on 
+        // (but we don't have direct access to client flags here, so we assume strict)
+        throw new Error('Unauthorized: Telegram Auth required');
+    }
+
+    const { wallet_address, round_id, amount, is_bonus } = await req.json()
 
     if (!wallet_address || !round_id || !amount) {
-      throw new Error('wallet_address, round_id, and amount are required');
+      throw new Error('Missing required fields');
     }
 
-    // 1. Fetch User and check balance
-    const { data: user, error: userError } = await supabaseClient
-      .from('users')
-      .select('id, balance')
-      .eq('wallet_address', wallet_address)
-      .single()
+    // 2. Execute atomic bet placement via RPC
+    const { data: result, error: rpcError } = await supabaseClient.rpc('place_bet_atomic', {
+        p_user_address: wallet_address,
+        p_round_id: round_id,
+        p_amount: Number(amount),
+        p_is_bonus: !!is_bonus
+    });
 
-    if (userError || !user) {
-        throw new Error("User not found: " + (userError?.message || ''));
-    }
-
-    if (Number(user.balance) < Number(amount)) {
-        throw new Error("Insufficient balance");
-    }
-
-    // 2. Prevent placing bets on rounds that have already started/crashed
-    // But for this MVP without strict timing, just ensure round exists
-    const { data: round, error: roundError } = await supabaseClient
-      .from('rounds')
-      .select('status')
-      .eq('id', round_id)
-      .single()
-      
-    if (roundError || !round) {
-        throw new Error("Round not found");
-    }
-
-    // Optional: if (round.status !== 'pending') throw new Error("Round already started")
-    
-    // 3. User can bet multiple times (e.g., Panel A and Panel B) on the same round.
-    // Removed duplicate bet restriction flag.
-
-    // 4. Atomically deduct the balance
-    const { error: balanceError } = await supabaseClient
-        .from('users')
-        .update({ balance: Number(user.balance) - Number(amount) })
-        .eq('id', user.id);
-
-    if (balanceError) {
-        throw new Error("Failed to deduct balance: " + balanceError.message);
-    }
-
-    // 5. Insert the bet
-    const { data: newBet, error: betError } = await supabaseClient
-        .from('bets')
-        .insert({
-            user_id: user.id,
-            round_id: round_id,
-            amount: amount,
-            status: 'confirmed',
-            tx_hash: `server_bet_${Date.now()}` // Mock hash since no actual on-chain tx
-        })
-        .select()
-        .single();
-
-    if (betError) {
-        // Rollback balance if bet insertion failed
-        await supabaseClient.from('users').update({ balance: Number(user.balance) }).eq('id', user.id);
-        throw new Error("Failed to record bet: " + betError.message);
-    }
+    if (rpcError) throw new Error("RPC Error: " + rpcError.message);
+    if (!result.success) throw new Error(result.error);
 
     return new Response(JSON.stringify({ 
         success: true, 
-        bet: newBet
+        bet_id: result.bet_id,
+        new_balance: result.new_balance
     }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -95,7 +63,7 @@ serve(async (req) => {
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      status: 400, // Return 400 for errors
     })
   }
 })

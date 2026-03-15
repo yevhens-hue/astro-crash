@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Send, UserCircle, Bot } from 'lucide-react';
 import { FEATURE_FLAGS } from '@/lib/flags';
 import { useTonWallet } from '@tonconnect/ui-react';
+import { CloudRain, Gift, Send, UserCircle, Bot, MessageSquare } from 'lucide-react';
 
 interface ChatMessage {
     id: string;
@@ -12,6 +12,7 @@ interface ChatMessage {
     username: string | null;
     content: string;
     is_system: boolean;
+    metadata?: any;
     created_at: string;
 }
 
@@ -56,6 +57,49 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
 
         if (data && !error) {
             setMessages(data.reverse());
+        }
+    };
+
+    const handleRain = async () => {
+        const address = currentWallet || (FEATURE_FLAGS.GUEST_MODE ? 'guest_test_wallet' : null);
+        if (!address) return;
+
+        try {
+            await supabase.from('chat_messages').insert([{
+                wallet_address: address,
+                username: 'Astro Rain',
+                content: 'Incoming Astro Rain! 🌧️💸 Be first to claim 0.5 TON Bonus!',
+                is_system: true,
+                metadata: { type: 'rain', amount: 0.5, claimed_by: null }
+            }]);
+        } catch (e) {
+            console.error("Rain failed:", e);
+        }
+    };
+
+    const handleClaim = async (msgId: string, amount: number) => {
+        const address = currentWallet || (FEATURE_FLAGS.GUEST_MODE ? 'guest_test_wallet' : null);
+        if (!address) {
+            alert('Connect wallet to claim!');
+            return;
+        }
+
+        try {
+            // Atomic check and claim
+            const { data: updated, error } = await supabase.rpc('claim_rain', {
+                p_message_id: msgId,
+                p_claimer_address: address,
+                p_amount: amount
+            });
+
+            if (error) throw error;
+            if (updated) {
+                alert(`🎊 Claimed! ${amount} TON Bonus added!`);
+            } else {
+                alert("Too late! Already claimed. 😢");
+            }
+        } catch (e: any) {
+            alert(`Claim failed: ${e.message}`);
         }
     };
 
@@ -146,6 +190,20 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
                             <p className={`mt-0.5 leading-snug ${msg.is_system ? 'text-white font-bold' : 'text-white/80'} break-words break-all`}>
                                 {msg.content}
                             </p>
+                            {msg.metadata?.type === 'rain' && !msg.metadata?.claimed_by && (
+                                <button
+                                    onClick={() => handleClaim(msg.id, msg.metadata.amount)}
+                                    className="mt-2 gold-button py-2 px-6 flex items-center gap-2 text-[10px]"
+                                >
+                                    <Gift className="w-3 h-3" />
+                                    CLAIM FREE BET
+                                </button>
+                            )}
+                            {msg.metadata?.claimed_by && (
+                                <div className="mt-2 text-[8px] uppercase font-bold text-white/20 italic">
+                                    Claimed by {msg.metadata.claimed_by.slice(0, 4)}...
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -169,6 +227,16 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
                 >
                     <Send className="w-5 h-5" />
                 </button>
+                {currentWallet && (
+                    <button
+                        type="button"
+                        onClick={handleRain}
+                        className="p-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-2xl transition-colors border border-blue-500/30 shrink-0"
+                        title="Send Rain (Owner only)"
+                    >
+                        <CloudRain className="w-5 h-5" />
+                    </button>
+                )}
             </form>
         </div>
     );

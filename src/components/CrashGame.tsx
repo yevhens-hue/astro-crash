@@ -8,14 +8,24 @@ import { supabase } from '@/lib/supabase';
 import { SoundManager } from '@/lib/sounds';
 import { FEATURE_FLAGS } from '@/lib/flags';
 import ProvablyFairModal from '@/components/ProvablyFairModal';
+import { useI18n } from '@/lib/i18n';
 
 export default function CrashGame({
     balance = 0,
-    onBalanceUpdate
+    bonus_balance = 0,
+    onBalanceUpdate,
+    onWageringUpdate,
+    onBigWin,
+    referralCode
 }: {
     balance?: number,
-    onBalanceUpdate?: (updater: (prev: number) => number) => void
+    bonus_balance?: number,
+    onBalanceUpdate?: (type: 'balance' | 'bonus', updater: (prev: number) => number) => void,
+    onWageringUpdate?: (amount: number) => void,
+    onBigWin?: (multiplier: number, amount: number) => void,
+    referralCode?: string | null
 }) {
+    const { t } = useI18n();
     const wallet = useTonWallet();
     const [tonConnectUI] = useTonConnectUI();
 
@@ -61,6 +71,8 @@ export default function CrashGame({
     const betStatusRefB = useRef<'none' | 'betting' | 'cashed'>('none');
     const currentBetIdRefA = useRef<string | null>(null);
     const currentBetIdRefB = useRef<string | null>(null);
+    const betBalanceTypeA = useRef<'balance' | 'bonus'>('balance');
+    const betBalanceTypeB = useRef<'balance' | 'bonus'>('balance');
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const pendingCrashAtRef = useRef<number | null>(null);
     const currentRoundIdRef = useRef<string | null>(null);
@@ -199,10 +211,14 @@ export default function CrashGame({
         const amount = panel === 'A' ? betAmountA : betAmountB;
         const auto = panel === 'A' ? autoCashoutA : autoCashoutB;
 
-        if (balance < amount) {
+        if (balance + bonus_balance < amount) {
             alert("Insufficient balance! Please deposit TON.");
             return;
         }
+
+        const balanceType: 'balance' | 'bonus' = balance >= amount ? 'balance' : 'bonus';
+        if (panel === 'A') betBalanceTypeA.current = balanceType;
+        else betBalanceTypeB.current = balanceType;
 
         try {
             console.log(`Starting bet for panel ${panel}... Amount:`, amount);
@@ -244,11 +260,17 @@ export default function CrashGame({
 
             if (address !== 'guest_test_wallet' && !roundId.startsWith('mock_round')) {
                 // Call Secure Edge Function
+                const initData = (window as any).Telegram?.WebApp?.initData || '';
                 const { data, error } = await supabase.functions.invoke('place-bet', {
                     body: {
                         wallet_address: address,
                         round_id: roundId,
-                        amount: amount
+                        amount: amount,
+                        is_bonus: balanceType === 'bonus'
+                    },
+                    headers: {
+                        'x-telegram-init-data': initData,
+                        'x-wallet-address': address!
                     }
                 });
 
@@ -256,8 +278,10 @@ export default function CrashGame({
                     throw new Error(error?.message || data?.error || 'Failed to place bet securely on server');
                 }
 
-                userId = data.bet.user_id;
-                dbBetId = data.bet.id;
+                dbBetId = data.bet_id;
+                if (typeof data.new_balance !== 'undefined' && onBalanceUpdate) {
+                    onBalanceUpdate(balanceType, () => Number(data.new_balance));
+                }
             }
 
             // Update local state
@@ -280,13 +304,13 @@ export default function CrashGame({
 
             if (latestCountdownRef.current === null || latestCountdownRef.current === 0) {
                 // IDLE mode -> Start immediately
-                if (onBalanceUpdate) onBalanceUpdate(prev => prev - amount);
+                if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev - amount);
                 startLaunchSequence(crashAt);
             } else {
                 // COUNTDOWN mode -> Store it, wait for 0
                 pendingCrashAtRef.current = crashAt;
                 // Subtract immediately since it's "BET PLACED"
-                if (onBalanceUpdate) onBalanceUpdate(prev => prev - amount);
+                if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev - amount);
             }
 
             // Move this after balance subtraction to ensure UI shows bet from both panels
@@ -305,7 +329,10 @@ export default function CrashGame({
         } catch (e: any) {
             console.error("Bet failed:", e);
             alert(`Bet failed: ${e.message || 'Check connection'}`);
-            // Reset status on failure
+            // Reset status on failure (refund is handled by state reverting or simply not update)
+            // But here we subtracted optimistically, so we should refund:
+            if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
+
             if (panel === 'A') {
                 setBetStatusA('none');
                 betStatusRefA.current = 'none';
@@ -441,11 +468,21 @@ export default function CrashGame({
         // Immediately update UI (synchronous — no awaits, no INP block)
         SoundManager.playWin();
         const winMult = multiplierRef.current;
+        const balanceType = panel === 'A' ? betBalanceTypeA.current : betBalanceTypeB.current;
         const winAmount = amount * winMult;
         setLastWin(winMult);
         setBetStatus('cashed');
         betStatusRef.current = 'cashed';
-        if (onBalanceUpdate) onBalanceUpdate(prev => prev + winAmount);
+        if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + winAmount);
+        
+        if (winMult >= 10 && onBigWin) {
+            onBigWin(winMult, winAmount);
+        }
+
+        // Wagering update (Aviator style: turnover counts if odds >= 1.5x)
+        if (winMult >= 1.5 && onWageringUpdate) {
+            onWageringUpdate(amount);
+        }
 
         const betId = currentBetIdRef.current;
         currentBetIdRef.current = null;
@@ -577,11 +614,11 @@ export default function CrashGame({
                         >
                             {multiplier.toFixed(2)}x
                         </motion.h3>
-                        {isCrashed && <p className="text-red-500 text-sm font-bold uppercase tracking-widest mt-1 animate-bounce">Crashed!</p>}
+                        {isCrashed && <p className="text-red-500 text-sm font-bold uppercase tracking-widest mt-1 animate-bounce">{t('crashed')}</p>}
 
                         {countdown !== null && (
                             <div className="flex flex-col items-center mt-2">
-                                <p className="text-gold/60 text-[10px] uppercase font-bold tracking-widest">Next Launch in</p>
+                                <p className="text-gold/60 text-[10px] uppercase font-bold tracking-widest">{t('next_launch')}</p>
                                 <span className="text-4xl font-black gold-text italic">{countdown}s</span>
                             </div>
                         )}
@@ -593,7 +630,7 @@ export default function CrashGame({
                                     animate={{ y: 0, opacity: 1 }}
                                     className="mt-2 bg-green-500/20 text-green-400 px-4 py-1 rounded-full text-sm font-bold border border-green-500/30"
                                 >
-                                    Cashed Out: {lastWin?.toFixed(2)}x
+                                    {t('cash_out')}: {lastWin?.toFixed(2)}x
                                 </motion.div>
                                 <motion.button
                                     initial={{ scale: 0.8, opacity: 0 }}
@@ -602,7 +639,7 @@ export default function CrashGame({
                                     onClick={() => setShowShareModal(true)}
                                     className="mt-4 text-[10px] uppercase font-bold text-gold/60 hover:text-gold flex items-center gap-2 border border-gold/20 px-3 py-1 rounded-full transition-colors"
                                 >
-                                    🚀 Share to Stories
+                                    🚀 {t('share')}
                                 </motion.button>
                             </div>
                         )}
@@ -658,15 +695,16 @@ export default function CrashGame({
                                     <p className="text-[8px] text-white/40 uppercase font-bold px-1">Show off your Astro victory to the community!</p>
                                     <button
                                         onClick={() => {
-                                            const text = `🚀 I just hit ${lastWin?.toFixed(2)}x on Astro Crash! Try to beat my score! Play now: https://t.me/AstroCrashGame_bot`;
-                                            window.open(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/AstroCrashGame_bot')}&text=${encodeURIComponent(text)}`, '_blank');
+                                            const text = `🚀 I just hit ${lastWin?.toFixed(2)}x on Astro Crash! Try to beat my score! Play now: @AstroCrashRobot_bot`;
+                                            const shareParams = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/AstroCrashRobot_bot/play?startapp=' + (referralCode || ''))}&text=${encodeURIComponent(text)}`;
+                                            (window as any).Telegram?.WebApp?.openTelegramLink(shareParams);
                                             setShowShareModal(false);
                                         }}
                                         className="gold-button w-full py-2.5 text-xs shrink-0"
                                     >
                                         Share on Telegram
                                     </button>
-                                    <button onClick={() => setShowShareModal(false)} className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40 shrink-0">Later</button>
+                                    <button onClick={() => setShowShareModal(false)} className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40 shrink-0">{t('close')}</button>
                                 </motion.div>
                             </motion.div>
                         )}
@@ -675,7 +713,7 @@ export default function CrashGame({
                     <div className={`absolute top-4 right-4 flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 px-3 py-1 rounded-full transition-all ${isSquadActive ? 'scale-110 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'opacity-60'} pointer-events-none`}>
                         <Users className={`w-3 h-3 ${isSquadActive ? 'text-purple-400' : 'text-white/40'}`} />
                         <span className={`text-[10px] font-bold uppercase tracking-tighter ${isSquadActive ? 'text-purple-400' : 'text-white/40'}`}>
-                            {isSquadActive ? `Squad 1.1x Active (${squadSize})` : `Online: ${squadSize}`}
+                            {isSquadActive ? `${t('squad_active')} (${squadSize})` : `Online: ${squadSize}`}
                         </span>
                     </div>
                 </motion.div>
@@ -683,7 +721,7 @@ export default function CrashGame({
 
             {/* Provably Fair Info */}
             <div className="relative z-10 w-full px-2 mt-2 flex justify-between items-center text-[8px] uppercase font-bold text-white/20 tracking-widest">
-                <span>Provably Fair Active</span>
+                <span>{t('provably_fair')} {t('active')}</span>
                 <span className="truncate max-w-[150px]">Seed: {currentSeed}</span>
             </div>
 
@@ -731,7 +769,7 @@ export default function CrashGame({
                             className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-tight transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2 group"
                         >
                             <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                            Connect Wallet to Play
+                            {t('connect_wallet_first')}
                         </button>
                     </div>
                 )}
@@ -744,7 +782,7 @@ export default function CrashGame({
                                 onClick={() => setActiveTab(tab as any)}
                                 className={`flex-1 py-3 text-[10px] uppercase font-bold tracking-widest transition-all ${activeTab === tab ? 'text-gold bg-white/5 border-b-2 border-gold' : 'text-white/20'}`}
                             >
-                                {tab === 'all' ? 'All Bets' : tab === 'my' ? 'My Bets' : 'Top Wins'}
+                                {tab === 'all' ? t('all_bets') : tab === 'my' ? t('my_bets') : t('top_wins')}
                             </button>
                         ))}
                     </div>
@@ -811,6 +849,7 @@ function BettingPanel({
     isFlying: boolean,
     isBetting: boolean
 }) {
+    const { t } = useI18n();
     return (
         <motion.div
             animate={{
@@ -831,7 +870,7 @@ function BettingPanel({
 
             <div className="flex gap-2 relative z-10">
                 <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
-                    <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">Bet Amount</span>
+                    <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('bet')}</span>
                     <div className="flex items-center justify-between">
                         <span className="text-base font-black text-gold tracking-tight">{amount.toFixed(1)} <span className="text-[10px] opacity-50">TON</span></span>
                         <div className="flex gap-1">
@@ -852,7 +891,7 @@ function BettingPanel({
                 </div>
                 <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">Auto Bet</span>
+                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('auto_bet')}</span>
                         <button
                             onClick={onAutoBetToggle}
                             className={`text-[9px] font-black px-2 py-1 rounded-lg flex items-center gap-1 ${isAutoBet ? 'bg-blue-500 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-white/10 text-white/40 hover:bg-white/20'} transition-all`}
@@ -862,7 +901,7 @@ function BettingPanel({
                         </button>
                     </div>
                     <div className="flex justify-between items-center pt-1">
-                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">Auto Cash</span>
+                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('auto_cashout')}</span>
                         <button
                             onClick={onAutoCashToggle}
                             className={`text-[9px] font-black px-2 py-1 rounded-lg ${isAutoCash ? 'bg-gold text-black shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-white/10 text-white/40 hover:bg-white/20'} transition-all`}
@@ -889,11 +928,11 @@ function BettingPanel({
                     onClick={onCashOut}
                     className="gold-button w-full py-4 text-xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] active:scale-95 transition-all animate-pulse rounded-2xl font-black italic"
                 >
-                    CASH OUT
+                    {t('cash_out')}
                 </button>
             ) : status === 'cashed' ? (
                 <div className="w-full py-4 text-center rounded-2xl bg-green-500/20 text-green-400 border border-green-500/40 text-xl font-black italic shadow-[0_0_25px_rgba(34,197,94,0.2)]">
-                    WON!
+                    {t('won')}
                 </div>
             ) : (
                 <button
@@ -901,7 +940,7 @@ function BettingPanel({
                     disabled={isFlying || isBetting || status === 'betting'}
                     className={`gold-button w-full py-4 text-xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] rounded-2xl font-black italic ${(isFlying || isBetting || status === 'betting') ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95 transition-all'}`}
                 >
-                    {isBetting ? 'WAIT...' : status === 'betting' ? 'BET PLACED' : `BET ${amount.toFixed(1)}`}
+                    {isBetting ? t('wait') : status === 'betting' ? t('bet_placed') : `${t('bet')} ${amount.toFixed(1)}`}
                 </button>
             )}
         </motion.div>

@@ -1,10 +1,10 @@
-// Follow this setup guide to integrate the Telegram Web App SDK: https://core.telegram.org/bots/webapps#initializing-mini-apps
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { verifyTelegramAuth } from "../_shared/telegram-auth.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-telegram-init-data',
 }
 
 const SYMBOLS = ['💎', '🎭', '👑', '777', '🍒', '🔔', '🍋'];
@@ -21,25 +21,22 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { wallet_address, tx_hash } = await req.json()
+    const initData = req.headers.get('x-telegram-init-data')
+    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
+
+    // 1. Verify Telegram Auth
+    if (!botToken) throw new Error('Bot token not configured');
+    if (initData) {
+      const isValid = await verifyTelegramAuth(initData, botToken);
+      if (!isValid) throw new Error('Unauthorized: Invalid Telegram Auth');
+    } else {
+      throw new Error('Unauthorized: Telegram Auth required');
+    }
+
+    const { wallet_address, tx_hash, is_bonus } = await req.json()
 
     if (!wallet_address) {
       throw new Error('wallet_address is required');
-    }
-
-    // 1. Fetch User and Balance
-    const { data: user, error: userError } = await supabaseClient
-      .from('users')
-      .select('id, balance')
-      .eq('wallet_address', wallet_address)
-      .single()
-
-    if (userError || !user) {
-        throw new Error("User not found: " + (userError?.message || ''));
-    }
-
-    if (user.balance < COST_PER_SPIN) {
-        throw new Error("Insufficient balance");
     }
 
     // 2. Generate spin result securely 
@@ -52,32 +49,32 @@ serve(async (req) => {
         SYMBOLS[cryptoBuffer[2] % SYMBOLS.length]
     ];
 
-    // Win Calculation: 3 of a kind
     const isWin = spinResults.every(s => s === spinResults[0]);
-    // Jackpots mapping
     let winAmount = 0;
     if (isWin) {
       if (spinResults[0] === '777') winAmount = 100.0;
       else if (spinResults[0] === '💎') winAmount = 50.0;
       else if (spinResults[0] === '👑') winAmount = 20.0;
-      else winAmount = 5.0; // standard 3-of-a-kind
+      else winAmount = 5.0; 
     }
 
-    // 3. Atomically update balance (deduct cost + add win_amount)
-    const netChange = winAmount - COST_PER_SPIN;
-    
-    const { error: balanceError } = await supabaseClient
-        .from('users')
-        .update({ balance: Number(user.balance) + netChange })
-        .eq('id', user.id);
+    // 3. Atomic update via RPC
+    const { data: result, error: rpcError } = await supabaseClient.rpc('spin_slot_atomic', {
+        p_user_address: wallet_address,
+        p_cost: COST_PER_SPIN,
+        p_win_amount: winAmount,
+        p_is_bonus: !!is_bonus
+    });
 
-    if (balanceError) {
-        throw new Error("Failed to update balance: " + balanceError.message);
-    }
+    if (rpcError) throw new Error("RPC Error: " + rpcError.message);
+    if (!result.success) throw new Error(result.error);
 
-    // 4. Record spin in DB
+    // 4. Record spin in DB (using userId from result if we returned it, but we have wallet_address)
+    // We'll fetch userId first or just use the wallet_address if the table allows it
+    const { data: user } = await supabaseClient.from('users').select('id').eq('wallet_address', wallet_address).single();
+
     await supabaseClient.from('slot_spins').insert({
-        user_id: user.id,
+        user_id: user?.id,
         wallet_address: wallet_address,
         amount: COST_PER_SPIN,
         result_symbols: spinResults,
@@ -90,7 +87,7 @@ serve(async (req) => {
         success: true, 
         spinResults, 
         winAmount, 
-        netChange 
+        new_balance: result.new_balance
     }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -99,7 +96,7 @@ serve(async (req) => {
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      status: 400,
     })
   }
 })

@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { TonClient, WalletContractV4, internal } from "https://esm.sh/@ton/ton@13.9.0";
-import { mnemonicToPrivateKey } from "https://esm.sh/@ton/crypto@3.2.0";
+import { TonClient, WalletContractV5R1, internal, Address } from "npm:@ton/ton@14.0.0";
+import { mnemonicToWalletKey } from "npm:@ton/crypto@3.2.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-telegram-init-data',
 };
 
 serve(async (req) => {
@@ -19,97 +19,154 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
     );
 
-    const { amount, wallet_address } = await req.json();
+    const { amount, wallet_address, recipient_address } = await req.json();
 
-    if (!amount || !wallet_address || isNaN(amount) || amount <= 0) {
-        throw new Error("Invalid withdrawal request parameters");
+    if (!amount || !wallet_address || !recipient_address || isNaN(amount) || amount < 0.5) {
+        console.error("Invalid withdrawal parameters received:", { amount, wallet_address, recipient_address, typeAmount: typeof amount });
+        throw new Error("Invalid withdrawal request parameters: minimum 0.5 TON and recipient required");
     }
 
     // 1. Verify user balance
-    const { data: user, error: userError } = await supabaseClient
+    const { data: targetUser, error: userError } = await supabaseClient
       .from('users')
-      .select('balance, id')
+      .select('balance, id, telegram_id, wallet_address, username')
       .eq('wallet_address', wallet_address)
       .single();
 
-    if (userError || !user) throw new Error("User not found");
-    if (user.balance < amount) throw new Error("Insufficient database balance");
+    if (userError || !targetUser) {
+        console.error("User lookup failed for address:", wallet_address, userError);
+        throw new Error("User not found or balance check failed");
+    }
 
-    // 2. Initialize TON Client (Testnet for safety if not specified)
-    const isTestnet = Deno.env.get('TON_NETWORK') === 'testnet';
-    const endpoint = isTestnet 
-        ? "https://testnet.toncenter.com/api/v2/jsonRPC"
-        : "https://toncenter.com/api/v2/jsonRPC";
-        
+    // SECURITY: Only allow withdrawal to user's own wallet address
+    if (recipient_address !== wallet_address) {
+        throw new Error("Security: Withdrawals can only be sent to your registered wallet address");
+    }
+
+    // 2. Verify Telegram Auth (optional but recommended for additional security)
+    const initData = req.headers.get('x-telegram-init-data');
+    if (initData) {
+        // In production, verify initData here using verifyTelegramAuth
+        // For now, we log it for audit purposes
+        console.log(`[WITHDRAWAL] Telegram initData received for user: ${wallet_address}`);
+    }
+
+    if (targetUser.balance < amount) {
+        throw new Error(`Insufficient balance. Your balance: ${targetUser.balance} TON.`);
+    }
+
+    // 2. Initialize TON Client
+    const endpoint = "https://toncenter.com/api/v2/jsonRPC"; // Ensure mainnet
     const client = new TonClient({
         endpoint,
         apiKey: Deno.env.get('TONCENTER_API_KEY')
     });
 
-    // 3. Initialize Server Wallet
+    // 3. Initialize Server Wallet (HOT WALLET)
     const mnemonic = Deno.env.get('SERVER_WALLET_MNEMONIC');
-    if (!mnemonic) throw new Error("Server wallet mnemonic not configured");
+    if (!mnemonic) {
+        console.error("Server wallet mnemonic not configured");
+        throw new Error("Server wallet not configured. Please contact support.");
+    }
     
-    const keyPair = await mnemonicToPrivateKey(mnemonic.split(" "));
-    const workchain = 0;
-    const wallet = WalletContractV4.create({ workchain, publicKey: keyPair.publicKey });
+    const keyPair = await mnemonicToWalletKey(mnemonic.split(" "));
+    const wallet = WalletContractV5R1.create({ workchain: 0, publicKey: keyPair.publicKey });
     const contract = client.open(wallet);
 
-    // 4. Check Server Wallet Balance
-    const serverBalance = await contract.getBalance();
-    const withdrawAmountNano = amount * 1000000000; // Convert TON to nanoTON
+    // 4. Double check server wallet address and balance
+    const serverAddress = wallet.address.toString({ bounceable: false, testOnly: false });
+    console.log(`[WITHDRAWAL] Using server wallet: ${serverAddress}`);
     
-    // We need amount + gas (approx 0.05 TON)
-    if (serverBalance < withdrawAmountNano + 50000000) {
-        throw new Error("Game server wallet has insufficient funds to process withdrawal");
+    const serverBalance = await contract.getBalance();
+    const withdrawAmountNano = BigInt(Math.floor(amount * 1e9));
+    const gasAmountNano = BigInt(50000000); // 0.05 TON
+    
+    if (serverBalance < withdrawAmountNano + gasAmountNano) {
+        const readableBalance = Number(serverBalance) / 1e9;
+        throw new Error(`Server wallet insufficient funds: ${readableBalance} TON. Required: ${amount} + gas.`);
     }
 
-    // 5. Send Transaction
+    // 5. Check Seqno and Send Transaction
     const seqno = await contract.getSeqno();
-    
-    await contract.sendTransfer({
+    console.log(`[WITHDRAWAL] Current seqno: ${seqno}, Amount: ${amount} to ${recipient_address}`);
+
+    // Create transfer
+    const transfer = wallet.createTransfer({
         seqno,
         secretKey: keyPair.secretKey,
+        sendMode: 1 + 2, // Pay fees separately + ignore errors
         messages: [
             internal({
-                to: wallet_address,
-                value: withdrawAmountNano.toString(),
+                to: recipient_address,
+                value: withdrawAmountNano,
                 body: "Astro Crash Withdrawal",
                 bounce: false,
             })
         ]
     });
 
-    // 6. Atomic Balance update in DB
+    // Send via client for more robustness in Deno
+    await client.sendExternalMessage(wallet, transfer);
+    
+    console.log(`[WITHDRAWAL] Message sent to network. Amount: ${amount} TON.`);
+
+    // 6. Update user balance in DB
     const { error: updateError } = await supabaseClient
       .from('users')
-      .update({ balance: user.balance - amount })
-      .eq('id', user.id);
+      .update({ balance: targetUser.balance - amount })
+      .eq('id', targetUser.id);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+        console.error("CRITICAL: Balance deduction failed after transaction broadcast!", updateError);
+        // We still continue to log the transaction, as the user might have actually received funds
+    }
 
     // 7. Log transaction
-    await supabaseClient.from('transactions').insert({
-      user_id: user.id,
+    const { data: txRecord, error: logError } = await supabaseClient.from('transactions').insert({
+      user_id: targetUser.id,
       amount: amount,
       type: 'withdrawal',
       status: 'completed',
-      wallet_address: wallet_address
-    });
+      wallet_address: wallet_address,
+      telegram_id: targetUser.telegram_id,
+      username: targetUser.username
+    }).select().single();
+
+    if (logError) console.error("Transaction logging failed:", logError);
+
+    // 8. Send Telegram Notification
+    const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
+    if (BOT_TOKEN && targetUser.telegram_id) {
+        try {
+            const message = `✅ *Withdrawal Successful!* \n\n*${amount} TON* has been sent to your wallet. \n\nCheck your transaction history. 💰`;
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: targetUser.telegram_id, text: message, parse_mode: 'Markdown' })
+            });
+        } catch (tgError) { console.error("TG notification failed:", tgError) }
+    }
 
     return new Response(JSON.stringify({ 
         success: true, 
-        message: "Withdrawal processed successfully on the blockchain" 
+        message: "Withdrawal processed",
+        tx_id: txRecord?.id 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
-  } catch (error) {
-    console.error("Withdrawal Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: any) {
+    console.error("Withdrawal Error:", error.message);
+    const statusCode = error.message.includes('Insufficient') || 
+                       error.message.includes('not found') || 
+                       error.message.includes('minimum') ? 400 : 500;
+    return new Response(JSON.stringify({ 
+        success: false, 
+        error: error.message || "Unknown error" 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: statusCode,
     });
   }
 });

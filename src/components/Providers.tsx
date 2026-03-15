@@ -2,30 +2,51 @@
 
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { useEffect } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 // URL манифеста нашего приложения
 const manifestUrl = 'https://telegram-gambling-app.vercel.app/tonconnect-manifest.json';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+    const { locale } = useI18n();
+
     useEffect(() => {
         const initTMA = async () => {
             try {
+                const analytics = (await import('@telegram-apps/analytics')).default;
                 const { postEvent, isTMA, miniApp, themeParams, retrieveLaunchParams } = await import('@tma.js/sdk');
+
+                // Init Analytics
+                try {
+                    const analytics = (await import('@telegram-apps/analytics')).default;
+                    const analyticsToken = process.env.NEXT_PUBLIC_TELEGRAM_ANALYTICS_TOKEN;
+                    if (!analyticsToken) {
+                        console.warn('Analytics token not configured');
+                        return;
+                    }
+                    analytics.init({
+                        appName: 'Astro Crash',
+                        token: analyticsToken,
+                        env: process.env.NODE_ENV === 'development' ? 'STG' : 'PROD',
+                    });
+                } catch (aErr) {
+                    console.warn('Analytics init error:', aErr);
+                }
 
                 const tma = await isTMA();
 
                 if (tma) {
                     // Mount components
                     // @ts-ignore
-                    if (miniApp.isAvailable() && !miniApp.isMounted()) miniApp.mount();
+                    if (miniApp?.isAvailable?.() && !miniApp?.isMounted?.()) miniApp.mount();
                     // @ts-ignore
-                    if (themeParams.isAvailable() && !themeParams.isMounted()) themeParams.mount();
+                    if (themeParams?.isAvailable?.() && !themeParams?.isMounted?.()) themeParams.mount();
 
                     postEvent('web_app_ready');
                     postEvent('web_app_expand');
 
                     // Set CSS variables from Telegram theme
-                    const params = (themeParams as any).getState?.() || (themeParams as any).get?.() || (themeParams as any).value;
+                    const params = (themeParams as any)?.getState?.() || (themeParams as any)?.get?.() || (themeParams as any)?.value;
                     if (params) {
                         document.documentElement.style.setProperty('--tg-theme-bg-color', params.backgroundColor || params.bgColor || '#050505');
                         document.documentElement.style.setProperty('--tg-theme-text-color', params.textColor || params.text_color || '#ffffff');

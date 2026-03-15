@@ -79,7 +79,7 @@ serve(async (req) => {
         console.log(`[PAYOUT] Simulated payout of ${bet.win_amount} TON to ${bet.users.wallet_address} (No Hot Wallet Seed)`);
     }
 
-    // 4. Update bet status to 'paid' AND increment user balance
+    // 4. Update bet status to 'paid' AND increment user balance atomically
     const { error: updateError } = await supabaseClient
       .from('bets')
       .update({ status: 'paid' })
@@ -87,23 +87,18 @@ serve(async (req) => {
 
     if (updateError) throw updateError
 
-    /* 
-    // 5. Increment balance in 'users' table - MOVED TO CLIENT FOR RESPONSIVE UI
-    const { data: userData, error: userFetchError } = await supabaseClient
-      .from('users')
-      .select('balance')
-      .eq('wallet_address', bet.users.wallet_address)
-      .single()
+    // 5. Increment balance in 'users' table - Use atomic RPC to prevent race conditions
+    const { data: balanceResult, error: balanceError } = await supabaseClient.rpc('increment_user_balance', {
+        p_wallet_address: bet.users.wallet_address,
+        p_amount: Number(bet.win_amount)
+    });
 
-    if (!userFetchError && userData) {
-        const newBalance = Number(userData.balance) + Number(bet.win_amount)
-        await supabaseClient
-            .from('users')
-            .update({ balance: newBalance })
-            .eq('wallet_address', bet.users.wallet_address)
-        console.log(`[BALANCE] Updated ${bet.users.wallet_address} balance to ${newBalance}`)
+    if (balanceError) {
+        console.error("[PAYOUT] Balance update failed:", balanceError);
+        // Still mark as paid since on-chain tx was sent
+    } else {
+        console.log(`[BALANCE] Updated ${bet.users.wallet_address} balance by ${bet.win_amount} TON`);
     }
-    */
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -132,8 +132,13 @@ export default function Page() {
     }
 
     try {
+      const walletAddress = (wallet as any)?.account?.address || address;
       const response = await supabase.functions.invoke('process-withdrawal', {
-        body: { amount: parseFloat(amount), wallet_address: (wallet as any)?.account?.address || address }
+        body: {
+          amount: parseFloat(amount),
+          wallet_address: walletAddress,
+          recipient_address: walletAddress  // Required: withdrawals only to own wallet
+        }
       });
 
       if (response.data?.success) {

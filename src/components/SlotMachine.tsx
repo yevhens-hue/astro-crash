@@ -5,17 +5,25 @@ import { motion, useAnimation } from 'framer-motion';
 import { useTonWallet } from '@tonconnect/ui-react';
 import { supabase } from '@/lib/supabase';
 import { FEATURE_FLAGS } from '@/lib/flags';
+import { useI18n } from '@/lib/i18n';
 
 const SYMBOLS = ['💎', '🎭', '👑', '777', '🍒', '🔔', '🍋'];
 const REEL_COUNT = 3;
 
 export default function SlotMachine({
     balance = 0,
-    onBalanceUpdate
+    bonus_balance = 0,
+    onBalanceUpdate,
+    onWageringUpdate,
+    onBigWin
 }: {
     balance?: number,
-    onBalanceUpdate?: (updater: (prev: number) => number) => void
+    bonus_balance?: number,
+    onBalanceUpdate?: (type: 'balance' | 'bonus', updater: (prev: number) => number) => void,
+    onWageringUpdate?: (amount: number) => void,
+    onBigWin?: (multiplier: number, amount: number) => void
 }) {
+    const { t } = useI18n();
     const wallet = useTonWallet();
     const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
     const [reels, setReels] = useState(Array(REEL_COUNT).fill(SYMBOLS[0]));
@@ -26,29 +34,36 @@ export default function SlotMachine({
         if (isSpinning) return;
 
         if (!address && !FEATURE_FLAGS.DEBUG_MODE) {
-            alert("Please connect your wallet first!");
+            alert(t('connect_wallet_first'));
             return;
         }
 
         const cost = 0.1;
-        if (balance < cost) {
-            alert("Insufficient balance!");
+        if (balance + bonus_balance < cost) {
+            alert(t('insufficient_balance'));
             return;
         }
+
+        const balanceType: 'balance' | 'bonus' = balance >= cost ? 'balance' : 'bonus';
 
         try {
             setIsSpinning(true);
 
-            // Optimistic UI update
-            if (onBalanceUpdate) onBalanceUpdate(prev => prev - cost);
-
-            let finalSymbols: string[];
+            let finalSymbols: string[] = [];
             let finalWinAmount = 0;
 
             if (address !== 'guest_test_wallet' || !FEATURE_FLAGS.GUEST_MODE) {
-                // Call Secure Edge Function
+                // Call Secure Edge Function with security headers
+                const initData = (window as any).Telegram?.WebApp?.initData || '';
                 const { data, error } = await supabase.functions.invoke('spin-slot', {
-                    body: { wallet_address: address }
+                    body: { 
+                        wallet_address: address,
+                        is_bonus: balanceType === 'bonus'
+                    },
+                    headers: {
+                        'x-telegram-init-data': initData,
+                        'x-wallet-address': address!
+                    }
                 });
 
                 if (error || !data?.success) {
@@ -57,8 +72,12 @@ export default function SlotMachine({
 
                 finalSymbols = data.spinResults;
                 finalWinAmount = data.winAmount;
+                if (typeof data.new_balance !== 'undefined' && onBalanceUpdate) {
+                    onBalanceUpdate(balanceType, () => Number(data.new_balance));
+                }
             } else {
-                // Local simulation for purely guest/debug mode without a DB account
+                // Local simulation: deduct cost first
+                if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev - cost);
                 finalSymbols = reels.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
                 const isWin = finalSymbols.every(s => s === finalSymbols[0]);
                 if (isWin) {
@@ -84,14 +103,26 @@ export default function SlotMachine({
             setReels(finalSymbols);
 
             if (finalWinAmount > 0) {
-                if (onBalanceUpdate) onBalanceUpdate(prev => prev + finalWinAmount);
-                alert(`🎰 BIG WIN! You won ${finalWinAmount} TON!`);
+                if (address === 'guest_test_wallet' && onBalanceUpdate) {
+                    onBalanceUpdate(balanceType, prev => prev + finalWinAmount);
+                }
+                alert(`${t('slot_win').replace('{amount}', finalWinAmount.toFixed(1))}`);
+                
+                // Wagering update (Slot style: count as turnover if win >= 1.5x cost)
+                if (finalWinAmount >= cost * 1.5 && onWageringUpdate) {
+                    onWageringUpdate(cost);
+                }
+
+                // Viral sharing (Slot: 10x cost is a big win)
+                if (finalWinAmount >= cost * 10 && onBigWin) {
+                    onBigWin(finalWinAmount / cost, finalWinAmount);
+                }
             }
 
         } catch (e: any) {
             console.error("Spin failed:", e);
-            if (onBalanceUpdate) onBalanceUpdate(prev => prev + cost); // Refund on failure
-            alert(`Spin failed: ${e.message || 'Check connection'}`);
+            if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + cost); // Refund on failure
+            alert(`${t('spin_failed') || 'Spin failed'}: ${e.message || 'Check connection'}`);
         } finally {
             setIsSpinning(false);
         }
@@ -117,14 +148,14 @@ export default function SlotMachine({
                 disabled={isSpinning}
                 className={`gold-button w-full text-3xl py-8 shadow-[0_15px_35px_-10px_rgba(212,175,55,0.6)] rounded-[2rem] font-black italic tracking-tighter active:scale-95 transition-all ${isSpinning ? 'opacity-50 grayscale' : ''}`}
             >
-                {isSpinning ? 'SPINNING...' : 'SPIN NOW'}
-                <div className="text-xs opacity-60 font-bold mt-1 tracking-widest not-italic">COST: {0.1} TON</div>
+                {isSpinning ? t('spinning') : t('spin_now')}
+                <div className="text-xs opacity-60 font-bold mt-1 tracking-widest not-italic">{t('cost')}: {0.1} TON</div>
             </button>
 
             {FEATURE_FLAGS.GUEST_MODE && !wallet && (
                 <div className="bg-orange-500/10 border border-orange-500/20 px-4 py-2 rounded-full">
                     <p className="text-[10px] text-orange-400 font-black uppercase tracking-[0.2em] animate-pulse">
-                        Guest Testing Mode Active
+                        {t('guest_mode_active')}
                     </p>
                 </div>
             )}

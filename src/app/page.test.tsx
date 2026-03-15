@@ -7,6 +7,7 @@ import Page from './page';
 vi.mock('@tonconnect/ui-react', () => ({
   useTonWallet: vi.fn(() => null),
   useTonConnectUI: vi.fn(() => [{}, vi.fn()]),
+  useTonAddress: vi.fn(() => ''),
   TonConnectButton: () => <div data-testid="ton-button">TonButton</div>,
 }));
 
