@@ -12,11 +12,9 @@ export default function TxModal({
   type: 'deposit' | 'withdraw';
   balance: number;
   onClose: () => void;
-  onConfirm: (amount: number, address?: string) => Promise<void>;
-  defaultAddress?: string;
+  onConfirm: (amount: number) => Promise<void>;
 }) {
   const [amount, setAmount] = useState('');
-  const [recipientAddress, setRecipientAddress] = useState(defaultAddress || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,12 +28,11 @@ export default function TxModal({
     if (!isDeposit && val > balance) { setError(t('insufficient_balance')); return; }
     const minAmount = isDeposit ? 0.1 : 0.5;
     if (val < minAmount) { setError(isDeposit ? t('min_deposit') : t('min_withdraw')); return; }
-    if (!isDeposit && !recipientAddress) { setError(t('enter_address')); return; }
     
     setError('');
     setLoading(true);
     try {
-      await onConfirm(val, recipientAddress);
+      await onConfirm(val);
       onClose();
     } catch (e: any) {
       setError(e.message || 'Transaction failed');
@@ -106,20 +103,6 @@ export default function TxModal({
             </button>
           ))}
         </div>
-
-        {/* Recipient Address (Only for Withdraw) */}
-        {!isDeposit && (
-          <div className="bg-black/40 rounded-2xl p-4 border border-white/5 flex flex-col gap-2">
-            <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">{t('recipient_addr')}</span>
-            <input
-              type="text"
-              placeholder="UQ..."
-              value={recipientAddress}
-              onChange={(e) => { setRecipientAddress(e.target.value); setError(''); }}
-              className="bg-transparent text-sm font-bold text-white outline-none placeholder:text-white/20 break-all"
-            />
-          </div>
-        )}
 
         {/* Error */}
         {error && (

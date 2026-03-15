@@ -519,21 +519,20 @@ export default function Page() {
     }
   }, [wallet, tonConnectUI, address]);
 
-  const handleWithdraw = useCallback(async (amount: number, customAddress?: string) => {
+  const handleWithdraw = useCallback(async (amount: number) => {
     if (!wallet) throw new Error("Please connect your wallet first");
     if (amount > balance) throw new Error("Insufficient balance");
     
-    const targetAddress = customAddress || address; // Use connected wallet if custom missing
-    if (!targetAddress) throw new Error("Recipient address is required");
+    if (!address) throw new Error("Recipient address is required");
 
     // Optimistically update the UI to feel instant
     setBalance(prev => prev - amount);
 
-    console.log("Withdrawal Payload being sent:", { amount, wallet_address: address, recipient_address: targetAddress });
+    console.log("Withdrawal Payload being sent:", { amount, wallet_address: address, recipient_address: address });
 
     try {
       const response = await supabase.functions.invoke('process-withdrawal', {
-        body: { amount, wallet_address: address, recipient_address: targetAddress }
+        body: { amount, wallet_address: address, recipient_address: address }
       });
 
       if (!response.data?.success) {
@@ -557,7 +556,6 @@ export default function Page() {
           balance={balance}
           onClose={() => setTxModal(null)}
           onConfirm={txModal === 'deposit' ? handleDeposit : handleWithdraw}
-          defaultAddress={displayAddress}
         />
       )}
 

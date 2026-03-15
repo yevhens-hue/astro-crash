@@ -141,13 +141,20 @@ export default function Page() {
         }
       });
 
+      // Check for edge function error
+      if (response.error) {
+        alert(`Withdrawal failed: ${response.error.message || "Edge function error"}`);
+        return;
+      }
+
       if (response.data?.success) {
         alert(`Withdrawal of ${amount} TON initiated!`);
       } else {
-        alert(`Withdrawal failed: ${response.error?.message || "Internal error"}`);
+        alert(`Withdrawal failed: ${response.data?.error || "Internal error"}`);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Withdrawal failed:", e);
+      alert(`Withdrawal failed: ${e.message || "Network error - check console"}`);
     }
   };
 
