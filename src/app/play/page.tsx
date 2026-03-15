@@ -16,6 +16,9 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState<'home' | 'referral' | 'leaderboard' | 'chat'>('home');
   const [activeGame, setActiveGame] = useState<'crash' | 'slots'>('crash');
   const [tonConnectUI] = useTonConnectUI();
+  const [username, setUsername] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
 
   // Mock local state for testing
   const FEATURE_FLAGS = { GUEST_MODE: true, HOUSE_WALLET: 'UQ...', DEBUG_MODE: true };
@@ -26,19 +29,28 @@ export default function Page() {
     const fetchBalance = async (userAddress: string) => {
       const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
       const telegramId = tgUser?.id;
+      const tgUsername = tgUser?.username
+        ? `@${tgUser.username}`
+        : (tgUser?.first_name || null);
 
       const { data, error } = await supabase
         .from('users')
-        .select('balance')
+        .select('id, balance, username, referral_code')
         .eq('wallet_address', userAddress)
         .single();
 
       if (data) {
+        setUserId(data.id);
+        setReferralCode(data.referral_code);
         setBalance(Number(data.balance));
-        if (telegramId) {
+        if (data.username || tgUsername) setUsername(data.username || tgUsername);
+        if (telegramId || (tgUsername && data.username !== tgUsername)) {
           await supabase
             .from('users')
-            .update({ telegram_id: telegramId })
+            .update({
+              ...(telegramId ? { telegram_id: telegramId } : {}),
+              ...(tgUsername ? { username: tgUsername } : {})
+            })
             .eq('wallet_address', userAddress);
         }
       } else if (error && error.code === 'PGRST116') {
@@ -48,9 +60,11 @@ export default function Page() {
           .insert({
             wallet_address: userAddress,
             balance: initialBalance,
-            telegram_id: telegramId
+            telegram_id: telegramId,
+            username: tgUsername
           });
         setBalance(initialBalance);
+        if (tgUsername) setUsername(tgUsername);
       }
     };
 
@@ -299,9 +313,9 @@ export default function Page() {
           </div>
         )}
 
-        {activeTab === 'referral' && <ReferralSystem />}
+        {activeTab === 'referral' && <ReferralSystem referralCode={referralCode} userId={userId} />}
         {activeTab === 'leaderboard' && <Leaderboard />}
-        {activeTab === 'chat' && <LiveChat />}
+        {activeTab === 'chat' && <LiveChat currentUsername={username} />}
       </div>
     </main>
   );

@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { verifyTelegramAuth } from "../_shared/telegram-auth.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-telegram-init-data',
 }
 
 serve(async (req) => {
@@ -17,21 +18,39 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { bet_id, cashout_at } = await req.json()
+    const { bet_id, cashout_at, wallet_address } = await req.json()
 
-    if (!bet_id || !cashout_at) {
-      throw new Error('bet_id and cashout_at are required');
+    if (!bet_id || !cashout_at || !wallet_address) {
+      throw new Error('bet_id, cashout_at and wallet_address are required');
+    }
+
+    // SECURITY: Verify Telegram Auth
+    const initData = req.headers.get('x-telegram-init-data')
+    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
+    
+    if (!botToken) throw new Error('Bot token not configured');
+    
+    if (initData) {
+      const isValid = await verifyTelegramAuth(initData, botToken);
+      if (!isValid) throw new Error('Unauthorized: Invalid Telegram Auth');
+    } else {
+      throw new Error('Unauthorized: Telegram Auth required');
     }
 
     // 1. Fetch bet and associated round
     const { data: bet, error: betError } = await supabaseClient
       .from('bets')
-      .select('*, rounds(crash_point), users(id, balance)')
+      .select('*, rounds(crash_point), users(id, balance, wallet_address)')
       .eq('id', bet_id)
       .single()
 
     if (betError || !bet) {
         throw new Error("Bet not found: " + (betError?.message || ''));
+    }
+
+    // SECURITY: Verify wallet owns the bet
+    if (bet.users.wallet_address !== wallet_address) {
+        throw new Error("Unauthorized: This bet belongs to another wallet");
     }
 
     if (bet.status !== 'confirmed') {

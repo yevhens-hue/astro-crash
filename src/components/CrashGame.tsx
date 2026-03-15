@@ -141,7 +141,7 @@ export default function CrashGame({
         // All bets
         const { data: all } = await supabase
             .from('bets')
-            .select('*, users(wallet_address)')
+            .select('*, users(wallet_address, username)')
             .order('created_at', { ascending: false })
             .limit(10);
         if (all) setAllBets(all);
@@ -168,7 +168,7 @@ export default function CrashGame({
         // Top bets
         const { data: top } = await supabase
             .from('bets')
-            .select('*, users(wallet_address)')
+            .select('*, users(wallet_address, username)')
             .eq('status', 'cashed')
             .order('win_amount', { ascending: false })
             .limit(10);
@@ -474,7 +474,7 @@ export default function CrashGame({
         setBetStatus('cashed');
         betStatusRef.current = 'cashed';
         if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + winAmount);
-        
+
         if (winMult >= 10 && onBigWin) {
             onBigWin(winMult, winAmount);
         }
@@ -505,9 +505,18 @@ export default function CrashGame({
             try {
                 if (address === 'guest_test_wallet' || !betId) return; // skip DB for guest
 
-                // 1. Secure Cashout
+                // 1. Secure Cashout with Telegram Auth
+                const initData = (window as any).Telegram?.WebApp?.initData || '';
                 const { data: cashoutData, error: cashoutError } = await supabase.functions.invoke('cashout-bet', {
-                    body: { bet_id: betId, cashout_at: winMult }
+                    body: {
+                        bet_id: betId,
+                        cashout_at: winMult,
+                        wallet_address: address
+                    },
+                    headers: {
+                        'x-telegram-init-data': initData,
+                        'x-wallet-address': address!
+                    }
                 });
 
                 if (cashoutError || !cashoutData?.success) {
@@ -791,7 +800,7 @@ export default function CrashGame({
                         {activeTab === 'all' && allBets.map((bet) => (
                             <LiveWinRow
                                 key={bet.id}
-                                user={bet.users?.wallet_address ? `${bet.users.wallet_address.slice(0, 4)}...${bet.users.wallet_address.slice(-4)}` : 'Anonymous'}
+                                user={bet.users?.username ? bet.users.username : (bet.users?.wallet_address ? `${bet.users.wallet_address.slice(0, 4)}...${bet.users.wallet_address.slice(-4)}` : 'Anonymous')}
                                 x={bet.cashout_at ? `${bet.cashout_at.toFixed(2)}x` : '-'}
                                 win={bet.win_amount ? `+${bet.win_amount.toFixed(2)} TON` : `${bet.amount} TON`}
                                 status={bet.status}
@@ -809,7 +818,7 @@ export default function CrashGame({
                         {activeTab === 'top' && topBets.map((bet) => (
                             <LiveWinRow
                                 key={bet.id}
-                                user={bet.users?.wallet_address ? `${bet.users.wallet_address.slice(0, 4)}...${bet.users.wallet_address.slice(-4)}` : 'Anonymous'}
+                                user={bet.users?.username ? bet.users.username : (bet.users?.wallet_address ? `${bet.users.wallet_address.slice(0, 4)}...${bet.users.wallet_address.slice(-4)}` : 'Anonymous')}
                                 x={bet.cashout_at ? `${bet.cashout_at.toFixed(2)}x` : '-'}
                                 win={`+${bet.win_amount.toFixed(2)} TON`}
                                 status={bet.status}
