@@ -7,7 +7,6 @@ export default function TxModal({
   balance,
   onClose,
   onConfirm,
-  defaultAddress,
 }: {
   type: 'deposit' | 'withdraw';
   balance: number;
@@ -20,7 +19,7 @@ export default function TxModal({
 
   const { t } = useI18n();
   const isDeposit = type === 'deposit';
-  const presets = isDeposit ? [0.5, 1, 2, 5] : [0.5, 1, Math.min(2, balance), Math.min(5, balance)].filter((v, i, a) => a.indexOf(v) === i);
+  const presets = [0.5, 1, 2, 5];
 
   const handleConfirm = async () => {
     const val = parseFloat(amount);
