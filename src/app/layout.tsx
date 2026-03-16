@@ -2,12 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import AgeGate from "@/components/AgeGate";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
-  title: "Astro Crash - Next-Gen TON Game",
-  description: "The ultimate crash game on Telegram",
+  title: "Astro Hub — TON Gaming Platform",
+  description: "Provably fair crash game on TON blockchain. 18+ only.",
 };
 
 export const viewport: Viewport = {
@@ -26,9 +27,11 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground select-none`}>
         <Providers>
-          <div className="min-h-screen max-w-md mx-auto flex flex-col">
-            {children}
-          </div>
+          <AgeGate>
+            <div className="min-h-screen max-w-md mx-auto flex flex-col">
+              {children}
+            </div>
+          </AgeGate>
         </Providers>
       </body>
     </html>
