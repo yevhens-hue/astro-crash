@@ -1124,7 +1124,7 @@ function BettingPanel({
 }) {
     const { t } = useI18n();
 
-    const quickAmounts = [0.5, 1, 2, 5];
+    const quickAmounts = [0.5, 1, 2, 5, 10, 25, 50];
     const quickAutoCashouts = [2, 5, 10];
     const autoCashoutValue = autoCashout;
 
