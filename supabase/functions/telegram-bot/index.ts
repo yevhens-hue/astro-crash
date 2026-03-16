@@ -1,7 +1,40 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
-const APP_URL = Deno.env.get("APP_URL") || "https://telegram-gambling-app.vercel.app";
+// SECURITY: Get URLs from environment - never hardcode!
+const APP_URL = Deno.env.get("APP_URL");
+const CHANNEL_URL = Deno.env.get("TELEGRAM_CHANNEL_URL");
+const TELEGRAM_BOT_NAME = Deno.env.get("TELEGRAM_BOT_NAME") || "AstroCrashRobot_bot";
+
+// CORS headers for this webhook
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+// SECURITY: Verify request comes from Telegram using secret token
+const verifyTelegramRequest = async (req: Request, body: any): Promise<boolean> => {
+    // Check for valid payload structure
+    if (!body || (!body.message && !body.callback_query && !body.inline_query)) {
+        return false;
+    }
+    
+    // Verify Telegram's secret token (X-Telegram-Bot-Api-Secret-Token header)
+    // This is the recommended way to secure webhooks per Telegram docs
+    const secretToken = Deno.env.get('TELEGRAM_WEBHOOK_SECRET');
+    const providedToken = req.headers.get('x-telegram-bot-api-secret-token');
+    
+    if (secretToken) {
+        // If secret is configured, it MUST be provided and match
+        if (!providedToken || providedToken !== secretToken) {
+            console.log('[SECURITY] Invalid or missing Telegram secret token');
+            return false;
+        }
+    }
+    
+    return true;
+};
 
 // Sanitize input to prevent XSS
 const sanitizeParam = (param: string): string => {
@@ -9,9 +42,39 @@ const sanitizeParam = (param: string): string => {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
     const payload = await req.json();
+    
+    // SECURITY: Verify request before processing
+    const isValid = await verifyTelegramRequest(req, payload);
+    if (!isValid) {
+        console.log('[SECURITY] Invalid Telegram request blocked');
+        return new Response(JSON.stringify({ error: 'Invalid request' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    
     console.log("Webhook received:", payload);
+
+    // SECURITY: Get URLs from environment - require in production
+    const isProduction = Deno.env.get('DENO_DEPLOYMENT_ID') !== undefined;
+    const appUrl = APP_URL || (isProduction ? '' : 'https://telegram-gambling-app.vercel.app');
+    const channelUrl = CHANNEL_URL || (isProduction ? '' : 'https://t.me/AstroCrashNews');
+
+    // In production, fail if URLs are not configured
+    if (isProduction && (!appUrl || !channelUrl)) {
+        console.error('[SECURITY] CRITICAL: APP_URL or TELEGRAM_CHANNEL_URL not configured in production!');
+        return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
 
     // Handle Start Command
     if (payload.message && payload.message.text && payload.message.text.startsWith("/start")) {
@@ -25,13 +88,13 @@ serve(async (req) => {
           [
             {
               text: "Play Now 🚀",
-              web_app: { url: APP_URL + (startParam ? `?startapp=${startParam}` : '') },
+              web_app: { url: appUrl + (startParam ? `?startapp=${startParam}` : '') },
             },
           ],
           [
             {
               text: "Join Channel 📢",
-              url: "https://t.me/AstroCrashNews",
+              url: channelUrl,
             },
           ],
         ],
@@ -55,9 +118,11 @@ serve(async (req) => {
       // If the user appended their referral code (e.g., typing "@AstroCrashRobot_bot ref_123"),
       // we can capture it. Otherwise, it's just the base app link.
 
+      // Use proper t.me URL for the bot
+      const botUsername = TELEGRAM_BOT_NAME.replace('_bot', '');
       const appLink = startAppArg 
-        ? `https://t.me/AstroCrashRobot_bot/play?startapp=${startAppArg}`
-        : `https://t.me/AstroCrashRobot_bot/play`;
+        ? `https://t.me/${botUsername}/play?startapp=${startAppArg}`
+        : `https://t.me/${botUsername}/play`;
 
       const results = [
         {
@@ -65,7 +130,7 @@ serve(async (req) => {
           id: "share_invite_" + Date.now(), // Ensure unique ID
           title: "🚀 Invite Friends to AstroCrash",
           description: "Earn 10% from their bets! 💸",
-          thumbnail_url: "https://telegram-gambling-app.vercel.app/images/coin.png", // Optional: Add a nice icon if available
+          thumbnail_url: `${appUrl}/images/coin.png`, // Use appUrl from env
           input_message_content: {
             message_text: `🚀 Join me on **AstroCrash**! Fly the rocket, win TON, and earn together! 🌕✨`,
             parse_mode: "Markdown"
@@ -95,13 +160,13 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error handling webhook:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

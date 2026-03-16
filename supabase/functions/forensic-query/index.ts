@@ -3,13 +3,37 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { TonClient, WalletContractV5R1, Address } from "npm:@ton/ton@14.0.0";
 import { mnemonicToWalletKey } from "npm:@ton/crypto@3.2.0";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// SECURITY: This is a debug/admin function - restrict access!
+const ADMIN_API_KEY = Deno.env.get('ADMIN_API_KEY');
+
+// SECURITY: Get wallet addresses from env only - never hardcode!
+const HOUSE_WALLET = Deno.env.get('HOUSE_WALLET');
+const FORENSIC_USER_WALLET = Deno.env.get('FORENSIC_USER_WALLET');
+
+// CORS: Restrict to specific origins in production
+const isProd = Deno.env.get('DENO_DEPLOYMENT_ID') !== undefined;
+const corsHeaders = isProd ? 
+  { 'Access-Control-Allow-Origin': Deno.env.get('ADMIN_ALLOWED_ORIGIN') || 'null' } :
+  { 'Access-Control-Allow-Origin': '*' };
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  // SECURITY: Check admin API key - require it in production
+  const providedKey = req.headers.get('x-admin-key');
+  if (!ADMIN_API_KEY) {
+    console.error('[SECURITY] ADMIN_API_KEY is not configured!');
+    return new Response(JSON.stringify({ error: 'Admin access not configured' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+  if (providedKey !== ADMIN_API_KEY) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
 
   try {
     const supabaseClient = createClient(
@@ -35,7 +59,12 @@ serve(async (req) => {
     const seqno = await contract.getSeqno();
 
     const derivedAddress = wallet.address.toString({ bounceable: false, testOnly: false });
-    const expectedAddress = "UQB0ZVYU321cleF9B5TwQc0KZ3h2L2sIAwPrQFODCWHPDoFA";
+    
+    // SECURITY: Verify derived address matches configured house wallet
+    const expectedAddress = HOUSE_WALLET;
+    if (!expectedAddress) {
+        throw new Error('HOUSE_WALLET not configured');
+    }
 
     // 3. Query transactions from DB
     const { data: dbWithdrawals, error: txError } = await supabaseClient
@@ -75,24 +104,27 @@ serve(async (req) => {
     }
 
     // 5. Query user's wallet for the 5 TON inflow (Investigation)
-    // In production, this should be parameterized or removed for security
-    const userWalletAddressStr = Deno.env.get('FORENSIC_USER_WALLET') || "UQBAGN3jApYWbNp4jy8VomFwKKdycQCsTcZnUJF00ZNrYdMt";
+    // SECURITY: Must be configured via env - no fallback!
+    const userWalletAddressStr = FORENSIC_USER_WALLET;
     let formattedUserTxs: any[] = [];
-    try {
-        const userTxs = await client.getTransactions(Address.parse(userWalletAddressStr), { limit: 10 });
-        formattedUserTxs = userTxs.map(tx => {
-            const inMsg = tx.inMessage;
-            return {
-                hash: typeof tx.hash === 'function' ? tx.hash().toString('hex') : (tx.hash instanceof Buffer || tx.hash instanceof Uint8Array ? Buffer.from(tx.hash).toString('hex') : tx.hash.toString()),
-                utime: tx.now,
-                date: new Date(tx.now * 1000).toISOString(),
-                valueInNano: inMsg?.info.type === 'internal' ? inMsg.info.value.coins.toString() : '0',
-                valueInTon: inMsg?.info.type === 'internal' ? Number(inMsg.info.value.coins) / 1e9 : 0,
-                from: inMsg?.info.type === 'internal' ? inMsg.info.src?.toString() : 'External/Other'
-            };
-        });
-    } catch (err: any) {
-        console.error("User chain query failed:", err.message);
+    
+    if (userWalletAddressStr) {
+        try {
+            const userTxs = await client.getTransactions(Address.parse(userWalletAddressStr), { limit: 10 });
+            formattedUserTxs = userTxs.map(tx => {
+                const inMsg = tx.inMessage;
+                return {
+                    hash: typeof tx.hash === 'function' ? tx.hash().toString('hex') : (tx.hash instanceof Buffer || tx.hash instanceof Uint8Array ? Buffer.from(tx.hash).toString('hex') : tx.hash.toString()),
+                    utime: tx.now,
+                    date: new Date(tx.now * 1000).toISOString(),
+                    valueInNano: inMsg?.info.type === 'internal' ? inMsg.info.value.coins.toString() : '0',
+                    valueInTon: inMsg?.info.type === 'internal' ? Number(inMsg.info.value.coins) / 1e9 : 0,
+                    from: inMsg?.info.type === 'internal' ? inMsg.info.src?.toString() : 'External/Other'
+                };
+            });
+        } catch (err: any) {
+            console.error("User chain query failed:", err.message);
+        }
     }
 
     return new Response(

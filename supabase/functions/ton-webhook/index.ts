@@ -2,14 +2,53 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { Address } from "https://esm.sh/@ton/core"
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// SECURITY: CORS should be restricted in production
+// Allow only specific origins, not '*'
+const ALLOWED_ORIGINS = Deno.env.get('ALLOWED_ORIGINS')?.split(',') || [];
+const isProd = Deno.env.get('DENO_DEPLOYMENT_ID') !== undefined; // Detect production
+
+const getCorsHeaders = (origin: string | null) => {
+    // In production, only allow specific origins
+    if (isProd && origin && ALLOWED_ORIGINS.includes(origin)) {
+        return {
+            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        };
+    }
+    // In development or if no origin match, be more permissive but log it
+    if (!isProd) {
+        return {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        };
+    }
+    // Production: deny by default
+    return {
+        'Access-Control-Allow-Origin': 'null',
+    };
+};
 
 serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
+  // In production, if origin is not allowed, still handle OPTIONS but deny others
+  if (isProd && origin && !ALLOWED_ORIGINS.includes(origin)) {
+      console.log(`[SECURITY] Blocked request from unauthorized origin: ${origin}`);
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  // Only allow POST in production from allowed origins
+  if (isProd && origin && !ALLOWED_ORIGINS.includes(origin)) {
+    return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 403
+    });
   }
 
   try {
@@ -18,12 +57,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // SECURITY: Get house wallet from env ONLY - never hardcode!
+    const HOUSE_WALLET = Deno.env.get('HOUSE_WALLET');
+    if (!HOUSE_WALLET) {
+        console.error('[SECURITY] CRITICAL: HOUSE_WALLET not configured!');
+        throw new Error('Server configuration error');
+    }
+
     const { tx_hash, amount, sender, type } = await req.json()
 
     console.log(`Verifying ${type}: ${tx_hash} from ${sender}`);
-
-    // House Wallet Address
-    const HOUSE_WALLET = "UQB0ZVYU321cleF9B5TwQc0KZ3h2L2sIAwPrQFODCWHPDoFA";
 
     // 1. Verify transaction via TonCenter API
     // Using mainnet for production
@@ -118,9 +161,10 @@ serve(async (req) => {
     })
   } catch (error: any) {
     console.error("Webhook Error:", error);
+    // SECURITY: Return proper error codes, not 200
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200, // Returning 200 so clients can read the JSON error safely
+      status: 400
     })
   }
 })
