@@ -60,6 +60,7 @@ body {
     background-clip: text;
     color: transparent;
     font-weight: bold;
+    padding-right: 0.1em;
   }
 
   .slot-reel {
