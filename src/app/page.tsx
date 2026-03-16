@@ -448,7 +448,7 @@ export default function Page() {
         setWageringRequirement(initialWager);
         setWageringTotal(initialWager);
         if (tgUsername) setUsername(tgUsername);
-        if (initialBalance > 0) {
+        if (initialBonus > 0 || initialBalance > 0) {
           setShowWelcomeBonus(true);
         }
       }

@@ -274,7 +274,8 @@ export default function CrashGame({
                     const { data: roundData, error: roundError } = await supabase.functions.invoke('generate-round');
                     if (roundError || !roundData) {
                         // Fall back to local simulation
-                        throw new Error('Server unavailable, using local mode');
+                        console.warn('generate-round error:', roundError);
+                        throw new Error(roundError?.message || 'Server unavailable, using local mode');
                     }
                     crashAt = parseFloat(roundData.crash_point);
                     roundId = roundData.id;
@@ -317,6 +318,7 @@ export default function CrashGame({
                     });
 
                     if (error || !data?.success) {
+                        console.warn('place-bet error:', error, data);
                         throw new Error(error?.message || data?.error || 'Failed to place bet');
                     }
 
@@ -326,7 +328,8 @@ export default function CrashGame({
                     }
                 } catch (betError: any) {
                     console.warn('Server bet failed, using local mode:', betError.message);
-                    // Continue with local mode
+                    // Continue with local mode - the bet will be tracked locally
+                    dbBetId = null;
                 }
             }
 
@@ -377,7 +380,19 @@ export default function CrashGame({
             // Provide more helpful error message
             let errorMessage = e.message || 'Check connection';
             if (errorMessage.includes('Failed to send a request')) {
-                errorMessage = 'Server unavailable. Please try again in a moment.';
+                errorMessage = 'Server unavailable. Game will continue in offline mode.';
+                // Don't show alert for server errors - continue with local mode silently
+                setIsBetting(false);
+
+                // Reset bet status
+                if (panel === 'A') {
+                    setBetStatusA('none');
+                    betStatusRefA.current = 'none';
+                } else {
+                    setBetStatusB('none');
+                    betStatusRefB.current = 'none';
+                }
+                return;
             } else if (errorMessage.includes('NetworkError')) {
                 errorMessage = 'Network error. Check your internet connection.';
             }
