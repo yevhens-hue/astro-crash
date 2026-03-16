@@ -382,6 +382,8 @@ export default function CrashGame({
             if (errorMessage.includes('Failed to send a request')) {
                 errorMessage = 'Server unavailable. Game will continue in offline mode.';
                 // Don't show alert for server errors - continue with local mode silently
+                // Refund the balance if it was deducted
+                if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
                 setIsBetting(false);
 
                 // Reset bet status
