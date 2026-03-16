@@ -374,7 +374,14 @@ export default function CrashGame({
             }
         } catch (e: any) {
             console.error("Bet failed:", e);
-            alert(`Bet failed: ${e.message || 'Check connection'}`);
+            // Provide more helpful error message
+            let errorMessage = e.message || 'Check connection';
+            if (errorMessage.includes('Failed to send a request')) {
+                errorMessage = 'Server unavailable. Please try again in a moment.';
+            } else if (errorMessage.includes('NetworkError')) {
+                errorMessage = 'Network error. Check your internet connection.';
+            }
+            alert(`Bet failed: ${errorMessage}`);
             // Reset status on failure (refund is handled by state reverting or simply not update)
             // But here we subtracted optimistically, so we should refund:
             if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
