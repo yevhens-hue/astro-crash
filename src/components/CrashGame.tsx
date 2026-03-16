@@ -41,6 +41,14 @@ export default function CrashGame({
     const [showShareModal, setShowShareModal] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
 
+    // Auto-cashout visualization states
+    const [autoCashoutTriggeredA, setAutoCashoutTriggeredA] = useState(false);
+    const [autoCashoutTriggeredB, setAutoCashoutTriggeredB] = useState(false);
+    const [showFlyingMoneyA, setShowFlyingMoneyA] = useState(false);
+    const [showFlyingMoneyB, setShowFlyingMoneyB] = useState(false);
+    const [autoCashoutCountdownA, setAutoCashoutCountdownA] = useState<number | null>(null);
+    const [autoCashoutCountdownB, setAutoCashoutCountdownB] = useState<number | null>(null);
+
     const [betAmountA, setBetAmountA] = useState(1.0);
     const [autoCashoutA, setAutoCashoutA] = useState(2.0);
     const [isAutoCashA, setIsAutoCashA] = useState(false);
@@ -52,19 +60,24 @@ export default function CrashGame({
     const [isAutoCashB, setIsAutoCashB] = useState(false);
     const [isAutoBetB, setIsAutoBetB] = useState(false);
 
-    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string, serverSeed?: string, clientSeed?: string, hash?: string }[]>([]);
+    const [recentMultipliers, setRecentMultipliers] = useState<{ multiplier: number, id: string, serverSeed?: string, clientSeed?: string, hash?: string, timestamp?: string }[]>([]);
+    const [statsMultipliers, setStatsMultipliers] = useState<{ multiplier: number }[]>([]);
     const [selectedRound, setSelectedRound] = useState<any | null>(null);
     const [activeTab, setActiveTab] = useState<'all' | 'my' | 'top'>('all');
+    const [activePanel, setActivePanel] = useState<'A' | 'B'>('A');
     const [allBets, setAllBets] = useState<any[]>([]);
     const [myBets, setMyBets] = useState<any[]>([]);
     const [topBets, setTopBets] = useState<any[]>([]);
     const [localMyBets, setLocalMyBets] = useState<any[]>([]); // Guest mode session history
+    const [autoCashoutedBets, setAutoCashoutedBets] = useState<Set<string>>(new Set());
 
     const multiplierRef = useRef(1.00);
     const autoCashoutRefA = useRef<number>(2.00);
     const autoCashoutRefB = useRef<number>(2.00);
     const isAutoCashRefA = useRef(false);
     const isAutoCashRefB = useRef(false);
+    const isAutoCashTriggeredRefA = useRef(false);
+    const isAutoCashTriggeredRefB = useRef(false);
     const requestRef = useRef<number | null>(null);
     const startTimeRef = useRef<number | null>(null);
     const betStatusRefA = useRef<'none' | 'betting' | 'cashed'>('none');
@@ -81,6 +94,11 @@ export default function CrashGame({
     const isFlyingRef = useRef(false);
     const isCrashedRef = useRef(true);
 
+    // Initialize sound manager
+    useEffect(() => {
+        SoundManager.init();
+    }, []);
+
     useEffect(() => {
         latestCountdownRef.current = countdown;
     }, [countdown]);
@@ -88,6 +106,7 @@ export default function CrashGame({
     useEffect(() => {
         // Initial fetch
         fetchRecentRounds();
+        fetchStatsRounds();
         fetchBets();
 
         // Subscribe to real-time bets
@@ -178,10 +197,10 @@ export default function CrashGame({
     const fetchRecentRounds = async () => {
         const { data, error } = await supabase
             .from('rounds')
-            .select('id, crash_point, server_seed')
+            .select('id, crash_point, server_seed, created_at')
             .not('crash_point', 'is', null)
             .order('created_at', { ascending: false })
-            .limit(15);
+            .limit(50);
 
         if (!error && data) {
             setRecentMultipliers(data.map(r => {
@@ -194,9 +213,25 @@ export default function CrashGame({
                     id: r.id,
                     serverSeed: seedObj?.serverSeed,
                     clientSeed: seedObj?.clientSeed,
-                    hash: seedObj?.hash || r.server_seed
+                    hash: seedObj?.hash || r.server_seed,
+                    timestamp: r.created_at
                 };
             }));
+        }
+    };
+
+    const fetchStatsRounds = async () => {
+        const { data, error } = await supabase
+            .from('rounds')
+            .select('crash_point')
+            .not('crash_point', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(100);
+
+        if (!error && data) {
+            setStatsMultipliers(data.map(r => ({
+                multiplier: parseFloat(r.crash_point)
+            })));
         }
     };
 
@@ -356,6 +391,16 @@ export default function CrashGame({
         SoundManager.playStart();
         SoundManager.startEngine();
 
+        // Reset auto-cashout triggered states
+        setAutoCashoutTriggeredA(false);
+        setAutoCashoutTriggeredB(false);
+        isAutoCashTriggeredRefA.current = false;
+        isAutoCashTriggeredRefB.current = false;
+        setAutoCashoutCountdownA(null);
+        setAutoCashoutCountdownB(null);
+        // Keep auto-cashouted bets in history for reference, but clear on new round start if needed
+        // setAutoCashoutedBets(new Set());
+
         // Reset bet statuses for new round
         if (betStatusRefA.current === 'cashed') {
             setBetStatusA('none');
@@ -385,10 +430,28 @@ export default function CrashGame({
 
                 // Auto cashout checks
                 if (isAutoCashRefA.current && betStatusRefA.current === 'betting' && newMultiplier >= autoCashoutRefA.current) {
-                    cashOut('A');
+                    if (!isAutoCashTriggeredRefA.current) {
+                        cashOut('A', true);
+                    }
                 }
                 if (isAutoCashRefB.current && betStatusRefB.current === 'betting' && newMultiplier >= autoCashoutRefB.current) {
-                    cashOut('B');
+                    if (!isAutoCashTriggeredRefB.current) {
+                        cashOut('B', true);
+                    }
+                }
+
+                // Update countdown to auto-cashout
+                if (isAutoCashRefA.current && betStatusRefA.current === 'betting' && !isAutoCashTriggeredRefA.current) {
+                    const timeToAuto = Math.log(newMultiplier / autoCashoutRefA.current) / Math.log(1.15);
+                    setAutoCashoutCountdownA(Math.max(0, timeToAuto));
+                } else {
+                    setAutoCashoutCountdownA(null);
+                }
+                if (isAutoCashRefB.current && betStatusRefB.current === 'betting' && !isAutoCashTriggeredRefB.current) {
+                    const timeToAuto = Math.log(newMultiplier / autoCashoutRefB.current) / Math.log(1.15);
+                    setAutoCashoutCountdownB(Math.max(0, timeToAuto));
+                } else {
+                    setAutoCashoutCountdownB(null);
                 }
 
                 requestRef.current = requestAnimationFrame(update);
@@ -423,7 +486,10 @@ export default function CrashGame({
         startCountdown(10);
 
         // Refresh history
-        setTimeout(fetchRecentRounds, 1000);
+        setTimeout(() => {
+            fetchRecentRounds();
+            fetchStatsRounds();
+        }, 1000);
     };
 
     const autoStartRound = useCallback(() => {
@@ -450,13 +516,13 @@ export default function CrashGame({
 
     const adjustBet = (panel: 'A' | 'B', delta: number) => {
         if (panel === 'A') {
-            setBetAmountA(prev => Math.max(0.1, parseFloat((prev + delta).toFixed(1))));
+            setBetAmountA(prev => Math.min(100, Math.max(0.1, parseFloat((prev + delta).toFixed(1)))));
         } else {
-            setBetAmountB(prev => Math.max(0.1, parseFloat((prev + delta).toFixed(1))));
+            setBetAmountB(prev => Math.min(100, Math.max(0.1, parseFloat((prev + delta).toFixed(1)))));
         }
     };
 
-    const cashOut = (panel: 'A' | 'B') => {
+    const cashOut = (panel: 'A' | 'B', isAuto: boolean = false) => {
         const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
         const betStatusRef = panel === 'A' ? betStatusRefA : betStatusRefB;
         const currentBetIdRef = panel === 'A' ? currentBetIdRefA : currentBetIdRefB;
@@ -465,8 +531,34 @@ export default function CrashGame({
 
         if (betStatusRef.current !== 'betting' || !multiplierRef.current || !currentBetIdRef.current) return;
 
-        // Immediately update UI (synchronous — no awaits, no INP block)
-        SoundManager.playWin();
+        // Auto-cashout visual and sound effects
+        if (isAuto) {
+            if (panel === 'A') {
+                setAutoCashoutTriggeredA(true);
+                setShowFlyingMoneyA(true);
+                isAutoCashTriggeredRefA.current = true;
+            } else {
+                setAutoCashoutTriggeredB(true);
+                setShowFlyingMoneyB(true);
+                isAutoCashTriggeredRefB.current = true;
+            }
+            // Track auto-cashout bet for history display
+            const currentBetId = panel === 'A' ? currentBetIdRefA.current : currentBetIdRefB.current;
+            if (currentBetId) {
+                setAutoCashoutedBets(prev => new Set(prev).add(currentBetId));
+            }
+            // Play special auto-cashout sound
+            SoundManager.playAutoCashout();
+
+            // Hide flying money animation after 1.5s
+            setTimeout(() => {
+                if (panel === 'A') setShowFlyingMoneyA(false);
+                else setShowFlyingMoneyB(false);
+            }, 1500);
+        } else {
+            SoundManager.playWin();
+        }
+
         const winMult = multiplierRef.current;
         const balanceType = panel === 'A' ? betBalanceTypeA.current : betBalanceTypeB.current;
         const winAmount = amount * winMult;
@@ -569,7 +661,29 @@ export default function CrashGame({
                 } : null}
             />
             {/* Recent Multipliers Ribbon */}
-            <div className="w-full overflow-hidden relative group">
+            <div className="w-full overflow-hidden relative group md:hidden">
+                <div className="flex gap-1 overflow-x-auto no-scrollbar py-1 px-1">
+                    {recentMultipliers.slice(0, 20).map((m, i) => {
+                        const colorClass = m.multiplier >= 10 ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' :
+                            m.multiplier >= 2 ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                                'bg-blue-500/20 text-blue-400 border-blue-500/30';
+                        return (
+                            <motion.button
+                                key={m.id}
+                                onClick={() => setSelectedRound(m)}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className={`flex-shrink-0 px-1.5 py-0.5 rounded-full text-[8px] font-bold border hover:brightness-125 transition-all ${colorClass}`}
+                            >
+                                {m.multiplier.toFixed(2)}x
+                            </motion.button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Desktop Recent Multipliers - larger */}
+            <div className="w-full overflow-hidden relative group hidden md:block">
                 <div className="flex gap-1 overflow-x-auto no-scrollbar py-2 px-1">
                     {recentMultipliers.map((m, i) => {
                         const colorClass = m.multiplier >= 10 ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' :
@@ -590,6 +704,78 @@ export default function CrashGame({
                 </div>
                 <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0a0a0a] to-transparent pointer-events-none" />
                 <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0a0a0a] to-transparent pointer-events-none" />
+            </div>
+
+            {/* Heat Map & Stats - hidden on small mobile */}
+            <div className="w-full flex flex-col gap-3 hidden sm:block">
+                {/* Stats Row - smaller on mobile */}
+                <div className="flex gap-1 md:gap-2 justify-between">
+                    <div className="flex-1 bg-black/40 rounded-lg md:rounded-xl p-1.5 md:p-2 border border-white/5">
+                        <div className="text-[7px] md:text-[8px] uppercase font-bold text-white/30 tracking-widest text-center">Avg 20</div>
+                        <div className="text-[10px] md:text-xs font-black text-center text-gold">{recentMultipliers.slice(0, 20).length > 0 ? (recentMultipliers.slice(0, 20).reduce((a, b) => a + b.multiplier, 0) / Math.min(recentMultipliers.length, 20)).toFixed(2) : '-'}x</div>
+                    </div>
+                    <div className="flex-1 bg-black/40 rounded-lg md:rounded-xl p-1.5 md:p-2 border border-white/5">
+                        <div className="text-[7px] md:text-[8px] uppercase font-bold text-white/30 tracking-widest text-center">Avg 50</div>
+                        <div className="text-[10px] md:text-xs font-black text-center text-gold">{recentMultipliers.length > 0 ? (recentMultipliers.reduce((a, b) => a + b.multiplier, 0) / Math.min(recentMultipliers.length, 50)).toFixed(2) : '-'}x</div>
+                    </div>
+                    <div className="flex-1 bg-black/40 rounded-lg md:rounded-xl p-1.5 md:p-2 border border-white/5 hidden sm:block">
+                        <div className="text-[7px] md:text-[8px] uppercase font-bold text-white/30 tracking-widest text-center">Avg 100</div>
+                        <div className="text-[10px] md:text-xs font-black text-center text-gold">{statsMultipliers.length > 0 ? (statsMultipliers.reduce((a, b) => a + b.multiplier, 0) / Math.min(statsMultipliers.length, 100)).toFixed(2) : '-'}x</div>
+                    </div>
+                    <div className="flex-1 bg-red-500/10 rounded-lg md:rounded-xl p-1.5 md:p-2 border border-red-500/20">
+                        <div className="text-[7px] md:text-[8px] uppercase font-bold text-red-400/50 tracking-widest text-center">🔥 Streak</div>
+                        <div className="text-[10px] md:text-xs font-black text-center text-red-400">
+                            {(() => {
+                                let streak = 0;
+                                for (const m of recentMultipliers) {
+                                    if (m.multiplier < 1.5) streak++;
+                                    else break;
+                                }
+                                return streak;
+                            })()}x
+                        </div>
+                    </div>
+                </div>
+
+                {/* Heat Map Grid - smaller on mobile */}
+                <div className="bg-black/40 rounded-xl md:rounded-xl p-2 md:p-3 border border-white/5">
+                    <div className="flex justify-between items-center mb-2 hidden md:flex">
+                        <span className="text-[8px] uppercase font-bold text-white/30 tracking-widest">History Heat Map</span>
+                        <div className="flex gap-2 text-[7px]">
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-500/60" /> &lt;1.5x</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-yellow-500/60" />1.5-2x</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-green-500/60" />&gt;2x</span>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-8 md:grid-cols-10 gap-0.5 md:gap-1">
+                        {recentMultipliers.slice(0, 32).map((m, i) => {
+                            const getHeatColor = (mult: number) => {
+                                if (mult < 1.5) return 'bg-red-500/60 border-red-500/40';
+                                if (mult < 2.0) return 'bg-yellow-500/60 border-yellow-500/40';
+                                return 'bg-green-500/60 border-green-500/40';
+                            };
+                            const formatTime = (ts?: string) => {
+                                if (!ts) return '';
+                                const d = new Date(ts);
+                                return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                            };
+                            return (
+                                <div
+                                    key={m.id || i}
+                                    className={`relative group cursor-pointer ${getHeatColor(m.multiplier)} border rounded-sm h-5 md:h-6 hover:scale-110 hover:z-10 transition-all`}
+                                >
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 border border-white/10 rounded-lg text-[8px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-20 transition-opacity">
+                                        <div className="font-bold text-gold">{m.multiplier.toFixed(2)}x</div>
+                                        <div className="text-white/40">{formatTime(m.timestamp)}</div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {Array.from({ length: Math.max(0, 32 - recentMultipliers.length) }).map((_, i) => (
+                            <div key={`empty-${i}`} className="bg-white/5 border border-white/5 rounded-sm h-5 md:h-6" />
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Game Screen */}
@@ -719,7 +905,7 @@ export default function CrashGame({
                         )}
                     </AnimatePresence>
 
-                    <div className={`absolute top-4 right-4 flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 px-3 py-1 rounded-full transition-all ${isSquadActive ? 'scale-110 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'opacity-60'} pointer-events-none`}>
+                    <div className={`absolute top-4 right-4 hidden md:flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 px-3 py-1 rounded-full transition-all ${isSquadActive ? 'scale-110 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'opacity-60'} pointer-events-none`}>
                         <Users className={`w-3 h-3 ${isSquadActive ? 'text-purple-400' : 'text-white/40'}`} />
                         <span className={`text-[10px] font-bold uppercase tracking-tighter ${isSquadActive ? 'text-purple-400' : 'text-white/40'}`}>
                             {isSquadActive ? `${t('squad_active')} (${squadSize})` : `Online: ${squadSize}`}
@@ -728,47 +914,118 @@ export default function CrashGame({
                 </motion.div>
             </div>
 
-            {/* Provably Fair Info */}
-            <div className="relative z-10 w-full px-2 mt-2 flex justify-between items-center text-[8px] uppercase font-bold text-white/20 tracking-widest">
+            {/* Provably Fair Info - hidden on mobile */}
+            <div className="relative z-10 w-full px-2 mt-2 hidden md:flex justify-between items-center text-[8px] uppercase font-bold text-white/20 tracking-widest">
                 <span>{t('provably_fair')} {t('active')}</span>
                 <span className="truncate max-w-[150px]">Seed: {currentSeed}</span>
+            </div>
+
+            {/* Panel Tabs for Mobile */}
+            <div className="md:hidden w-full flex gap-2 mb-2">
+                <button
+                    onClick={() => setActivePanel('A')}
+                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${activePanel === 'A' ? 'bg-gold text-black shadow-[0_0_15px_rgba(212,175,55,0.5)]' : 'bg-white/10 text-white/60'}`}
+                >
+                    Panel A
+                </button>
+                <button
+                    onClick={() => setActivePanel('B')}
+                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${activePanel === 'B' ? 'bg-gold text-black shadow-[0_0_15px_rgba(212,175,55,0.5)]' : 'bg-white/10 text-white/60'}`}
+                >
+                    Panel B
+                </button>
             </div>
 
             {/* Controls */}
             <div className="relative z-20 w-full flex flex-col gap-4">
                 <div className="flex flex-col gap-4">
-                    <BettingPanel
-                        panel="A"
-                        status={betStatusA}
-                        amount={betAmountA}
-                        autoCashout={autoCashoutA}
-                        isAutoCash={isAutoCashA}
-                        isAutoBet={isAutoBetA}
-                        onAdjust={(d) => adjustBet('A', d)}
-                        onAutoCashoutChange={setAutoCashoutA}
-                        onAutoCashToggle={() => setIsAutoCashA(!isAutoCashA)}
-                        onAutoBetToggle={() => setIsAutoBetA(!isAutoBetA)}
-                        onPlaceBet={() => handlePlaceBet('A')}
-                        onCashOut={() => cashOut('A')}
-                        isFlying={isFlying}
-                        isBetting={isBetting}
-                    />
-                    <BettingPanel
-                        panel="B"
-                        status={betStatusB}
-                        amount={betAmountB}
-                        autoCashout={autoCashoutB}
-                        isAutoCash={isAutoCashB}
-                        isAutoBet={isAutoBetB}
-                        onAdjust={(d) => adjustBet('B', d)}
-                        onAutoCashoutChange={setAutoCashoutB}
-                        onAutoCashToggle={() => setIsAutoCashB(!isAutoCashB)}
-                        onAutoBetToggle={() => setIsAutoBetB(!isAutoBetB)}
-                        onPlaceBet={() => handlePlaceBet('B')}
-                        onCashOut={() => cashOut('B')}
-                        isFlying={isFlying}
-                        isBetting={isBetting}
-                    />
+                    {/* Desktop: show both panels, Mobile: show only active panel */}
+                    <div className="hidden md:block">
+                        <BettingPanel
+                            panel="A"
+                            status={betStatusA}
+                            amount={betAmountA}
+                            autoCashout={autoCashoutA}
+                            isAutoCash={isAutoCashA}
+                            isAutoBet={isAutoBetA}
+                            onAdjust={(d) => adjustBet('A', d)}
+                            onAutoCashoutChange={setAutoCashoutA}
+                            onAutoCashToggle={() => setIsAutoCashA(!isAutoCashA)}
+                            onAutoBetToggle={() => setIsAutoBetA(!isAutoBetA)}
+                            onPlaceBet={() => handlePlaceBet('A')}
+                            onCashOut={() => cashOut('A')}
+                            isFlying={isFlying}
+                            isBetting={isBetting}
+                            autoCashoutTriggered={autoCashoutTriggeredA}
+                            showFlyingMoney={showFlyingMoneyA}
+                            autoCashoutCountdown={autoCashoutCountdownA}
+                        />
+                        <div className="my-2" />
+                        <BettingPanel
+                            panel="B"
+                            status={betStatusB}
+                            amount={betAmountB}
+                            autoCashout={autoCashoutB}
+                            isAutoCash={isAutoCashB}
+                            isAutoBet={isAutoBetB}
+                            onAdjust={(d) => adjustBet('B', d)}
+                            onAutoCashoutChange={setAutoCashoutB}
+                            onAutoCashToggle={() => setIsAutoCashB(!isAutoCashB)}
+                            onAutoBetToggle={() => setIsAutoBetB(!isAutoBetB)}
+                            onPlaceBet={() => handlePlaceBet('B')}
+                            onCashOut={() => cashOut('B')}
+                            isFlying={isFlying}
+                            isBetting={isBetting}
+                            autoCashoutTriggered={autoCashoutTriggeredB}
+                            showFlyingMoney={showFlyingMoneyB}
+                            autoCashoutCountdown={autoCashoutCountdownB}
+                        />
+                    </div>
+                    {/* Mobile: show only active panel */}
+                    <div className="md:hidden">
+                        {activePanel === 'A' && (
+                            <BettingPanel
+                                panel="A"
+                                status={betStatusA}
+                                amount={betAmountA}
+                                autoCashout={autoCashoutA}
+                                isAutoCash={isAutoCashA}
+                                isAutoBet={isAutoBetA}
+                                onAdjust={(d) => adjustBet('A', d)}
+                                onAutoCashoutChange={setAutoCashoutA}
+                                onAutoCashToggle={() => setIsAutoCashA(!isAutoCashA)}
+                                onAutoBetToggle={() => setIsAutoBetA(!isAutoBetA)}
+                                onPlaceBet={() => handlePlaceBet('A')}
+                                onCashOut={() => cashOut('A')}
+                                isFlying={isFlying}
+                                isBetting={isBetting}
+                                autoCashoutTriggered={autoCashoutTriggeredA}
+                                showFlyingMoney={showFlyingMoneyA}
+                                autoCashoutCountdown={autoCashoutCountdownA}
+                            />
+                        )}
+                        {activePanel === 'B' && (
+                            <BettingPanel
+                                panel="B"
+                                status={betStatusB}
+                                amount={betAmountB}
+                                autoCashout={autoCashoutB}
+                                isAutoCash={isAutoCashB}
+                                isAutoBet={isAutoBetB}
+                                onAdjust={(d) => adjustBet('B', d)}
+                                onAutoCashoutChange={setAutoCashoutB}
+                                onAutoCashToggle={() => setIsAutoCashB(!isAutoCashB)}
+                                onAutoBetToggle={() => setIsAutoBetB(!isAutoBetB)}
+                                onPlaceBet={() => handlePlaceBet('B')}
+                                onCashOut={() => cashOut('B')}
+                                isFlying={isFlying}
+                                isBetting={isBetting}
+                                autoCashoutTriggered={autoCashoutTriggeredB}
+                                showFlyingMoney={showFlyingMoneyB}
+                                autoCashoutCountdown={autoCashoutCountdownB}
+                            />
+                        )}
+                    </div>
                 </div>
 
                 {!wallet && !FEATURE_FLAGS.GUEST_MODE && (
@@ -813,6 +1070,7 @@ export default function CrashGame({
                                 x={bet.cashout_at ? `${parseFloat(bet.cashout_at).toFixed(2)}x` : '-'}
                                 win={bet.win_amount ? `+${parseFloat(bet.win_amount).toFixed(2)} TON` : `${bet.amount} TON`}
                                 status={bet.status}
+                                isAutoCashout={autoCashoutedBets.has(bet.id)}
                             />
                         ))}
                         {activeTab === 'top' && topBets.map((bet) => (
@@ -841,7 +1099,10 @@ export default function CrashGame({
 function BettingPanel({
     panel, status, amount, autoCashout, isAutoCash, isAutoBet,
     onAdjust, onAutoCashoutChange, onAutoCashToggle, onAutoBetToggle,
-    onPlaceBet, onCashOut, isFlying, isBetting
+    onPlaceBet, onCashOut, isFlying, isBetting,
+    autoCashoutTriggered = false,
+    showFlyingMoney = false,
+    autoCashoutCountdown = null
 }: {
     panel: 'A' | 'B',
     status: 'none' | 'betting' | 'cashed',
@@ -856,9 +1117,17 @@ function BettingPanel({
     onPlaceBet: () => void,
     onCashOut: () => void,
     isFlying: boolean,
-    isBetting: boolean
+    isBetting: boolean,
+    autoCashoutTriggered?: boolean,
+    showFlyingMoney?: boolean,
+    autoCashoutCountdown?: number | null
 }) {
     const { t } = useI18n();
+
+    const quickAmounts = [0.5, 1, 2, 5, 10, 25, 50, 100];
+    const quickAutoCashouts = [2, 5, 10];
+    const autoCashoutValue = autoCashout;
+
     return (
         <motion.div
             animate={{
@@ -867,7 +1136,7 @@ function BettingPanel({
                     status === 'betting' ? '0 0 20px rgba(212,175,55,0.1)' : '0 10px 30px rgba(0,0,0,0.5)'
             }}
             transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-            className={`glass-card p-5 relative overflow-hidden flex flex-col gap-4 rounded-[2rem] border transition-colors ${status === 'cashed' ? 'border-green-500/40 bg-green-500/5' : status === 'betting' ? 'border-gold/30 bg-gold/5' : 'border-white/5'}`}
+            className={`glass-card p-3 md:p-5 relative overflow-hidden flex flex-col gap-3 md:gap-4 rounded-2xl md:rounded-[2rem] border transition-colors ${status === 'cashed' ? 'border-green-500/40 bg-green-500/5' : status === 'betting' ? 'border-gold/30 bg-gold/5' : 'border-white/5'}`}
         >
             {/* Background animated gradient for active states */}
             {status === 'betting' && (
@@ -877,43 +1146,76 @@ function BettingPanel({
                 <div className="absolute inset-0 bg-gradient-to-t from-green-500/20 to-transparent opacity-50 pointer-events-none" />
             )}
 
-            <div className="flex gap-2 relative z-10">
-                <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
-                    <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('bet')}</span>
+            <div className="flex gap-2 md:gap-3 relative z-10">
+                <div className="flex-1 bg-black/40 rounded-xl md:rounded-2xl p-2 md:p-3 flex flex-col gap-2 border border-white/5">
+                    <span className="text-[8px] md:text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('bet')}</span>
                     <div className="flex items-center justify-between">
-                        <span className="text-base font-black text-gold tracking-tight">{amount.toFixed(1)} <span className="text-[10px] opacity-50">TON</span></span>
+                        <span className="text-sm md:text-base font-black text-gold tracking-tight">{amount.toFixed(1)} <span className="text-[9px] md:text-[10px] opacity-50">TON</span></span>
                         <div className="flex gap-1">
                             <button
                                 onClick={() => onAdjust(-0.1)}
-                                className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-lg font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg"
+                                className="w-10 h-10 md:w-8 md:h-8 bg-white/10 rounded-xl flex items-center justify-center text-lg font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg min-h-[44px]"
                             >
                                 -
                             </button>
                             <button
                                 onClick={() => onAdjust(0.1)}
-                                className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-lg font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg"
+                                className="w-10 h-10 md:w-8 md:h-8 bg-white/10 rounded-xl flex items-center justify-center text-lg font-bold hover:bg-white/20 active:scale-90 transition-all shadow-lg min-h-[44px]"
                             >
                                 +
                             </button>
                         </div>
                     </div>
+                    {/* Range Slider */}
+                    <div className="mt-1 md:mt-2">
+                        <input
+                            type="range"
+                            min="0.1"
+                            max="100"
+                            step="0.1"
+                            value={amount}
+                            onChange={(e) => onAdjust(parseFloat(e.target.value) - amount)}
+                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-gold hover:accent-gold/80 transition-all"
+                            style={{
+                                background: `linear-gradient(to right, #d4af55 0%, #d4af55 ${((amount - 0.1) / 99.9) * 100}%, rgba(255,255,255,0.1) ${((amount - 0.1) / 99.9) * 100}%, rgba(255,255,255,0.1) 100%)`
+                            }}
+                        />
+                    </div>
+                    {/* Quick Amount Buttons - larger on mobile */}
+                    <div className="flex flex-wrap gap-1 mt-1 md:mt-2">
+                        {quickAmounts.map((quickAmount) => (
+                            <button
+                                key={quickAmount}
+                                onClick={() => {
+                                    const diff = quickAmount - amount;
+                                    onAdjust(diff);
+                                }}
+                                className={`flex-1 min-w-[calc(25%-2px)] py-2 md:py-1.5 text-[10px] md:text-[9px] font-bold rounded-lg transition-all min-h-[44px] md:min-h-0 ${Math.abs(amount - quickAmount) < 0.01
+                                    ? 'bg-gold text-black shadow-[0_0_10px_rgba(212,175,55,0.5)]'
+                                    : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                                    }`}
+                            >
+                                {quickAmount}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-                <div className="flex-1 bg-black/40 rounded-2xl p-3 flex flex-col gap-2 border border-white/5">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('auto_bet')}</span>
+                <div className="flex-1 bg-black/40 rounded-xl md:rounded-2xl p-2 md:p-3 flex flex-col gap-2 border border-white/5">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-1 md:pb-2">
+                        <span className="text-[8px] md:text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('auto_bet')}</span>
                         <button
                             onClick={onAutoBetToggle}
-                            className={`text-[9px] font-black px-2 py-1 rounded-lg flex items-center gap-1 ${isAutoBet ? 'bg-blue-500 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-white/10 text-white/40 hover:bg-white/20'} transition-all`}
+                            className={`text-[8px] md:text-[9px] font-black px-2 py-1.5 md:py-1 rounded-lg flex items-center gap-1 min-h-[36px] ${isAutoBet ? 'bg-blue-500 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-white/10 text-white/40 hover:bg-white/20'} transition-all`}
                         >
                             <div className={`w-1.5 h-1.5 rounded-full ${isAutoBet ? 'bg-white animate-pulse' : 'bg-white/20'}`} />
                             AUTO
                         </button>
                     </div>
                     <div className="flex justify-between items-center pt-1">
-                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('auto_cashout')}</span>
+                        <span className="text-[8px] md:text-[9px] uppercase font-bold text-white/40 tracking-widest">{t('auto_cashout')}</span>
                         <button
                             onClick={onAutoCashToggle}
-                            className={`text-[9px] font-black px-2 py-1 rounded-lg ${isAutoCash ? 'bg-gold text-black shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-white/10 text-white/40 hover:bg-white/20'} transition-all`}
+                            className={`text-[8px] md:text-[9px] font-black px-2 py-1.5 md:py-1 rounded-lg min-h-[36px] ${isAutoCash ? 'bg-gold text-black shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-white/10 text-white/40 hover:bg-white/20'} transition-all`}
                         >
                             AUTO
                         </button>
@@ -925,29 +1227,94 @@ function BettingPanel({
                             min="1.1"
                             value={autoCashout}
                             onChange={(e) => onAutoCashoutChange(parseFloat(e.target.value) || 1.1)}
-                            className="bg-transparent border-none outline-none text-base font-black text-gold w-12"
+                            className="bg-transparent border-none outline-none text-sm md:text-base font-black text-gold w-12"
                         />
-                        <span className="text-[10px] font-black text-white/20 italic">x</span>
+                        <span className="text-[9px] md:text-[10px] font-black text-white/20 italic">x</span>
                     </div>
+                    {/* Quick Auto-Cashout Buttons - larger on mobile */}
+                    <div className="flex gap-1 mt-1">
+                        {quickAutoCashouts.map((quickAuto) => (
+                            <button
+                                key={quickAuto}
+                                onClick={() => {
+                                    onAutoCashoutChange(quickAuto);
+                                    if (!isAutoCash) onAutoCashToggle();
+                                }}
+                                className={`flex-1 py-2 md:py-1 text-[9px] md:text-[8px] font-bold rounded-lg transition-all min-h-[44px] md:min-h-0 ${Math.abs(autoCashout - quickAuto) < 0.01 && isAutoCash
+                                    ? 'bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.5)]'
+                                    : 'bg-white/10 text-white/40 hover:bg-white/20 hover:text-white'
+                                    }`}
+                            >
+                                {quickAuto}x
+                            </button>
+                        ))}
+                    </div>
+                    {/* Auto-cashout indicator and countdown */}
+                    {isAutoCash && (
+                        <div className="flex items-center justify-between mt-1 px-2 py-1 bg-green-500/10 rounded-lg border border-green-500/20">
+                            <span className="text-[7px] md:text-[8px] font-bold text-green-400">Auto: {autoCashout.toFixed(2)}x</span>
+                            {autoCashoutCountdown !== null && status === 'betting' && isFlying && (
+                                <span className="text-[7px] md:text-[8px] font-bold text-green-400 animate-pulse">
+                                    ~{autoCashoutCountdown.toFixed(1)}s
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
             {status === 'betting' && isFlying ? (
-                <button
-                    onClick={onCashOut}
-                    className="gold-button w-full py-4 text-xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] active:scale-95 transition-all animate-pulse rounded-2xl font-black italic"
-                >
-                    {t('cash_out')}
-                </button>
+                <>
+                    <AnimatePresence>
+                        {showFlyingMoney && (
+                            <motion.div
+                                initial={{ x: -50, y: 0, opacity: 0 }}
+                                animate={{ x: 100, y: -30, opacity: [1, 1, 0] }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                className="absolute pointer-events-none left-0 right-0 flex justify-center"
+                            >
+                                <div className="flex gap-1">
+                                    {[...Array(8)].map((_, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ scale: 0, rotate: 0 }}
+                                            animate={{ scale: 1, rotate: 360, x: [0, 20 + i * 5], y: [0, -20 - i * 3] }}
+                                            transition={{ duration: 1.5, delay: i * 0.1 }}
+                                            className="w-3 h-3 bg-green-400 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.8)]"
+                                        />
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    <button
+                        onClick={onCashOut}
+                        className={`gold-button w-full py-4 md:py-4 text-lg md:text-xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] active:scale-95 transition-all animate-pulse rounded-2xl font-black italic relative overflow-hidden min-h-[56px] ${autoCashoutTriggered ? 'bg-green-500 border-green-400 shadow-[0_0_30px_rgba(34,197,94,0.6)]' : ''
+                            }`}
+                    >
+                        {autoCashoutTriggered ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <motion.span
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="text-lg md:text-xl">🎉</motion.span>
+                                {t('cash_out')} {autoCashout?.toFixed(2)}x
+                            </span>
+                        ) : (
+                            t('cash_out')
+                        )}
+                    </button>
+                </>
             ) : status === 'cashed' ? (
-                <div className="w-full py-4 text-center rounded-2xl bg-green-500/20 text-green-400 border border-green-500/40 text-xl font-black italic shadow-[0_0_25px_rgba(34,197,94,0.2)]">
+                <div className="w-full py-3 md:py-4 text-center rounded-2xl bg-green-500/20 text-green-400 border border-green-500/40 text-lg md:text-xl font-black italic shadow-[0_0_25px_rgba(34,197,94,0.2)]">
                     {t('won')}
                 </div>
             ) : (
                 <button
                     onClick={onPlaceBet}
                     disabled={isFlying || isBetting || status === 'betting'}
-                    className={`gold-button w-full py-4 text-xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] rounded-2xl font-black italic ${(isFlying || isBetting || status === 'betting') ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95 transition-all'}`}
+                    className={`gold-button w-full py-4 md:py-4 text-lg md:text-xl shadow-[0_10px_25px_rgba(212,175,55,0.4)] rounded-2xl font-black italic min-h-[56px] ${(isFlying || isBetting || status === 'betting') ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95 transition-all'}`}
                 >
                     {isBetting ? t('wait') : status === 'betting' ? t('bet_placed') : `${t('bet')} ${amount.toFixed(1)}`}
                 </button>
@@ -956,15 +1323,20 @@ function BettingPanel({
     );
 }
 
-function LiveWinRow({ user, x, win, status }: { user: string, x: string, win: string, status?: string }) {
+function LiveWinRow({ user, x, win, status, isAutoCashout = false }: { user: string, x: string, win: string, status?: string, isAutoCashout?: boolean }) {
     const isWin = status === 'cashed' || status === 'paid';
     return (
         <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex justify-between items-center bg-white/5 p-2 rounded-lg border transition-all hover:bg-white/10 ${isWin ? 'border-green-500/20 bg-green-500/10' : 'border-white/5'}`}
+            className={`flex justify-between items-center bg-white/5 p-2 rounded-lg border transition-all hover:bg-white/10 ${isWin ? 'border-green-500/20 bg-green-500/10' : 'border-white/5'} ${isAutoCashout ? 'border-green-400/40 bg-green-500/15' : ''}`}
         >
-            <span className="text-xs font-medium text-white/60">{user}</span>
+            <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-white/60">{user}</span>
+                {isAutoCashout && (
+                    <span className="text-[8px] px-1 py-0.5 bg-green-500/30 text-green-400 rounded font-bold">AUTO</span>
+                )}
+            </div>
             <div className="flex gap-3">
                 <span className="text-xs font-bold text-gold">{x}</span>
                 <span className={`text-xs font-bold ${isWin ? 'text-green-400' : 'text-white/40'}`}>{win}</span>

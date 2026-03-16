@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Info, Calculator } from 'lucide-react';
 
 interface VIPStatusProps {
   level: number;
@@ -7,7 +7,34 @@ interface VIPStatusProps {
   currentPoints: number;
   nextLevelPoints: number;
   perks: string[];
+  // Cashback props
+  pendingCashback?: number;
+  cashbackRate?: number;
+  netLoss?: number;
+  calculation?: {
+    totalBets: number;
+    totalWins: number;
+    formula: string;
+    cashbackFormula: string;
+    minimumQualifier: string;
+  };
 }
+
+const VIP_LEVELS = {
+  1: { name: 'Bronze', color: '#cd7f32', gradient: 'from-amber-700 to-amber-900' },
+  2: { name: 'Silver', color: '#c0c0c0', gradient: 'from-slate-300 to-slate-500' },
+  3: { name: 'Gold', color: '#ffd700', gradient: 'from-yellow-400 to-yellow-600' },
+  4: { name: 'Platinum', color: '#e5e4e2', gradient: 'from-slate-200 to-slate-400' },
+  5: { name: 'Diamond', color: '#b9f2ff', gradient: 'from-cyan-200 to-blue-400' },
+};
+
+const CASHBACK_RATES: Record<number, number> = {
+  1: 5,   // Bronze: 5%
+  2: 7,   // Silver: 7%
+  3: 10,  // Gold: 10%
+  4: 12,  // Platinum: 12%
+  5: 15,  // Diamond: 15%
+};
 
 export default function VIPStatus({
   level,
@@ -15,57 +42,134 @@ export default function VIPStatus({
   currentPoints,
   nextLevelPoints,
   perks,
+  pendingCashback = 0,
+  cashbackRate = 5,
+  netLoss = 0,
+  calculation,
 }: VIPStatusProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const progressPercent = Math.min(100, Math.max(0, (currentPoints / nextLevelPoints) * 100));
+  const [showCashbackDetails, setShowCashbackDetails] = useState(false);
+  const progressPercent = Math.min(100, Math.max(0, (currentPoints / (nextLevelPoints || 1)) * 100));
+
+  const currentLevelInfo = VIP_LEVELS[level as keyof typeof VIP_LEVELS] || VIP_LEVELS[1];
+  const displayCashbackRate = CASHBACK_RATES[level] || 5;
 
   return (
     <div className="w-full flex flex-col bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-lg transition-all duration-300">
       {/* Compact Header */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between p-4 bg-gradient-to-r from-[#1a1b4b]/80 to-[#0a0c1a]/80 hover:bg-white/5 transition-colors w-full"
       >
         <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center size-12 rounded-full bg-gradient-to-tr from-slate-400 to-slate-100 shadow-lg relative shrink-0">
+          <div className={`flex items-center justify-center size-12 rounded-full bg-gradient-to-tr ${currentLevelInfo.gradient} shadow-lg relative shrink-0`}>
             <svg xmlns="http://www.w3.org/2000/svg" className="size-6 text-[#0a0c1a]" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-[#0d33f2] rounded-full text-[9px] font-black uppercase tracking-widest border border-blue-400/50 text-white whitespace-nowrap hidden md:block">
+            <div
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/20 text-white whitespace-nowrap hidden md:block"
+              style={{ backgroundColor: currentLevelInfo.color }}
+            >
               LVL {level}
             </div>
           </div>
           <div className="text-left flex flex-col justify-center">
             <div className="flex items-center gap-2">
-              <span className="md:hidden px-1.5 py-0.5 bg-[#0d33f2] rounded-md text-[8px] font-black uppercase tracking-widest border border-blue-400/50 text-white leading-none">
+              <span className="md:hidden px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-white/20 text-white leading-none"
+                style={{ backgroundColor: currentLevelInfo.color }}
+              >
                 Lvl {level}
               </span>
               <h2 className="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-100 to-slate-400 tracking-tight leading-none">
-                {levelName}
+                {levelName} VIP
               </h2>
             </div>
-            
+
             <div className="flex items-center gap-2 mt-1.5">
               <div className="w-24 md:w-32 h-1.5 bg-black/40 rounded-full overflow-hidden">
-                <div 
-                  className="h-full rounded-full bg-gradient-to-r from-[#ff00e5] to-[#00f2ff] shadow-[0_0_10px_rgba(255,0,229,0.4)]" 
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#ff00e5] to-[#00f2ff] shadow-[0_0_10px_rgba(255,0,229,0.4)]"
                   style={{ width: `${progressPercent}%` }}
                 ></div>
               </div>
               <p className="text-[10px] text-slate-400 font-black tracking-widest whitespace-nowrap">
-                {currentPoints} <span className="text-slate-500">/ {nextLevelPoints} XP</span>
+                {currentPoints} <span className="text-slate-500">/ {nextLevelPoints || 'MAX'} XP</span>
               </p>
             </div>
           </div>
         </div>
-        
-        <div className="flex items-center pl-2">
+
+        <div className="flex items-center gap-2 pl-2">
+          {/* Cashback Badge */}
+          {pendingCashback > 0 && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 border border-green-500/30 rounded-lg">
+              <span className="text-[10px] font-bold text-green-400">
+                +{pendingCashback.toFixed(2)} TON
+              </span>
+            </div>
+          )}
           <ChevronDown className={`w-5 h-5 text-white/50 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </button>
 
+      {/* Cashback Info Bar (always visible when there's pending cashback) */}
+      {pendingCashback > 0 && (
+        <button
+          onClick={() => setShowCashbackDetails(!showCashbackDetails)}
+          className="flex items-center justify-between px-4 py-2 bg-green-500/10 border-y border-green-500/20 hover:bg-green-500/15 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Calculator className="w-4 h-4 text-green-400" />
+            <span className="text-xs font-bold text-green-400">
+              Weekly Cashback: {displayCashbackRate}% of net losses
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-green-300/70">
+              {netLoss > 0 ? `Net loss: ${netLoss.toFixed(2)} TON` : 'No losses this week'}
+            </span>
+            <Info className="w-4 h-4 text-green-400/50" />
+          </div>
+        </button>
+      )}
+
+      {/* Cashback Calculation Details */}
+      {showCashbackDetails && calculation && (
+        <div className="p-4 bg-black/30 border-b border-white/5">
+          <h4 className="text-[10px] uppercase tracking-widest font-black text-green-400/70 px-1 mb-3">
+            Cashback Calculation
+          </h4>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between text-slate-300">
+              <span>Total Bets:</span>
+              <span className="font-mono">{calculation.totalBets.toFixed(2)} TON</span>
+            </div>
+            <div className="flex justify-between text-slate-300">
+              <span>Total Wins:</span>
+              <span className="font-mono">-{calculation.totalWins.toFixed(2)} TON</span>
+            </div>
+            <div className="flex justify-between text-slate-400 border-t border-white/10 pt-2">
+              <span>Net Loss:</span>
+              <span className="font-mono font-bold">{netLoss.toFixed(2)} TON</span>
+            </div>
+            <div className="flex justify-between text-green-400 pt-2">
+              <span>Cashback ({displayCashbackRate}%):</span>
+              <span className="font-mono font-bold">
+                {calculation.cashbackFormula.replace(`${netLoss.toFixed(2)} × ${cashbackRate}% = `, '')}
+              </span>
+            </div>
+            <div className={`text-[10px] text-center mt-2 py-1 rounded ${pendingCashback >= 1
+                ? 'bg-green-500/20 text-green-400'
+                : 'bg-yellow-500/20 text-yellow-400'
+              }`}>
+              {calculation.minimumQualifier}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Expanded Perks */}
-      <div 
+      <div
         className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">

@@ -45,4 +45,44 @@ describe('Page Component Branding', () => {
     const crashSelector = screen.queryByText(/Astro Crash/i);
     expect(crashSelector).not.toBeInTheDocument();
   });
+
+  it('renders WelcomeBonusModal correctly on first load with 5 TON', async () => {
+    // Setup specific mocks for this test run
+    const mockSupabase = {
+      channel: vi.fn(() => ({
+        on: vi.fn().mockReturnThis(),
+        subscribe: vi.fn(),
+      })),
+      removeChannel: vi.fn(),
+      from: vi.fn(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ 
+          error: { code: 'PGRST116' }, // user not found -> first login
+        }),
+        insert: vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'dummy', balance: 0, bonus_balance: 5, wagering_requirement: 175 } }) }) }),
+      })),
+      functions: { invoke: vi.fn() },
+    };
+
+    vi.doMock('@/lib/supabase', () => ({ supabase: mockSupabase }));
+    
+    // Override ton-connect mocks for this test to pretend a wallet is connected
+    vi.doMock('@tonconnect/ui-react', () => ({
+      useTonWallet: vi.fn(() => ({ account: { address: '0xTestWallet' } })),
+      useTonConnectUI: vi.fn(() => [{}, vi.fn()]),
+      useTonAddress: vi.fn(() => 'UQTestWallet123'),
+      TonConnectButton: () => <div data-testid="ton-button">TonButton</div>,
+    }));
+
+    render(<Page />);
+    
+    // Ensure the welcome modal shows up with the expected 5 TON mock translation test
+    const welcomeTitle = await screen.findByText('welcome_title');
+    expect(welcomeTitle).toBeInTheDocument();
+    
+    // Check that we render the let's play button
+    const playButton = await screen.findByRole('button', { name: /lets_play/i });
+    expect(playButton).toBeInTheDocument();
+  });
 });

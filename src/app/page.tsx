@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTonWallet, TonConnectButton, useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
-import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft, X, Loader2, Shield, Send, Volume2, VolumeX, Gift, Bell, BellOff } from 'lucide-react';
+import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft, X, Loader2, Shield, Send, Volume2, VolumeX, Gift, Bell, BellOff, Settings } from 'lucide-react';
 import TxModal from '@/components/TxModal';
 import { FEATURE_FLAGS } from '@/lib/flags';
 import { useI18n } from '@/lib/i18n';
+import { SoundManager } from '@/lib/sounds';
 import { AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import CrashGame from '@/components/CrashGame';
@@ -15,6 +16,7 @@ import Leaderboard from '@/components/Leaderboard';
 import BalanceHistoryModal from '@/components/BalanceHistoryModal';
 import BigWinCard from '@/components/BigWinCard';
 import VIPStatus from '@/components/VIPStatus';
+import SoundSettingsModal from '@/components/SoundSettingsModal';
 
 // ─── Welcome Bonus Modal ───────────────────────────────────────────────────
 function WelcomeBonusModal({
@@ -37,12 +39,12 @@ function WelcomeBonusModal({
             <Gift className="w-12 h-12 text-black" />
           </div>
         </div>
-        
+
         <div className="flex flex-col gap-2">
           <h3 className="text-3xl font-black uppercase italic gold-text tracking-tighter">{t('welcome_title')}</h3>
           <p className="text-white/60 text-sm font-bold uppercase tracking-widest">{t('welcome_subtitle')}</p>
         </div>
- 
+
         <div className="bg-white/5 border border-white/10 rounded-3xl p-6 w-full flex flex-col gap-1">
           <span className="text-[10px] font-black uppercase text-gold/60 tracking-[0.3em]">{t('bonus_credited')}</span>
           <div className="flex items-baseline justify-center gap-2">
@@ -50,7 +52,11 @@ function WelcomeBonusModal({
             <span className="text-xl font-black gold-text italic">TON</span>
           </div>
         </div>
- 
+
+        <div className="text-xs text-white/50 px-4">
+          {t('welcome_bonus_desc')}
+        </div>
+
         <button
           onClick={onClose}
           className="gold-button w-full py-5 text-lg rounded-2xl font-black uppercase italic tracking-wider active:scale-95 transition-transform"
@@ -87,6 +93,7 @@ function BurgerMenu({
   notificationsEnabled: boolean;
 }) {
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [showProvablyTooltip, setShowProvablyTooltip] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const { t } = useI18n();
@@ -94,6 +101,7 @@ function BurgerMenu({
   return (
     <>
       <BalanceHistoryModal isOpen={showHistoryModal} onClose={() => setShowHistoryModal(false)} walletAddress={address || ''} />
+      <SoundSettingsModal isOpen={showSoundSettings} onClose={() => setShowSoundSettings(false)} />
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -142,7 +150,7 @@ function BurgerMenu({
                   <span className="gold-text">{(wageringTotal > 0 ? Math.max(0, 100 - (wageringRequirement / wageringTotal * 100)) : 0).toFixed(0)}%</span>
                 </div>
                 <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-gold to-gold-dark transition-all duration-500"
                     style={{ width: `${Math.max(0, 100 - (wageringRequirement / wageringTotal * 100))}%` }}
                   />
@@ -233,10 +241,8 @@ function BurgerMenu({
 
             <button
               onClick={() => {
-                const newSoundEnabled = !soundEnabled;
-                setSoundEnabled(newSoundEnabled);
-                // Assume SoundManager global toggle exists or map accordingly
-                import('@/lib/sounds').then(m => m.SoundManager.init(newSoundEnabled));
+                const isEnabled = SoundManager.toggleMute();
+                setSoundEnabled(isEnabled);
               }}
               className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
             >
@@ -246,6 +252,19 @@ function BurgerMenu({
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-white/80">{t('audio_effects')}</span>
                 <span className="text-[10px] text-white/30 uppercase font-bold">{soundEnabled ? t('enabled') : t('muted')}</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setShowSoundSettings(true)}
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
+            >
+              <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
+                <Settings className="w-5 h-5 text-blue-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">Sound Settings</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">Customize</span>
               </div>
             </button>
           </div>
@@ -270,7 +289,7 @@ export default function Page() {
   const wallet = useTonWallet();
   const rawAddress = wallet?.account.address;
   const friendlyAddress = useTonAddress();
-  
+
   // Calculate a reliable friendly address
   const displayAddress = React.useMemo(() => {
     if (friendlyAddress) return friendlyAddress;
@@ -299,7 +318,34 @@ export default function Page() {
   const [wageringTotal, setWageringTotal] = useState<number>(0);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [bigWin, setBigWin] = useState<{multiplier: number, amount: number} | null>(null);
+  const [bigWin, setBigWin] = useState<{ multiplier: number, amount: number } | null>(null);
+  // VIP State
+  const [vipData, setVipData] = useState<{
+    level: number;
+    levelName: string;
+    currentPoints: number;
+    nextLevelPoints: number | null;
+    perks: string[];
+    pendingCashback: number;
+    cashbackRate: number;
+    netLoss: number;
+    calculation?: {
+      totalBets: number;
+      totalWins: number;
+      formula: string;
+      cashbackFormula: string;
+      minimumQualifier: string;
+    };
+  }>({
+    level: 1,
+    levelName: 'Bronze',
+    currentPoints: 0,
+    nextLevelPoints: 10000,
+    perks: ['5% Weekly Cashback', 'Priority Support', 'Faster Withdrawals'],
+    pendingCashback: 0,
+    cashbackRate: 5,
+    netLoss: 0,
+  });
 
   useEffect(() => {
     // Check for demo or guest mode in URL
@@ -354,6 +400,9 @@ export default function Page() {
         setWageringRequirement(Number(data.wagering_requirement || 0));
         setWageringTotal(Number(data.wagering_total || 0));
         if (data.username || tgUsername) setUsername(data.username || tgUsername);
+
+        // Fetch VIP data and pending cashback
+        fetchVipData(userAddress);
         // Auto-recover any stuck deposits quietly in the background
         if (!FEATURE_FLAGS.GUEST_MODE) {
           supabase.functions.invoke('ton-webhook', {
@@ -405,6 +454,31 @@ export default function Page() {
       }
     };
 
+    // Fetch VIP data and pending cashback
+    const fetchVipData = async (userAddress: string) => {
+      try {
+        const response = await supabase.functions.invoke('get-pending-cashback', {
+          body: { wallet_address: userAddress }
+        });
+
+        if (response.data && !response.error) {
+          setVipData({
+            level: response.data.level || 1,
+            levelName: response.data.levelName || 'Bronze',
+            currentPoints: response.data.currentPoints || 0,
+            nextLevelPoints: response.data.nextLevelPoints || null,
+            perks: response.data.perks || ['5% Weekly Cashback', 'Priority Support', 'Faster Withdrawals'],
+            pendingCashback: response.data.pendingCashback || 0,
+            cashbackRate: response.data.cashbackRate || 5,
+            netLoss: response.data.netLoss || 0,
+            calculation: response.data.calculation,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch VIP data:', err);
+      }
+    };
+
     if (address) {
       fetchBalance(address);
 
@@ -442,7 +516,7 @@ export default function Page() {
 
     // Call DB update (non-blocking)
     const { data: userData } = await supabase.from('users').select('bonus_balance, balance').eq('wallet_address', address).single();
-    
+
     if (newRequirement <= 0 && userData && Number(userData.bonus_balance) > 0) {
       // Unlock bonus: Move bonus to real balance
       const totalBalance = Number(userData.balance) + Number(userData.bonus_balance);
@@ -522,7 +596,7 @@ export default function Page() {
   const handleWithdraw = useCallback(async (amount: number) => {
     if (!wallet) throw new Error("Please connect your wallet first");
     if (amount > balance) throw new Error("Insufficient balance");
-    
+
     if (!address) throw new Error("Recipient address is required");
 
     // Optimistically update the UI to feel instant
@@ -616,6 +690,34 @@ export default function Page() {
           <span className="text-xl font-black text-gold/40 italic">TON</span>
         </div>
 
+        {/* Bonus Balance & Wagering Progress Inline */}
+        {(bonusBalance > 0 || wageringTotal > 0) && (
+          <div className="flex flex-col items-center gap-2 mt-2 w-full max-w-[200px]">
+            <div className="flex gap-2 items-center bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{t('bonus_balance')}:</span>
+              <span className="text-sm font-black text-white">{(bonusBalance || 0).toFixed(2)} TON</span>
+            </div>
+
+            {wageringTotal > 0 && (
+              <div className="w-full flex flex-col gap-1">
+                <div className="flex justify-between text-[8px] font-black uppercase tracking-widest">
+                  <span className="text-white/40">{t('wagering_progress')}</span>
+                  <span className="gold-text">{(wageringTotal > 0 ? Math.max(0, 100 - (wageringRequirement / wageringTotal * 100)) : 0).toFixed(0)}%</span>
+                </div>
+                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-gold to-gold-dark transition-all duration-500"
+                    style={{ width: `${Math.max(0, 100 - (wageringRequirement / wageringTotal * 100))}%` }}
+                  />
+                </div>
+                <span className="text-[7px] text-white/30 text-center font-bold uppercase">
+                  {(wageringRequirement || 0).toFixed(2)} TON {t('wagering_left')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Wallet Display */}
         {address ? (
           <div className="flex items-center gap-2 mt-4 px-4 py-1.5 bg-white/5 rounded-full border border-white/10">
@@ -669,13 +771,13 @@ export default function Page() {
         ))}
       </div>
 
-            {/* Tab Content */}
-            <div className="flex-1 pb-24">
-              {activeTab === 'home' && (
-                <div className="flex flex-col gap-6">
-                  {/* Game Selector hidden as requested */}
-                  
-                  {FEATURE_FLAGS.GUEST_MODE && !wallet && (
+      {/* Tab Content */}
+      <div className="flex-1 pb-24">
+        {activeTab === 'home' && (
+          <div className="flex flex-col gap-6">
+            {/* Game Selector hidden as requested */}
+
+            {FEATURE_FLAGS.GUEST_MODE && !wallet && (
               <div className="w-full bg-blue-500/10 border border-blue-500/20 p-3 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
@@ -685,34 +787,38 @@ export default function Page() {
               </div>
             )}
 
-            {/* VIP Status component placeholder */}
+            {/* VIP Status component with cashback */}
             <div className="w-full max-w-sm mx-auto mb-6">
-              <VIPStatus 
-                level={1}
-                levelName="Silver VIP"
-                currentPoints={2500}
-                nextLevelPoints={5000}
-                perks={["5% Daily Cashback", "Priority Support", "Faster Withdrawals"]}
+              <VIPStatus
+                level={vipData.level}
+                levelName={vipData.levelName}
+                currentPoints={vipData.currentPoints}
+                nextLevelPoints={vipData.nextLevelPoints || 10000}
+                perks={vipData.perks}
+                pendingCashback={vipData.pendingCashback}
+                cashbackRate={vipData.cashbackRate}
+                netLoss={vipData.netLoss}
+                calculation={vipData.calculation}
               />
             </div>
 
             {/* Active Game Display */}
             <div className="w-full flex justify-center">
               {activeGame === 'crash' ? (
-                <CrashGame 
-                  balance={balance} 
+                <CrashGame
+                  balance={balance}
                   bonus_balance={bonusBalance}
-                  onBalanceUpdate={handleBalanceUpdate} 
+                  onBalanceUpdate={handleBalanceUpdate}
                   onWageringUpdate={handleWageringUpdate}
                   onBigWin={(multiplier, amount) => setBigWin({ multiplier, amount })}
                   referralCode={referralCode}
                 />
               ) : (
-                <SlotMachine 
-                  balance={balance} 
+                <SlotMachine
+                  balance={balance}
                   bonus_balance={bonusBalance}
-                  onBalanceUpdate={handleBalanceUpdate} 
-                  onWageringUpdate={handleWageringUpdate} 
+                  onBalanceUpdate={handleBalanceUpdate}
+                  onWageringUpdate={handleWageringUpdate}
                   onBigWin={(multiplier, amount) => setBigWin({ multiplier, amount })}
                 />
               )}

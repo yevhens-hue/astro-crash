@@ -35,7 +35,6 @@ describe('TxModal Component', () => {
     renderModal({});
     expect(screen.getByText('Withdraw TON')).toBeInTheDocument();
     expect(screen.getByText(/Available: 10.00 TON/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('UQ...')).toBeInTheDocument();
   });
 
   it('validates minimum withdrawal amount (0.5 TON)', async () => {
@@ -44,10 +43,6 @@ describe('TxModal Component', () => {
     // Set amount below minimum
     const amountInput = screen.getByPlaceholderText('0.00');
     fireEvent.change(amountInput, { target: { value: '0.2' } });
-    
-    // Set valid address
-    const addressInput = screen.getByPlaceholderText('UQ...');
-    fireEvent.change(addressInput, { target: { value: 'UQTest123' } });
     
     const confirmButton = screen.getByRole('button', { name: /withdraw/i });
     fireEvent.click(confirmButton);
@@ -66,16 +61,11 @@ describe('TxModal Component', () => {
     const amountInput = screen.getByPlaceholderText('0.00');
     fireEvent.change(amountInput, { target: { value: '2.5' } });
     
-    // Set a custom recipient address
-    const customAddress = 'UQCustomRecipientAddress123';
-    const addressInput = screen.getByPlaceholderText('UQ...');
-    fireEvent.change(addressInput, { target: { value: customAddress } });
-    
     const confirmButton = screen.getByRole('button', { name: /withdraw/i });
     fireEvent.click(confirmButton);
     
     await waitFor(() => {
-      expect(mockOnConfirm).toHaveBeenCalledWith(2.5, customAddress);
+      expect(mockOnConfirm).toHaveBeenCalledWith(2.5);
     });
     
     // onClose should be called after a successful confirm
@@ -88,9 +78,6 @@ describe('TxModal Component', () => {
     // Set amount greater than balance
     const amountInput = screen.getByPlaceholderText('0.00');
     fireEvent.change(amountInput, { target: { value: '5' } });
-    
-    const addressInput = screen.getByPlaceholderText('UQ...');
-    fireEvent.change(addressInput, { target: { value: 'UQTest123' } });
     
     const confirmButton = screen.getByRole('button', { name: /withdraw/i });
     fireEvent.click(confirmButton);

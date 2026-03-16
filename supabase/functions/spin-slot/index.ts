@@ -9,6 +9,7 @@ const corsHeaders = {
 
 const SYMBOLS = ['💎', '🎭', '👑', '777', '🍒', '🔔', '🍋'];
 const COST_PER_SPIN = 0.1;
+const JACKPOT_CONTRIBUTION_PERCENT = 0.005; // 0.5%
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -51,26 +52,62 @@ serve(async (req) => {
 
     const isWin = spinResults.every(s => s === spinResults[0]);
     let winAmount = 0;
+    let jackpotWin = 0;
+    let jackpotType = null;
+
+    // 3. Get current jackpot before spin
+    const { data: jackpotData } = await supabaseClient.rpc('get_current_jackpot');
+    const currentJackpot = jackpotData?.[0]?.current_amount || 10;
+
     if (isWin) {
-      if (spinResults[0] === '777') winAmount = 100.0;
-      else if (spinResults[0] === '💎') winAmount = 50.0;
-      else if (spinResults[0] === '👑') winAmount = 20.0;
-      else winAmount = 5.0; 
+      const symbol = spinResults[0];
+      
+      // Calculate base win amount
+      if (symbol === '777') winAmount = 100.0;
+      else if (symbol === '💎') winAmount = 50.0;
+      else if (symbol === '👑') winAmount = 20.0;
+      else winAmount = 5.0;
+
+      // Calculate jackpot win if applicable
+      if (symbol === '777') {
+        jackpotWin = currentJackpot * 1.00; // 100%
+        jackpotType = '777';
+      } else if (symbol === '💎') {
+        jackpotWin = currentJackpot * 0.50; // 50%
+        jackpotType = '💎';
+      } else if (symbol === '👑') {
+        jackpotWin = currentJackpot * 0.25; // 25%
+        jackpotType = '👑';
+      }
+
+      // Process jackpot if won
+      if (jackpotWin > 0) {
+        await supabaseClient.rpc('process_jackpot_win', {
+          p_winner_address: wallet_address,
+          p_symbol: symbol,
+          p_current_jackpot: currentJackpot
+        });
+      }
     }
 
-    // 3. Atomic update via RPC
+    // 4. Contribute to jackpot (0.5% of bet)
+    const contribution = COST_PER_SPIN * JACKPOT_CONTRIBUTION_PERCENT;
+    await supabaseClient.rpc('contribute_to_jackpot', {
+      p_cost: COST_PER_SPIN
+    });
+
+    // 5. Atomic update via RPC
     const { data: result, error: rpcError } = await supabaseClient.rpc('spin_slot_atomic', {
         p_user_address: wallet_address,
         p_cost: COST_PER_SPIN,
-        p_win_amount: winAmount,
+        p_win_amount: winAmount + jackpotWin, // Base win + jackpot win
         p_is_bonus: !!is_bonus
     });
 
     if (rpcError) throw new Error("RPC Error: " + rpcError.message);
     if (!result.success) throw new Error(result.error);
 
-    // 4. Record spin in DB (using userId from result if we returned it, but we have wallet_address)
-    // We'll fetch userId first or just use the wallet_address if the table allows it
+    // 6. Record spin in DB
     const { data: user } = await supabaseClient.from('users').select('id').eq('wallet_address', wallet_address).single();
 
     await supabaseClient.from('slot_spins').insert({
@@ -78,16 +115,24 @@ serve(async (req) => {
         wallet_address: wallet_address,
         amount: COST_PER_SPIN,
         result_symbols: spinResults,
-        win_amount: winAmount,
+        win_amount: winAmount + jackpotWin,
         tx_hash: tx_hash || `slot_tx_${Date.now()}`,
         status: 'confirmed'
     });
+
+    // 7. Get updated jackpot amount
+    const { data: newJackpotData } = await supabaseClient.rpc('get_current_jackpot');
+    const newJackpot = newJackpotData?.[0]?.current_amount || currentJackpot;
 
     return new Response(JSON.stringify({ 
         success: true, 
         spinResults, 
         winAmount, 
-        new_balance: result.new_balance
+        new_balance: result.new_balance,
+        jackpotWin: jackpotWin,
+        jackpotType: jackpotType,
+        currentJackpot: newJackpot,
+        contribution: contribution
     }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
