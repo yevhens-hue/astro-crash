@@ -37,6 +37,27 @@ serve(async (req) => {
       throw new Error('Unauthorized: Telegram Auth required');
     }
 
+    // RATE LIMITING: Check if user has exceeded rate limit
+    const { data: rateLimitData, error: rateLimitError } = await supabaseClient.rpc('check_rate_limit', {
+      p_wallet_address: wallet_address,
+      p_endpoint: 'cashout-bet',
+      p_limit: 20,  // Max 20 cashouts per minute
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (!rateLimitData) {
+      return new Response(JSON.stringify({ 
+        error: 'Too many requests. Please slow down.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' },
+        status: 429
+      });
+    }
+
     // 1. Fetch bet and associated round
     const { data: bet, error: betError } = await supabaseClient
       .from('bets')

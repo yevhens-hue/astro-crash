@@ -24,20 +24,47 @@ serve(async (req) => {
     // 1. Verify Telegram Auth
     if (!botToken) throw new Error('Bot token not configured');
     
-    // In production, we MUST verify. In local dev, we might skip if debugging.
     if (initData) {
       const isValid = await verifyTelegramAuth(initData, botToken);
       if (!isValid) throw new Error('Unauthorized: Invalid Telegram Auth');
     } else {
-        // Only allow missing initData if FEATURE_FLAGS.DEBUG_MODE is on 
-        // (but we don't have direct access to client flags here, so we assume strict)
-        throw new Error('Unauthorized: Telegram Auth required');
+      throw new Error('Unauthorized: Telegram Auth required');
     }
 
     const { wallet_address, round_id, amount, is_bonus } = await req.json()
 
     if (!wallet_address || !round_id || !amount) {
       throw new Error('Missing required fields');
+    }
+
+    // RATE LIMITING: Check if user has exceeded rate limit
+    const { data: rateLimitData, error: rateLimitError } = await supabaseClient.rpc('check_rate_limit', {
+      p_wallet_address: wallet_address,
+      p_endpoint: 'place-bet',
+      p_limit: 10,  // Max 10 bets per minute
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (!rateLimitData) {
+      // Get rate limit status for response headers
+      const { data: status } = await supabaseClient.rpc('get_rate_limit_status', {
+        p_wallet_address: wallet_address,
+        p_endpoint: 'place-bet',
+        p_limit: 10,
+        p_window_seconds: 60
+      });
+
+      return new Response(JSON.stringify({ 
+        error: 'Too many requests. Please slow down.',
+        rate_limit: status
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' },
+        status: 429
+      });
     }
 
     // 2. Execute atomic bet placement via RPC
@@ -51,10 +78,19 @@ serve(async (req) => {
     if (rpcError) throw new Error("RPC Error: " + rpcError.message);
     if (!result.success) throw new Error(result.error);
 
+    // Get updated rate limit status
+    const { data: rateStatus } = await supabaseClient.rpc('get_rate_limit_status', {
+      p_wallet_address: wallet_address,
+      p_endpoint: 'place-bet',
+      p_limit: 10,
+      p_window_seconds: 60
+    });
+
     return new Response(JSON.stringify({ 
         success: true, 
         bet_id: result.bet_id,
-        new_balance: result.new_balance
+        new_balance: result.new_balance,
+        rate_limit: rateStatus
     }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

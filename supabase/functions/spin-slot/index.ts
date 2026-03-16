@@ -40,6 +40,27 @@ serve(async (req) => {
       throw new Error('wallet_address is required');
     }
 
+    // RATE LIMITING: Check if user has exceeded rate limit
+    const { data: rateLimitData, error: rateLimitError } = await supabaseClient.rpc('check_rate_limit', {
+      p_wallet_address: wallet_address,
+      p_endpoint: 'spin-slot',
+      p_limit: 10,  // Max 10 spins per minute
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (!rateLimitData) {
+      return new Response(JSON.stringify({ 
+        error: 'Too many requests. Please slow down.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' },
+        status: 429
+      });
+    }
+
     // 2. Generate spin result securely 
     const cryptoBuffer = new Uint8Array(3);
     crypto.getRandomValues(cryptoBuffer);

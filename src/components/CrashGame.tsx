@@ -49,7 +49,7 @@ export default function CrashGame({
     const [autoCashoutCountdownA, setAutoCashoutCountdownA] = useState<number | null>(null);
     const [autoCashoutCountdownB, setAutoCashoutCountdownB] = useState<number | null>(null);
 
-    const [betAmountA, setBetAmountA] = useState(1.0);
+    const [betAmountA, setBetAmountA] = useState(0.5);
     const [autoCashoutA, setAutoCashoutA] = useState(2.0);
     const [isAutoCashA, setIsAutoCashA] = useState(false);
     const [isAutoBetA, setIsAutoBetA] = useState(false);
@@ -269,16 +269,22 @@ export default function CrashGame({
                 crashAt = currentCrashAtRef.current;
                 serverSeed = currentSeed || ""; // reused
             } else {
-                if (address === 'guest_test_wallet' || FEATURE_FLAGS.DEBUG_MODE) {
-                    crashAt = Math.max(1.1, 0.99 / (1 - Math.random()));
-                    roundId = `mock_round_${Date.now()}`;
-                    serverSeed = "local_simulation_seed";
-                } else {
+                // Try to fetch round from server, fall back to local simulation if it fails
+                try {
                     const { data: roundData, error: roundError } = await supabase.functions.invoke('generate-round');
-                    if (roundError || !roundData) throw new Error(roundError?.message || "Failed to sync round");
+                    if (roundError || !roundData) {
+                        // Fall back to local simulation
+                        throw new Error('Server unavailable, using local mode');
+                    }
                     crashAt = parseFloat(roundData.crash_point);
                     roundId = roundData.id;
                     serverSeed = roundData.server_seed;
+                } catch (serverError: any) {
+                    // Fall back to local simulation
+                    console.warn('Server round generation failed, using local mode:', serverError.message);
+                    crashAt = Math.max(1.1, 0.99 / (1 - Math.random()));
+                    roundId = `local_round_${Date.now()}`;
+                    serverSeed = "local_simulation_seed";
                 }
 
                 currentRoundIdRef.current = roundId;
@@ -293,29 +299,34 @@ export default function CrashGame({
             let currentUserBalance = balance;
             let dbBetId: string | null = null;
 
-            if (address !== 'guest_test_wallet' && !roundId.startsWith('mock_round')) {
-                // Call Secure Edge Function
-                const initData = (window as any).Telegram?.WebApp?.initData || '';
-                const { data, error } = await supabase.functions.invoke('place-bet', {
-                    body: {
-                        wallet_address: address,
-                        round_id: roundId,
-                        amount: amount,
-                        is_bonus: balanceType === 'bonus'
-                    },
-                    headers: {
-                        'x-telegram-init-data': initData,
-                        'x-wallet-address': address!
+            if (address !== 'guest_test_wallet' && !roundId.startsWith('mock_') && !roundId.startsWith('local_')) {
+                // Call Secure Edge Function with fallback
+                try {
+                    const initData = (window as any).Telegram?.WebApp?.initData || '';
+                    const { data, error } = await supabase.functions.invoke('place-bet', {
+                        body: {
+                            wallet_address: address,
+                            round_id: roundId,
+                            amount: amount,
+                            is_bonus: balanceType === 'bonus'
+                        },
+                        headers: {
+                            'x-telegram-init-data': initData,
+                            'x-wallet-address': address!
+                        }
+                    });
+
+                    if (error || !data?.success) {
+                        throw new Error(error?.message || data?.error || 'Failed to place bet');
                     }
-                });
 
-                if (error || !data?.success) {
-                    throw new Error(error?.message || data?.error || 'Failed to place bet securely on server');
-                }
-
-                dbBetId = data.bet_id;
-                if (typeof data.new_balance !== 'undefined' && onBalanceUpdate) {
-                    onBalanceUpdate(balanceType, () => Number(data.new_balance));
+                    dbBetId = data.bet_id;
+                    if (typeof data.new_balance !== 'undefined' && onBalanceUpdate) {
+                        onBalanceUpdate(balanceType, () => Number(data.new_balance));
+                    }
+                } catch (betError: any) {
+                    console.warn('Server bet failed, using local mode:', betError.message);
+                    // Continue with local mode
                 }
             }
 
@@ -516,9 +527,9 @@ export default function CrashGame({
 
     const adjustBet = (panel: 'A' | 'B', delta: number) => {
         if (panel === 'A') {
-            setBetAmountA(prev => Math.min(100, Math.max(0.1, parseFloat((prev + delta).toFixed(1)))));
+            setBetAmountA(prev => Math.min(100, Math.max(0.5, parseFloat((prev + delta).toFixed(1)))));
         } else {
-            setBetAmountB(prev => Math.min(100, Math.max(0.1, parseFloat((prev + delta).toFixed(1)))));
+            setBetAmountB(prev => Math.min(100, Math.max(0.5, parseFloat((prev + delta).toFixed(1)))));
         }
     };
 
@@ -1170,7 +1181,7 @@ function BettingPanel({
                     <div className="mt-1 md:mt-2">
                         <input
                             type="range"
-                            min="0.1"
+                            min="0.5"
                             max="100"
                             step="0.1"
                             value={amount}
