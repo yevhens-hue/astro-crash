@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trophy, Medal, Crown, TrendingUp, User } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Trophy, Medal, Crown, TrendingUp, User, Gift, Clock, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useI18n } from '@/lib/i18n';
 
@@ -13,6 +13,20 @@ interface LeaderboardEntry {
     multiplier: string;
     isMe?: boolean;
 }
+
+interface RewardInfo {
+    amount: number;
+    type: string;
+    period: string;
+}
+
+const REWARD_TIERS: Record<number, RewardInfo> = {
+    1: { amount: 10, type: 'TON', period: 'daily' },
+    2: { amount: 5, type: 'TON', period: 'daily' },
+    3: { amount: 2, type: 'TON', period: 'daily' },
+    4: { amount: 5, type: 'BONUS', period: 'daily' },
+    5: { amount: 3, type: 'BONUS', period: 'daily' },
+};
 
 export default function Leaderboard() {
     const { t } = useI18n();
@@ -156,6 +170,8 @@ export default function Leaderboard() {
 }
 
 function PodiumPlace({ rank, user, height, isCrown }: { rank: number, user: string, height: string, isCrown?: boolean }) {
+    const reward = REWARD_TIERS[rank];
+
     return (
         <div className={`flex flex-col items-center gap-1 w-20`}>
             {isCrown && <Crown className="w-4 h-4 text-gold fill-gold/20 animate-bounce mb-1" />}
@@ -164,12 +180,20 @@ function PodiumPlace({ rank, user, height, isCrown }: { rank: number, user: stri
                 <div className="absolute inset-0 bg-gold/5 blur-xl" />
                 <span className="text-xs font-black text-white/80 truncate px-2 w-full text-center tracking-tighter">{user}</span>
                 <span className="text-[10px] font-black italic text-gold">#{rank}</span>
+                {reward && (
+                    <div className="mt-1 flex items-center gap-1 bg-gold/20 px-2 py-0.5 rounded-full">
+                        <Gift className="w-3 h-3 text-gold" />
+                        <span className="text-[8px] font-black text-gold">{reward.amount} {reward.type}</span>
+                    </div>
+                )}
             </div>
         </div>
     );
 }
 
 function LeaderboardRow({ rank, user, profit, multiplier, isMe }: LeaderboardEntry) {
+    const reward = REWARD_TIERS[rank];
+
     return (
         <motion.div
             initial={{ opacity: 0, x: -10 }}
@@ -189,8 +213,16 @@ function LeaderboardRow({ rank, user, profit, multiplier, isMe }: LeaderboardEnt
                     <span className="text-[8px] text-white/30 uppercase font-bold">{multiplier} Max X</span>
                 </div>
             </div>
-            <div className="text-right">
-                <span className="text-sm font-black gold-text italic tracking-tighter">{profit}</span>
+            <div className="flex items-center gap-3">
+                {reward && rank <= 5 && (
+                    <div className="flex items-center gap-1 bg-purple-500/20 px-2 py-1 rounded-full">
+                        <Gift className="w-3 h-3 text-purple-400" />
+                        <span className="text-[8px] font-bold text-purple-400">{reward.amount}</span>
+                    </div>
+                )}
+                <div className="text-right">
+                    <span className="text-sm font-black gold-text italic tracking-tighter">{profit}</span>
+                </div>
             </div>
         </motion.div>
     );

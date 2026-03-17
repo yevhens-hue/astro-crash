@@ -3,6 +3,7 @@
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
+import { ThemeProvider } from '@/hooks/useTheme';
 
 // URL манифеста нашего приложения
 const manifestUrl = 'https://telegram-gambling-app.vercel.app/tonconnect-manifest.json';
@@ -94,9 +95,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
         initTMA();
     }, []);
 
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(err => {
+                    console.error('ServiceWorker registration failed: ', err);
+                });
+        }
+    }, []);
+
     return (
-        <TonConnectUIProvider manifestUrl={manifestUrl}>
-            {children}
-        </TonConnectUIProvider>
+        <ThemeProvider>
+            <TonConnectUIProvider manifestUrl={manifestUrl}>
+                {children}
+            </TonConnectUIProvider>
+        </ThemeProvider>
     );
 }

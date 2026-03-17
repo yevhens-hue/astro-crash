@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTonWallet, TonConnectButton, useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
-import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft, X, Loader2, Shield, Send, Volume2, VolumeX, Gift, Bell, BellOff, Settings } from 'lucide-react';
+import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft, X, Loader2, Shield, Send, Volume2, VolumeX, Gift, Bell, BellOff, Settings, Palette } from 'lucide-react';
 import TxModal from '@/components/TxModal';
 import { FEATURE_FLAGS } from '@/lib/flags';
 import { useI18n } from '@/lib/i18n';
@@ -17,6 +17,7 @@ import BalanceHistoryModal from '@/components/BalanceHistoryModal';
 import BigWinCard from '@/components/BigWinCard';
 import VIPStatus from '@/components/VIPStatus';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
+import ThemeSelector from '@/components/ThemeSelector';
 
 // ─── Welcome Bonus Modal ───────────────────────────────────────────────────
 function WelcomeBonusModal({
@@ -96,12 +97,14 @@ function BurgerMenu({
   const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [showProvablyTooltip, setShowProvablyTooltip] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
   const { t } = useI18n();
 
   return (
     <>
       <BalanceHistoryModal isOpen={showHistoryModal} onClose={() => setShowHistoryModal(false)} walletAddress={address || ''} />
       <SoundSettingsModal isOpen={showSoundSettings} onClose={() => setShowSoundSettings(false)} />
+      <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -193,6 +196,19 @@ function BurgerMenu({
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-white/80">{t('balance_history')}</span>
                 <span className="text-[10px] text-white/30 uppercase font-bold">{t('view_transactions')}</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setShowThemeSelector(true)}
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
+            >
+              <div className="p-2 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
+                <Palette className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">Theme</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">Customize colors</span>
               </div>
             </button>
 

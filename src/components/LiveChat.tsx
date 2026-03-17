@@ -4,7 +4,18 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { FEATURE_FLAGS } from '@/lib/flags';
 import { useTonWallet } from '@tonconnect/ui-react';
-import { CloudRain, Gift, Send, UserCircle, Bot, MessageSquare } from 'lucide-react';
+import { CloudRain, Gift, Send, UserCircle, Bot, MessageSquare, Heart, ThumbsUp, ThumbsDown, Flame, Moon, PartyPopper, MousePointerClick } from 'lucide-react';
+
+// Available reactions
+const REACTIONS = ['👍', '👎', '❤️', '🔥', '🎉', '🌙', '🐭'];
+
+interface ChatReaction {
+    id: string;
+    message_id: string;
+    wallet_address: string;
+    emoji: string;
+    created_at: string;
+}
 
 interface ChatMessage {
     id: string;
@@ -14,6 +25,7 @@ interface ChatMessage {
     is_system: boolean;
     metadata?: any;
     created_at: string;
+    reactions?: ChatReaction[];
 }
 
 export default function LiveChat({ currentUsername }: { currentUsername?: string | null }) {
@@ -23,7 +35,67 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isSending, setIsSending] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
+    const [reactions, setReactions] = useState<Map<string, ChatReaction[]>>(new Map());
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Fetch reactions for messages
+    const fetchReactions = async (messageIds: string[]) => {
+        if (messageIds.length === 0) return;
+
+        const { data } = await supabase
+            .from('chat_reactions')
+            .select('*')
+            .in('message_id', messageIds);
+
+        if (data) {
+            const reactionMap = new Map<string, ChatReaction[]>();
+            data.forEach((r: ChatReaction) => {
+                const existing = reactionMap.get(r.message_id) || [];
+                reactionMap.set(r.message_id, [...existing, r]);
+            });
+            setReactions(reactionMap);
+        }
+    };
+
+    // Toggle reaction on a message
+    const toggleReaction = async (messageId: string, emoji: string) => {
+        const address = currentWallet || (FEATURE_FLAGS.GUEST_MODE ? 'guest_test_wallet' : null);
+        if (!address) return;
+
+        const messageReactions = reactions.get(messageId) || [];
+        const existingReaction = messageReactions.find(
+            r => r.wallet_address === address && r.emoji === emoji
+        );
+
+        if (existingReaction) {
+            // Remove reaction
+            await supabase.from('chat_reactions').delete().eq('id', existingReaction.id);
+            setReactions(prev => {
+                const updated = new Map(prev);
+                const msgReactions = (updated.get(messageId) || []).filter(r => r.id !== existingReaction.id);
+                updated.set(messageId, msgReactions);
+                return updated;
+            });
+        } else {
+            // Add reaction
+            const { data } = await supabase.from('chat_reactions').insert([{
+                message_id: messageId,
+                wallet_address: address,
+                emoji: emoji
+            }]).select().single();
+
+            if (data) {
+                setReactions(prev => {
+                    const updated = new Map(prev);
+                    const msgReactions = [...(updated.get(messageId) || []), data as ChatReaction];
+                    updated.set(messageId, msgReactions);
+                    return updated;
+                });
+            }
+        }
+        setShowEmojiPicker(null);
+    };
 
     useEffect(() => {
         fetchMessages();
@@ -34,13 +106,27 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
                 setMessages(prev => {
                     // Check if message already exists (optimistic UI)
                     if (prev.some(m => m.id === payload.new.id)) return prev;
-                    return [...prev, payload.new as ChatMessage];
+                    const newMsg = payload.new as ChatMessage;
+                    // Fetch reactions for new message
+                    fetchReactions([newMsg.id]);
+                    return [...prev, newMsg];
                 });
+            })
+            .subscribe();
+
+        // Subscribe to reactions
+        const reactionsChannel = supabase
+            .channel('public:chat_reactions')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_reactions' }, () => {
+                // Refresh all reactions when something changes
+                const msgIds = messages.map(m => m.id);
+                if (msgIds.length > 0) fetchReactions(msgIds);
             })
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
+            supabase.removeChannel(reactionsChannel);
         };
     }, []);
 
@@ -57,6 +143,9 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
 
         if (data && !error) {
             setMessages(data.reverse());
+            // Fetch reactions for all messages
+            const msgIds = data.map(m => m.id);
+            if (msgIds.length > 0) fetchReactions(msgIds);
         }
     };
 
@@ -204,6 +293,45 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
                                     Claimed by {msg.metadata.claimed_by.slice(0, 4)}...
                                 </div>
                             )}
+                            {/* Reactions UI */}
+                            <div className="mt-2 flex items-center gap-1 flex-wrap">
+                                {/* Display existing reactions */}
+                                {(reactions.get(msg.id) || []).map((reaction) => (
+                                    <button
+                                        key={reaction.id}
+                                        onClick={() => toggleReaction(msg.id, reaction.emoji)}
+                                        className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${reaction.wallet_address === currentWallet || reaction.wallet_address === 'guest_test_wallet'
+                                                ? 'bg-gold/30 border border-gold/50'
+                                                : 'bg-white/10 border border-white/20'
+                                            }`}
+                                    >
+                                        {reaction.emoji}
+                                    </button>
+                                ))}
+                                {/* Add reaction button */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowEmojiPicker(showEmojiPicker === msg.id ? null : msg.id)}
+                                        className="text-xs px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-white/50"
+                                    >
+                                        +
+                                    </button>
+                                    {/* Emoji picker dropdown */}
+                                    {showEmojiPicker === msg.id && (
+                                        <div className="absolute bottom-full left-0 mb-1 flex gap-0.5 bg-[#1a1a1a] border border-white/10 rounded-lg p-1 shadow-lg z-10">
+                                            {REACTIONS.map((emoji) => (
+                                                <button
+                                                    key={emoji}
+                                                    onClick={() => toggleReaction(msg.id, emoji)}
+                                                    className="w-7 h-7 flex items-center justify-center text-lg hover:bg-white/10 rounded transition-colors"
+                                                >
+                                                    {emoji}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
