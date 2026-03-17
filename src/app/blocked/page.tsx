@@ -5,7 +5,11 @@ export const metadata: Metadata = {
   description: 'This service is not available in your region',
 };
 
-export default function BlockedPage() {
+export default function BlockedPage({
+  searchParams,
+}: {
+  searchParams: { country?: string; region?: string }
+}) {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center">
       <div className="max-w-sm">
@@ -15,8 +19,13 @@ export default function BlockedPage() {
           <br />
           <span className="text-white/40">In Your Region</span>
         </h1>
+        {searchParams?.country && (
+          <div className="inline-block bg-white/10 px-3 py-1 rounded-full text-white/80 text-sm font-bold tracking-widest uppercase mb-6 border border-white/20">
+            Detected: {searchParams.country} {searchParams.region ? `(${searchParams.region})` : ''}
+          </div>
+        )}
         <p className="text-white/50 text-sm leading-relaxed mb-8">
-          Astro Hub is not available in your country due to local gambling regulations.
+          Astro Hub is not available in your region due to local gambling regulations.
           We comply with applicable laws and restrict access to users in jurisdictions
           where online gaming is prohibited.
         </p>
