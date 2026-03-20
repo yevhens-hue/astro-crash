@@ -92,6 +92,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const updateUserBalance = async (userId: string, newBalance: string) => {
+    try {
+      const parsedBalance = parseFloat(newBalance);
+      if (isNaN(parsedBalance)) return;
+      
+      const { error } = await supabase
+        .from('users')
+        .update({ balance: parsedBalance })
+        .eq('id', userId);
+
+      if (!error) {
+        setUsers(users.map(u => u.id === userId ? { ...u, balance: parsedBalance } : u));
+        alert('Balance updated successfully!');
+      } else {
+        alert('Error updating balance: ' + error.message);
+      }
+    } catch (e) {
+      console.error('Error updating user balance:', e);
+    }
+  };
+
   const saveJackpot = async () => {
     if (!jackpot) return;
     setIsSavingJackpot(true);
@@ -209,7 +230,22 @@ export default function AdminDashboard() {
                     {u.wallet_address.slice(0, 4)}...{u.wallet_address.slice(-4)}
                     <span className="hidden opacity-0">{u.wallet_address}</span> {/* Для тестов */}
                   </td>
-                  <td className="p-4 text-white font-medium">{u.balance} TON</td>
+                  <td className="p-4 text-white font-medium">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        defaultValue={u.balance}
+                        onBlur={(e) => {
+                          if (parseFloat(e.target.value) !== u.balance) {
+                            updateUserBalance(u.id, e.target.value);
+                          }
+                        }}
+                        className="w-24 bg-black/40 border border-white/10 rounded px-2 py-1 text-white font-mono focus:outline-none focus:border-gold/50 transition-colors"
+                      />
+                      <span className="text-white/50 text-xs">TON</span>
+                    </div>
+                  </td>
                   <td className="p-4">
                     {u.is_blocked ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold uppercase tracking-wider">
