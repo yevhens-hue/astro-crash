@@ -27,7 +27,7 @@ export default function ThemeSelector({ isOpen, onClose }: ThemeSelectorProps) {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full max-w-sm bg-[#111] border border-white/10 rounded-3xl p-6"
+                        className="w-full max-w-sm bg-[var(--custom-bg,#111)] border border-white/10 rounded-3xl p-6"
                     >
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">

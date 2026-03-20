@@ -178,17 +178,46 @@ serve(async (req) => {
 
     if (logError) console.error("Transaction logging failed:", logError);
 
-    // 8. Send Telegram Notification
+    // 8. Send Telegram Notification - Regular notification
     const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
     if (BOT_TOKEN && targetUser.telegram_id) {
         try {
-            const message = `✅ *Withdrawal Successful!* \n\n*${amount} TON* has been sent to your wallet. \n\nCheck your transaction history. 💰`;
+            let message = '';
+            const LARGE_WITHDRAWAL_THRESHOLD = parseFloat(Deno.env.get('LARGE_WITHDRAWAL_THRESHOLD') || '100');
+            const isLargeWithdrawal = amount >= LARGE_WITHDRAWAL_THRESHOLD;
+            
+            if (isLargeWithdrawal) {
+                // Large withdrawal notification
+                message = `⚠️ *LARGE WITHDRAWAL!* \n\n*${amount} TON* requested for withdrawal.\n\nWallet: \`${wallet_address.slice(0, 8)}...${wallet_address.slice(-8)}\`\n\nPlease verify this request manually if suspicious.`;
+            } else {
+                message = `✅ *Withdrawal Successful!* \n\n*${amount} TON* has been sent to your wallet. \n\nCheck your transaction history. 💰`;
+            }
+            
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: targetUser.telegram_id, text: message, parse_mode: 'Markdown' })
             });
         } catch (tgError) { console.error("TG notification failed:", tgError) }
+    }
+
+    // 9. Alert admin for large withdrawals
+    const LARGE_WITHDRAWAL_THRESHOLD = parseFloat(Deno.env.get('LARGE_WITHDRAWAL_THRESHOLD') || '100');
+    if (amount >= LARGE_WITHDRAWAL_THRESHOLD) {
+        const ADMIN_TELEGRAM_ID = Deno.env.get('ADMIN_TELEGRAM_ID');
+        if (ADMIN_TELEGRAM_ID && BOT_TOKEN) {
+            try {
+                const adminMessage = `🚨 *ALERT: Large Withdrawal!* \n\n\nAmount: *${amount} TON*\nUser: ${wallet_address}\nUsername: ${targetUser.username || 'N/A'}\nTime: ${new Date().toISOString()}`;
+                
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: ADMIN_TELEGRAM_ID, text: adminMessage, parse_mode: 'Markdown' })
+                });
+            } catch (adminError) {
+                console.error("Admin notification failed:", adminError);
+            }
+        }
     }
 
     return new Response(JSON.stringify({ 

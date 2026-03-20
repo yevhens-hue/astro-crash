@@ -18,6 +18,7 @@ import BigWinCard from '@/components/BigWinCard';
 import VIPStatus from '@/components/VIPStatus';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
 import ThemeSelector from '@/components/ThemeSelector';
+import SessionHistoryModal from '@/components/SessionHistoryModal';
 
 // ─── Welcome Bonus Modal ───────────────────────────────────────────────────
 function WelcomeBonusModal({
@@ -97,12 +98,14 @@ function BurgerMenu({
   const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [showProvablyTooltip, setShowProvablyTooltip] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showSessionHistoryModal, setShowSessionHistoryModal] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const { t } = useI18n();
 
   return (
     <>
       <BalanceHistoryModal isOpen={showHistoryModal} onClose={() => setShowHistoryModal(false)} walletAddress={address || ''} />
+      <SessionHistoryModal isOpen={showSessionHistoryModal} onClose={() => setShowSessionHistoryModal(false)} walletAddress={address || ''} />
       <SoundSettingsModal isOpen={showSoundSettings} onClose={() => setShowSoundSettings(false)} />
       <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
       {/* Backdrop */}
@@ -113,9 +116,9 @@ function BurgerMenu({
 
       {/* Drawer */}
       <div
-        className={`fixed right-0 top-0 bottom-0 z-[70] w-full max-w-[280px] bg-[#0a0a0a] border-l border-white/10 shadow-2xl transition-transform duration-300 ease-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed right-0 top-0 bottom-0 z-[70] w-full max-w-[280px] bg-[var(--custom-bg,#0a0a0a)] border-l border-white/10 shadow-2xl transition-transform duration-300 ease-out transform flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
-        <div className="flex flex-col h-full p-6">
+        <div className="flex flex-col h-full p-6 overflow-hidden">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xl font-black uppercase italic gold-text">{t('menu')}</h3>
@@ -166,7 +169,7 @@ function BurgerMenu({
           </div>
 
           {/* Menu Items */}
-          <div className="flex flex-col gap-2 flex-1">
+          <div className="flex flex-col gap-2 flex-1 overflow-y-auto pb-8 scrollbar-hide">
             <button
               onClick={() => setShowProvablyTooltip(!showProvablyTooltip)}
               className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left relative"
@@ -196,6 +199,19 @@ function BurgerMenu({
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-white/80">{t('balance_history')}</span>
                 <span className="text-[10px] text-white/30 uppercase font-bold">{t('view_transactions')}</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setShowSessionHistoryModal(true)}
+              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
+            >
+              <div className="p-2 bg-teal-500/10 rounded-xl group-hover:bg-teal-500/20 transition-colors">
+                <TrendingUp className="w-5 h-5 text-teal-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white/80">{t('session_history' as any)}</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">{t('your_play_sessions' as any)}</span>
               </div>
             </button>
 
@@ -241,6 +257,8 @@ function BurgerMenu({
                 <span className="text-[10px] text-white/30 uppercase font-bold">Games-Income.com</span>
               </div>
             </a>
+
+
 
             <button
               onClick={() => onToggleNotifications(!notificationsEnabled)}

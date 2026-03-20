@@ -15,15 +15,18 @@ CREATE OR REPLACE FUNCTION place_bet_atomic(
     p_round_id UUID,
     p_amount DECIMAL,
     p_is_bonus BOOLEAN DEFAULT FALSE
-) RETURNS JSONB AS $$
+) RETURNS JSONB AS $
 DECLARE
     v_user_id UUID;
     v_current_balance DECIMAL;
+    v_current_bonus DECIMAL;
+    v_total_available DECIMAL;
     v_new_bet_id UUID;
+    v_use_bonus BOOLEAN;
 BEGIN
     -- Get user and lock the row for update to prevent race conditions
-    SELECT id, CASE WHEN p_is_bonus THEN bonus_balance ELSE balance END
-    INTO v_user_id, v_current_balance
+    SELECT id, balance, bonus_balance
+    INTO v_user_id, v_current_balance, v_current_bonus
     FROM users
     WHERE wallet_address = p_user_address
     FOR UPDATE;
@@ -32,31 +35,58 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'User not found');
     END IF;
 
-    IF v_current_balance < p_amount THEN
+    -- Calculate total available balance (real + bonus)
+    v_total_available := COALESCE(v_current_balance, 0) + COALESCE(v_current_bonus, 0);
+    
+    -- Check if user has enough total balance
+    IF v_total_available < p_amount THEN
         RETURN jsonb_build_object('success', false, 'error', 'Insufficient balance');
     END IF;
 
-    -- Update balance
+    -- Determine which balance to use
+    -- If p_is_bonus is true, use bonus balance
+    -- Otherwise, use real balance first, then bonus if needed
     IF p_is_bonus THEN
+        -- User specifically requested bonus balance
+        IF COALESCE(v_current_bonus, 0) < p_amount THEN
+            RETURN jsonb_build_object('success', false, 'error', 'Insufficient bonus balance');
+        END IF;
         UPDATE users SET bonus_balance = bonus_balance - p_amount WHERE id = v_user_id;
     ELSE
-        UPDATE users SET balance = balance - p_amount WHERE id = v_user_id;
+        -- Use real balance first
+        IF COALESCE(v_current_balance, 0) >= p_amount THEN
+            UPDATE users SET balance = balance - p_amount WHERE id = v_user_id;
+        ELSE
+            -- Not enough real balance, use bonus to cover the difference
+            DECLARE
+                v_remaining DECIMAL;
+            BEGIN
+                v_remaining := p_amount - COALESCE(v_current_balance, 0);
+                UPDATE users SET 
+                    balance = 0,
+                    bonus_balance = bonus_balance - v_remaining 
+                WHERE id = v_user_id;
+            END;
+        END IF;
     END IF;
 
     -- Record the bet
-    INSERT INTO bets (user_id, round_id, amount, status)
-    VALUES (v_user_id, p_round_id, p_amount, 'confirmed')
+    INSERT INTO bets (user_id, round_id, amount, status, is_bonus)
+    VALUES (v_user_id, p_round_id, p_amount, 'confirmed', p_is_bonus)
     RETURNING id INTO v_new_bet_id;
 
+    -- Return new total balance
+    SELECT balance + bonus_balance INTO v_total_available FROM users WHERE id = v_user_id;
+    
     RETURN jsonb_build_object(
         'success', true,
         'bet_id', v_new_bet_id,
-        'new_balance', v_current_balance - p_amount
+        'new_balance', v_total_available
     );
 EXCEPTION WHEN OTHERS THEN
     RETURN jsonb_build_object('success', false, 'error', SQLERRM);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 3. Atomic function for Slot Spin (deduct + payout)
 CREATE OR REPLACE FUNCTION spin_slot_atomic(
@@ -68,11 +98,13 @@ CREATE OR REPLACE FUNCTION spin_slot_atomic(
 DECLARE
     v_user_id UUID;
     v_current_balance DECIMAL;
+    v_current_bonus DECIMAL;
+    v_total_available DECIMAL;
     v_net_change DECIMAL;
 BEGIN
     -- Get user and lock
-    SELECT id, CASE WHEN p_is_bonus THEN bonus_balance ELSE balance END
-    INTO v_user_id, v_current_balance
+    SELECT id, balance, bonus_balance
+    INTO v_user_id, v_current_balance, v_current_bonus
     FROM users
     WHERE wallet_address = p_user_address
     FOR UPDATE;
@@ -81,23 +113,56 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'User not found');
     END IF;
 
-    IF v_current_balance < p_cost THEN
+    -- Calculate total available balance
+    v_total_available := COALESCE(v_current_balance, 0) + COALESCE(v_current_bonus, 0);
+    
+    -- Check if user has enough total balance
+    IF v_total_available < p_cost THEN
         RETURN jsonb_build_object('success', false, 'error', 'Insufficient balance');
     END IF;
 
     v_net_change := p_win_amount - p_cost;
 
-    -- Update balance
+    -- Update balance - use real first, then bonus if needed
     IF p_is_bonus THEN
-        UPDATE users SET bonus_balance = bonus_balance + v_net_change WHERE id = v_user_id;
+        -- Using bonus balance only
+        IF COALESCE(v_current_bonus, 0) >= p_cost THEN
+            UPDATE users SET bonus_balance = bonus_balance + v_net_change WHERE id = v_user_id;
+        ELSE
+            -- Not enough bonus, use real + bonus
+            DECLARE
+                v_remaining DECIMAL;
+            BEGIN
+                v_remaining := p_cost - COALESCE(v_current_bonus, 0);
+                UPDATE users SET 
+                    balance = balance - v_remaining,
+                    bonus_balance = bonus_balance + v_net_change
+                WHERE id = v_user_id;
+            END;
+        END IF;
     ELSE
-        UPDATE users SET balance = balance + v_net_change WHERE id = v_user_id;
+        -- Using real balance first
+        IF COALESCE(v_current_balance, 0) >= p_cost THEN
+            UPDATE users SET balance = balance + v_net_change WHERE id = v_user_id;
+        ELSE
+            -- Not enough real balance, use bonus to cover difference
+            DECLARE
+                v_remaining DECIMAL;
+            BEGIN
+                v_remaining := p_cost - COALESCE(v_current_balance, 0);
+                UPDATE users SET 
+                    balance = 0,
+                    bonus_balance = bonus_balance - v_remaining + v_net_change
+                WHERE id = v_user_id;
+            END;
+        END IF;
     END IF;
 
     -- Return new balance
+    SELECT balance + bonus_balance INTO v_total_available FROM users WHERE id = v_user_id;
     RETURN jsonb_build_object(
         'success', true,
-        'new_balance', v_current_balance + v_net_change
+        'new_balance', v_total_available
     );
 EXCEPTION WHEN OTHERS THEN
     RETURN jsonb_build_object('success', false, 'error', SQLERRM);
@@ -144,12 +209,21 @@ BEGIN
     SET status = 'cashed', cashout_at = p_cashout_at, win_amount = p_win_amount
     WHERE id = p_bet_id;
 
-    -- Credit user balance
-    UPDATE users
-    SET balance = balance + p_win_amount
-    WHERE id = v_bet.user_id;
+    -- Credit user balance - return to same balance type as bet was made from
+    IF COALESCE(v_bet.is_bonus, FALSE) = TRUE THEN
+        UPDATE users
+        SET bonus_balance = bonus_balance + p_win_amount
+        WHERE id = v_bet.user_id;
+    ELSE
+        UPDATE users
+        SET balance = balance + p_win_amount
+        WHERE id = v_bet.user_id;
+    END IF;
 
-    RETURN jsonb_build_object('success', true);
+    -- Return new total balance
+    SELECT balance + bonus_balance INTO v_current_balance FROM users WHERE id = v_bet.user_id;
+    
+    RETURN jsonb_build_object('success', true, 'new_balance', v_current_balance);
 EXCEPTION WHEN OTHERS THEN
     RETURN jsonb_build_object('success', false, 'error', SQLERRM);
 END;

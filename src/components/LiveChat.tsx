@@ -250,11 +250,12 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
 
     return (
         <div className="flex flex-col h-full bg-[#0a0a0a] rounded-3xl border border-white/5 overflow-hidden">
-            <div className="p-4 border-b border-white/5 bg-white/[0.02]">
+            <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
                 <h3 className="text-sm font-black italic gold-text uppercase flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     Live Global Chat
                 </h3>
+
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar min-h-[400px]">
@@ -301,8 +302,8 @@ export default function LiveChat({ currentUsername }: { currentUsername?: string
                                         key={reaction.id}
                                         onClick={() => toggleReaction(msg.id, reaction.emoji)}
                                         className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${reaction.wallet_address === currentWallet || reaction.wallet_address === 'guest_test_wallet'
-                                                ? 'bg-gold/30 border border-gold/50'
-                                                : 'bg-white/10 border border-white/20'
+                                            ? 'bg-gold/30 border border-gold/50'
+                                            : 'bg-white/10 border border-white/20'
                                             }`}
                                     >
                                         {reaction.emoji}

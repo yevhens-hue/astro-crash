@@ -15,6 +15,10 @@ vi.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key })
 }));
 
+vi.mock('@/hooks/useTheme', () => ({
+  useTheme: () => ({ theme: 'dark', setTheme: vi.fn() }),
+}));
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     channel: vi.fn(() => ({
@@ -46,7 +50,7 @@ vi.mock('@/components/BurgerMenu', () => ({
 describe('Page Component Branding', () => {
   it('should NOT render the Game Selector block (Astro Crash / Galaxy Slots buttons)', () => {
     render(<Page />);
-    
+
     // According to TDD: This test MUST FAIL first because the block is still in the code
     const crashSelector = screen.queryByText(/Astro Crash/i);
     expect(crashSelector).not.toBeInTheDocument();
@@ -55,11 +59,11 @@ describe('Page Component Branding', () => {
   it('renders WelcomeBonusModal correctly on first load with 5 TON', async () => {
 
     render(<Page />);
-    
+
     // Ensure the welcome modal shows up with the expected 5 TON mock translation test
     const welcomeTitle = await screen.findByText('welcome_title');
     expect(welcomeTitle).toBeInTheDocument();
-    
+
     // Check that we render the let's play button
     const playButton = await screen.findByRole('button', { name: /lets_play/i });
     expect(playButton).toBeInTheDocument();
