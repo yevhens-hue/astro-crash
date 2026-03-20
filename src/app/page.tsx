@@ -1,11 +1,11 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTonWallet, TonConnectButton, useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
-import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft, X, Loader2, Shield, Send, Volume2, VolumeX, Gift, Bell, BellOff, Settings, Palette } from 'lucide-react';
+import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft, X, Loader2, Shield, Send, Volume2, VolumeX, Gift, Bell, BellOff, ShieldAlert } from 'lucide-react';
 import TxModal from '@/components/TxModal';
 import { FEATURE_FLAGS } from '@/lib/flags';
 import { useI18n } from '@/lib/i18n';
-import { SoundManager } from '@/lib/sounds';
+import Link from 'next/link';
 import { AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import CrashGame from '@/components/CrashGame';
@@ -17,7 +17,6 @@ import BalanceHistoryModal from '@/components/BalanceHistoryModal';
 import BigWinCard from '@/components/BigWinCard';
 import VIPStatus from '@/components/VIPStatus';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
-import ThemeSelector from '@/components/ThemeSelector';
 import SessionHistoryModal from '@/components/SessionHistoryModal';
 
 // ─── Welcome Bonus Modal ───────────────────────────────────────────────────
@@ -94,12 +93,11 @@ function BurgerMenu({
   onToggleNotifications: (enabled: boolean) => void;
   notificationsEnabled: boolean;
 }) {
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled] = useState(true);
   const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [showProvablyTooltip, setShowProvablyTooltip] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showSessionHistoryModal, setShowSessionHistoryModal] = useState(false);
-  const [showThemeSelector, setShowThemeSelector] = useState(false);
   const { t } = useI18n();
 
   return (
@@ -107,7 +105,6 @@ function BurgerMenu({
       <BalanceHistoryModal isOpen={showHistoryModal} onClose={() => setShowHistoryModal(false)} walletAddress={address || ''} />
       <SessionHistoryModal isOpen={showSessionHistoryModal} onClose={() => setShowSessionHistoryModal(false)} walletAddress={address || ''} />
       <SoundSettingsModal isOpen={showSoundSettings} onClose={() => setShowSoundSettings(false)} />
-      <ThemeSelector isOpen={showThemeSelector} onClose={() => setShowThemeSelector(false)} />
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -215,18 +212,18 @@ function BurgerMenu({
               </div>
             </button>
 
-            <button
-              onClick={() => setShowThemeSelector(true)}
+            <Link
+              href="/admin"
               className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
             >
-              <div className="p-2 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
-                <Palette className="w-5 h-5 text-purple-400" />
+              <div className="p-2 bg-red-500/10 rounded-xl group-hover:bg-red-500/20 transition-colors">
+                <ShieldAlert className="w-5 h-5 text-red-500" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-white/80">Theme</span>
-                <span className="text-[10px] text-white/30 uppercase font-bold">Customize colors</span>
+                <span className="text-sm font-bold text-white/80">Admin Dashboard</span>
+                <span className="text-[10px] text-red-500/70 uppercase font-bold">Admin Only</span>
               </div>
-            </button>
+            </Link>
 
             <a
               href="https://luckybetvip.com/"
@@ -274,31 +271,15 @@ function BurgerMenu({
             </button>
 
             <button
-              onClick={() => {
-                const isEnabled = SoundManager.toggleMute();
-                setSoundEnabled(isEnabled);
-              }}
-              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
-            >
-              <div className="p-2 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
-                {soundEnabled ? <Volume2 className="w-5 h-5 text-purple-400" /> : <VolumeX className="w-5 h-5 text-white/40" />}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-white/80">{t('audio_effects')}</span>
-                <span className="text-[10px] text-white/30 uppercase font-bold">{soundEnabled ? t('enabled') : t('muted')}</span>
-              </div>
-            </button>
-
-            <button
               onClick={() => setShowSoundSettings(true)}
               className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
             >
               <div className="p-2 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
-                <Settings className="w-5 h-5 text-blue-400" />
+                {soundEnabled ? <Volume2 className="w-5 h-5 text-blue-400" /> : <VolumeX className="w-5 h-5 text-white/40" />}
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-white/80">Sound Settings</span>
-                <span className="text-[10px] text-white/30 uppercase font-bold">Customize</span>
+                <span className="text-[10px] text-white/30 uppercase font-bold">{soundEnabled ? t('enabled') : t('muted')}</span>
               </div>
             </button>
           </div>
