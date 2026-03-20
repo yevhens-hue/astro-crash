@@ -82,6 +82,7 @@ function BurgerMenu({
   address,
   onToggleNotifications,
   notificationsEnabled,
+  isAdmin,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -92,6 +93,7 @@ function BurgerMenu({
   address: string | null;
   onToggleNotifications: (enabled: boolean) => void;
   notificationsEnabled: boolean;
+  isAdmin: boolean;
 }) {
   const [soundEnabled] = useState(true);
   const [showSoundSettings, setShowSoundSettings] = useState(false);
@@ -212,18 +214,20 @@ function BurgerMenu({
               </div>
             </button>
 
-            <Link
-              href="/admin"
-              className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
-            >
-              <div className="p-2 bg-red-500/10 rounded-xl group-hover:bg-red-500/20 transition-colors">
-                <ShieldAlert className="w-5 h-5 text-red-500" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-white/80">Admin Dashboard</span>
-                <span className="text-[10px] text-red-500/70 uppercase font-bold">Admin Only</span>
-              </div>
-            </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group text-left"
+              >
+                <div className="p-2 bg-red-500/10 rounded-xl group-hover:bg-red-500/20 transition-colors">
+                  <ShieldAlert className="w-5 h-5 text-red-500" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-white/80">Admin Dashboard</span>
+                  <span className="text-[10px] text-red-500/70 uppercase font-bold">Admin Only</span>
+                </div>
+              </Link>
+            )}
 
             <a
               href="https://luckybetvip.com/"
@@ -301,6 +305,7 @@ function BurgerMenu({
 export default function Page() {
   const { t } = useI18n();
   const [balance, setBalance] = useState<number>(0);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const wallet = useTonWallet();
   const rawAddress = wallet?.account.address;
   const friendlyAddress = useTonAddress();
@@ -383,13 +388,14 @@ export default function Page() {
 
       const { data, error } = await supabase
         .from('users')
-        .select('id, balance, bonus_balance, wagering_requirement, wagering_total, username, referrer_id, referral_code')
+        .select('id, balance, bonus_balance, wagering_requirement, wagering_total, username, referrer_id, referral_code, is_admin')
         .eq('wallet_address', userAddress)
         .single();
 
       if (data) {
         setUserId(data.id);
         setReferralCode(data.referral_code);
+        setIsAdmin(!!data.is_admin);
         setBalance(Number(data.balance));
         // Update username or ID if missing/changed
         if (telegramId || (tgUsername && data.username !== tgUsername)) {
@@ -665,6 +671,7 @@ export default function Page() {
             (window as any).Telegram?.WebApp?.requestWriteAccess?.();
           }
         }}
+        isAdmin={isAdmin}
       />
 
       {showWelcomeBonus && (
