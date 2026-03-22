@@ -370,7 +370,7 @@ export default function CrashGame({
             }
 
             // Move this after balance subtraction to ensure UI shows bet from both panels
-            if (address === 'guest_test_wallet') {
+            if (address === 'guest_test_wallet' || !dbBetId) {
                 const guestBet = {
                     id: panel === 'A' ? currentBetIdRefA.current : currentBetIdRefB.current,
                     user_id: userId,
@@ -638,7 +638,7 @@ export default function CrashGame({
         // All DB operations deferred — won't block UI thread
         setTimeout(async () => {
             try {
-                if (address === 'guest_test_wallet' || !betId) return; // skip DB for guest
+                if (address === 'guest_test_wallet' || !betId || betId.startsWith('bet_a_') || betId.startsWith('bet_b_')) return; // skip DB for guest and local fallback bets
 
                 // 1. Secure Cashout with Telegram Auth
                 const initData = (window as any).Telegram?.WebApp?.initData || '';
