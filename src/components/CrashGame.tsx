@@ -283,10 +283,7 @@ export default function CrashGame({
                     roundId = roundData.id;
                     serverSeed = roundData.server_seed;
                 } catch (serverError: any) {
-                    if (address !== 'guest_test_wallet') {
-                        throw new Error(serverError.message || 'Server round generation failed');
-                    }
-                    // Fall back to local simulation for guests
+                    // Fall back to local simulation
                     console.warn('Server round generation failed, using local mode:', serverError.message);
                     crashAt = Math.max(1.1, 0.99 / (1 - Math.random()));
                     roundId = `local_round_${Date.now()}`;
@@ -331,9 +328,6 @@ export default function CrashGame({
                         onBalanceUpdate(balanceType, () => Number(data.new_balance));
                     }
                 } catch (betError: any) {
-                    if (address !== 'guest_test_wallet') {
-                        throw new Error(betError.message || 'Server bet failed');
-                    }
                     console.warn('Server bet failed, using local mode:', betError.message);
                     // Continue with local mode - the bet will be tracked locally
                     dbBetId = null;

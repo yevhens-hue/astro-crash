@@ -136,6 +136,8 @@ export default function SlotMachine({
             let jackpotWin = 0;
             let jackpotType: string | null = null;
 
+            let serverSpinSuccess = false;
+            
             if (address !== 'guest_test_wallet' || !FEATURE_FLAGS.GUEST_MODE) {
                 // Call Secure Edge Function with security headers
                 const initData = (window as any).Telegram?.WebApp?.initData || '';
@@ -151,23 +153,27 @@ export default function SlotMachine({
                 });
 
                 if (error || !data?.success) {
-                    throw new Error(error?.message || data?.error || 'Failed to spin');
-                }
+                    console.warn('[SlotMachine] Server spin failed, using local simulation:', error?.message || data?.error);
+                    // Silently fall through to local simulation mode
+                } else {
+                    finalSymbols = data.spinResults;
+                    finalWinAmount = data.winAmount;
+                    jackpotWin = data.jackpotWin || 0;
+                    jackpotType = data.jackpotType;
 
-                finalSymbols = data.spinResults;
-                finalWinAmount = data.winAmount;
-                jackpotWin = data.jackpotWin || 0;
-                jackpotType = data.jackpotType;
+                    // Update jackpot from server response
+                    if (data.currentJackpot) {
+                        setJackpot(prev => ({ ...prev, current_amount: data.currentJackpot }));
+                    }
 
-                // Update jackpot from server response
-                if (data.currentJackpot) {
-                    setJackpot(prev => ({ ...prev, current_amount: data.currentJackpot }));
+                    if (typeof data.new_balance !== 'undefined' && onBalanceUpdate) {
+                        onBalanceUpdate(balanceType, () => Number(data.new_balance));
+                    }
+                    serverSpinSuccess = true;
                 }
-
-                if (typeof data.new_balance !== 'undefined' && onBalanceUpdate) {
-                    onBalanceUpdate(balanceType, () => Number(data.new_balance));
-                }
-            } else {
+            }
+            
+            if (!serverSpinSuccess) {
                 // Local simulation: deduct cost first
                 if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev - cost);
                 finalSymbols = reels.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
