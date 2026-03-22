@@ -925,10 +925,20 @@ export default function CrashGame({
                                     <p className="text-[8px] text-white/40 uppercase font-bold px-1">Show off your Astro victory to the community!</p>
                                     <button
                                         onClick={() => {
-                                            const text = `🚀 I just hit ${lastWin?.toFixed(2)}x on Astro Crash! Try to beat my score! Play now: @AstroCrashRobot_bot`;
-                                            const shareParams = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/AstroCrashRobot_bot/play?startapp=' + (referralCode || ''))}&text=${encodeURIComponent(text)}`;
-                                            (window as any).Telegram?.WebApp?.openTelegramLink(shareParams);
-                                            setShowShareModal(false);
+                                            const shareText = `🚀 I just hit ${lastWin?.toFixed(2)}x on Astro Crash! Try to beat my score! Play now: @AstroCrashRobot_bot`;
+                                            const playUrl = referralCode 
+                                                ? `https://t.me/AstroCrashRobot_bot/play?startapp=${referralCode}`
+                                                : 'https://t.me/AstroCrashRobot_bot/play';
+                                            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(playUrl)}&text=${encodeURIComponent(shareText)}`;
+                                            
+                                            const tg = (window as any).Telegram?.WebApp;
+                                            if (tg?.openTelegramLink) {
+                                                tg.openTelegramLink(shareUrl);
+                                            } else {
+                                                window.open(shareUrl, '_blank');
+                                            }
+                                            
+                                            setTimeout(() => setShowShareModal(false), 500);
                                         }}
                                         className="gold-button w-full py-2.5 text-xs shrink-0"
                                     >

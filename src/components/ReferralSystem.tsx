@@ -134,7 +134,17 @@ export default function ReferralSystem({ referralCode, userId }: ReferralSystemP
         const text = encodeURIComponent("🚀 Play AstroCrash and earn together! Join my team:");
         const url = encodeURIComponent(referralLink);
         const shareUrl = `https://t.me/share/url?url=${url}&text=${text}`;
-        (window as any).Telegram?.WebApp?.openTelegramLink?.(shareUrl) || window.open(shareUrl, '_blank');
+        
+        try {
+            const tg = (window as any).Telegram?.WebApp;
+            if (tg && typeof tg.openTelegramLink === 'function') {
+                tg.openTelegramLink(shareUrl);
+            } else {
+                window.open(shareUrl, '_blank');
+            }
+        } catch (e) {
+            window.open(shareUrl, '_blank');
+        }
     };
 
     return (

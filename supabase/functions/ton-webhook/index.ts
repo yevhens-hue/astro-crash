@@ -64,7 +64,7 @@ serve(async (req) => {
         throw new Error('Server configuration error');
     }
 
-    const { tx_hash, amount, sender, type } = await req.json()
+    const { tx_hash, sender, type } = await req.json()
 
     console.log(`Verifying ${type}: ${tx_hash} from ${sender}`);
 
@@ -112,35 +112,45 @@ serve(async (req) => {
         if (!existing) {
             // Uncredited transaction found!
             if (type === 'deposit') {
-                // Determine user
-                const { data: user, error: userError } = await supabaseClient
-                    .from('users')
-                    .select('balance, id')
-                    .eq('wallet_address', sender)
-                    .single()
+                // Use atomic function to prevent race conditions
+                const { data: result, error: depositError } = await supabaseClient
+                    .rpc('credit_deposit_atomic', {
+                        p_wallet_address: sender,
+                        p_amount: val,
+                        p_tx_hash: txHash
+                    });
 
-                if (!userError && user) {
-                    await supabaseClient
-                        .from('users')
-                        .update({ balance: Number(user.balance) + val })
-                        .eq('id', user.id)
-                        
-                    await supabaseClient.from('transactions').insert({
-                        user_id: user.id,
-                        amount: val,
-                        type: 'deposit',
-                        status: 'completed',
-                        tx_hash: txHash,
-                        wallet_address: sender
-                    })
-                    processedCount++;
+                if (depositError) {
+                    console.error(`Deposit error for wallet ${sender}:`, depositError);
+                    throw new Error(`Deposit failed: ${depositError.message}`);
                 }
-            } else if (type === 'bet_confirmation') {
-                await supabaseClient
-                    .from('bets')
-                    .update({ status: 'confirmed' })
-                    .eq('tx_hash', txHash)
+
+                if (!result?.success) {
+                    console.error(`Deposit failed for wallet ${sender}:`, result?.error);
+                    throw new Error(result?.error || 'Deposit failed');
+                }
+
                 processedCount++;
+                console.log(`Deposited ${val} TON to user ${result.user_id}, new balance: ${result.new_balance}`);
+            } else if (type === 'bet_confirmation') {
+                // Use atomic function to prevent race conditions
+                const { data: result, error: betError } = await supabaseClient
+                    .rpc('confirm_bet_atomic', {
+                        p_tx_hash: txHash
+                    });
+
+                if (betError) {
+                    console.error(`Bet confirmation error for tx ${txHash}:`, betError);
+                    throw new Error(`Bet confirmation failed: ${betError.message}`);
+                }
+
+                if (!result?.success) {
+                    console.error(`Bet confirmation failed for tx ${txHash}:`, result?.error);
+                    throw new Error(result?.error || 'Bet confirmation failed');
+                }
+
+                processedCount++;
+                console.log(`Confirmed bet ${result.bet_id}, previous status: ${result.previous_status}`);
             }
             
             // If the user specified a specific tx_hash or amount and we found it, we can break early if we want,
@@ -151,8 +161,8 @@ serve(async (req) => {
         }
     }
     
-    if (processedCount === 0 && amount) {
-        throw new Error("Deposit transaction not found on-chain yet or already processed.");
+    if (processedCount === 0 && tx_hash) {
+        throw new Error("Transaction not found on-chain yet or already processed.");
     }
 
     return new Response(JSON.stringify({ success: true, processed: processedCount }), {

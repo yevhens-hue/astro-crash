@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import AgeGate from "@/components/AgeGate";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
@@ -25,6 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+      </head>
       <body className={`${inter.className} bg-background text-foreground select-none`}>
         <Providers>
           <AgeGate>

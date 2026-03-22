@@ -860,10 +860,22 @@ export default function Page() {
             amount={bigWin.amount}
             onClose={() => setBigWin(null)}
             onShare={() => {
-              const text = `🚀 I JUST WON ${bigWin.amount.toFixed(2)} TON (${bigWin.multiplier.toFixed(2)}x) on @AstroCrashRobot_bot! 💎\n\nJoin me and win big!`;
-              const url = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/AstroCrashRobot_bot/play' + (referralCode ? '?startapp=' + referralCode : ''))}&text=${encodeURIComponent(text)}`;
-              (window as any).Telegram?.WebApp?.openTelegramLink(url);
-              setBigWin(null);
+              const text = encodeURIComponent(`🚀 I JUST WON ${bigWin.amount.toFixed(2)} TON (${bigWin.multiplier.toFixed(2)}x) on @AstroCrashRobot_bot! 💎\n\nJoin me and win big!`);
+              const playUrl = encodeURIComponent('https://t.me/AstroCrashRobot_bot/play' + (referralCode ? '?startapp=' + referralCode : ''));
+              const url = `https://t.me/share/url?url=${playUrl}&text=${text}`;
+              
+              try {
+                  const tg = (window as any).Telegram?.WebApp;
+                  if (tg && typeof tg.openTelegramLink === 'function') {
+                      tg.openTelegramLink(url);
+                  } else {
+                      window.open(url, '_blank');
+                  }
+              } catch (e) {
+                  window.open(url, '_blank');
+              }
+              
+              setTimeout(() => setBigWin(null), 500);
             }}
           />
         )}
