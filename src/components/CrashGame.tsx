@@ -319,8 +319,18 @@ export default function CrashGame({
                         }
                     });
 
-                    if (error || !data?.success) {
-                        throw new Error(error?.message || data?.error || 'Failed to place bet');
+                    if (error) {
+                        let actualError = error.message;
+                        if (error.name === 'FunctionsHttpError' && (error as any).context) {
+                            try {
+                                const contextBody = await (error as any).context.json();
+                                if (contextBody && contextBody.error) actualError = contextBody.error;
+                            } catch (e) { }
+                        }
+                        throw new Error(actualError);
+                    }
+                    if (!data?.success) {
+                        throw new Error(data?.error || 'Failed to place bet');
                     }
 
                     dbBetId = data.bet_id;
@@ -666,10 +676,20 @@ export default function CrashGame({
                     }
                 });
 
-                if (cashoutError || !cashoutData?.success) {
-                    console.error("Cashout securely failed:", cashoutError || cashoutData);
-                    // Don't revert here - let the atomic RPC handle consistency
-                    // The server will handle any needed rollback
+                if (cashoutError) {
+                    let actualError = cashoutError.message;
+                    if (cashoutError.name === 'FunctionsHttpError' && (cashoutError as any).context) {
+                        try {
+                            const contextBody = await (cashoutError as any).context.json();
+                            if (contextBody && contextBody.error) actualError = contextBody.error;
+                        } catch (e) { }
+                    }
+                    console.error("Cashout securely failed:", actualError);
+                    alert(`Cashout failed: ${actualError}`);
+                    return;
+                }
+                if (!cashoutData?.success) {
+                    console.error("Cashout securely failed:", cashoutData);
                     alert(`Cashout failed: ${cashoutData?.error || 'Unknown error'}`);
                     return;
                 }
