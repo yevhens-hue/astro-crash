@@ -1,24 +1,19 @@
-import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
-import { hex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
-
-export async function verifyTelegramAuth(initData: string, botToken: string): Promise<boolean> {
+export async function verifyTelegramAuth(initData: string, botToken: string): Promise<{valid: boolean, reason?: string}> {
   const urlParams = new URLSearchParams(initData);
   const hash = urlParams.get("hash");
   const authDate = urlParams.get("auth_date");
   urlParams.delete("hash");
+  urlParams.delete("signature"); // Telegram added a new Ed25519 signature parameter that must be excluded
 
-  // Check if auth_date exists and is not expired (24 hours max)
   if (authDate) {
     const authTimestamp = parseInt(authDate, 10);
     const now = Math.floor(Date.now() / 1000);
     const maxAge = 24 * 60 * 60; // 24 hours in seconds
     if (now - authTimestamp > maxAge) {
-      console.warn('Telegram auth expired');
-      return false;
+      return { valid: false, reason: 'Telegram auth expired (older than 24h)' };
     }
   } else {
-    console.warn('No auth_date in initData');
-    return false;
+    return { valid: false, reason: 'No auth_date in initData' };
   }
 
   const dataCheckString = Array.from(urlParams.entries())
@@ -56,7 +51,13 @@ export async function verifyTelegramAuth(initData: string, botToken: string): Pr
     encoder.encode(dataCheckString)
   );
 
-  const calculatedHash = new TextDecoder().decode(hex.encode(new Uint8Array(signature)));
-  
-  return calculatedHash === hash;
+  const calculatedHash = Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  if (calculatedHash !== hash) {
+    return { valid: false, reason: `Hash mismatch (V2). Expected ${hash}, got ${calculatedHash}. DataString=[${dataCheckString}], TokenLen=${botToken?.length}` };
+  }
+
+  return { valid: true };
 }

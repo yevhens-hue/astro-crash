@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient } from "npm:@supabase/supabase-js@2"
 import { verifyTelegramAuth } from "../_shared/telegram-auth.ts"
 
 const corsHeaders = {
@@ -27,10 +27,10 @@ serve(async (req) => {
 
     // 1. Verify Telegram Auth
     if (!botToken) throw new Error('Bot token not configured');
-    if (initData) {
-      const isValid = await verifyTelegramAuth(initData, botToken);
-      if (!isValid) throw new Error('Unauthorized: Invalid Telegram Auth');
-    } else {
+    if (botToken && initData && initData.length > 0) {
+      const authResult = await verifyTelegramAuth(initData, botToken);
+      if (!authResult.valid) throw new Error(`Unauthorized: ${authResult.reason || 'Invalid Telegram Auth'}`);
+    } else if (!initData || initData.length === 0) {
       throw new Error('Unauthorized: Telegram Auth required');
     }
 

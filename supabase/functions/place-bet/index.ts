@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient } from "npm:@supabase/supabase-js@2"
 import { verifyTelegramAuth } from "../_shared/telegram-auth.ts"
 
 const corsHeaders = {
@@ -21,13 +21,12 @@ serve(async (req) => {
     const initData = req.headers.get('x-telegram-init-data')
     const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
 
-    // 1. Verify Telegram Auth (optional: warns but doesn't block if initData is missing)
-    if (botToken && initData && initData.length > 0) {
-      const isValid = await verifyTelegramAuth(initData, botToken);
-      if (!isValid) throw new Error('Unauthorized: Invalid Telegram Auth');
-    } else if (!initData || initData.length === 0) {
-      console.warn('[place-bet] No initData provided - allowing bet without Telegram auth verification');
-    }
+    // 1. Verify Telegram Auth (required for security)
+    if (!botToken) throw new Error('Bot token not configured');
+    if (!initData || initData.length === 0) throw new Error('Unauthorized: Telegram Auth required');
+    
+    const authResult = await verifyTelegramAuth(initData, botToken);
+    if (!authResult.valid) throw new Error(`Unauthorized: ${authResult.reason || 'Invalid Telegram Auth'}`);
 
     const { wallet_address, round_id, amount, is_bonus } = await req.json()
 

@@ -386,7 +386,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 [functions.spin-slot]
 enabled = true
 verify_jwt = true
-import_map = "./functions/spin-slot/deno.json"
+
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/spin-slot/index.ts"
@@ -397,7 +397,7 @@ entrypoint = "./functions/spin-slot/index.ts"
 [functions.place-bet]
 enabled = true
 verify_jwt = true
-import_map = "./functions/place-bet/deno.json"
+
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/place-bet/index.ts"
@@ -408,7 +408,7 @@ entrypoint = "./functions/place-bet/index.ts"
 [functions.cashout-bet]
 enabled = true
 verify_jwt = true
-import_map = "./functions/cashout-bet/deno.json"
+
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/cashout-bet/index.ts"
