@@ -4,7 +4,7 @@ import { verifyTelegramAuth } from "../_shared/telegram-auth.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-telegram-init-data',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-telegram-init-data, x-wallet-address',
 }
 
 const SYMBOLS = ['💎', '🎭', '👑', '777', '🍒', '🔔', '🍋'];

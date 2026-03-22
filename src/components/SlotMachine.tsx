@@ -128,6 +128,8 @@ export default function SlotMachine({
 
         const balanceType: 'balance' | 'bonus' = balance >= cost ? 'balance' : 'bonus';
 
+        let balanceDeducted = false;
+
         try {
             setIsSpinning(true);
 
@@ -153,8 +155,9 @@ export default function SlotMachine({
                 });
 
                 if (error || !data?.success) {
-                    console.warn('[SlotMachine] Server spin failed, using local simulation:', error?.message || data?.error);
-                    // Silently fall through to local simulation mode
+                    const errorMsg = error?.message || data?.error || 'Failed to spin';
+                    console.error('[SlotMachine] Server spin failed:', errorMsg);
+                    throw new Error(errorMsg);
                 } else {
                     finalSymbols = data.spinResults;
                     finalWinAmount = data.winAmount;
@@ -175,7 +178,10 @@ export default function SlotMachine({
             
             if (!serverSpinSuccess) {
                 // Local simulation: deduct cost first
-                if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev - cost);
+                if (onBalanceUpdate) {
+                    onBalanceUpdate(balanceType, prev => prev - cost);
+                    balanceDeducted = true;
+                }
                 finalSymbols = reels.map(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
                 const isWin = finalSymbols.every(s => s === finalSymbols[0]);
                 if (isWin) {
@@ -232,8 +238,8 @@ export default function SlotMachine({
 
         } catch (e: any) {
             console.error("Spin failed:", e);
-            if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + cost); // Refund on failure
-            alert(`${t('spin_failed') || 'Spin failed'}: ${e.message || 'Check connection'}`);
+            if (balanceDeducted && onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + cost); // Refund on failure only if deducted locally
+            alert(`${t('spin_failed') || 'Spin failed'}: ${e.message || 'Check connection. Please reload the game.'}`);
         } finally {
             setIsSpinning(false);
         }

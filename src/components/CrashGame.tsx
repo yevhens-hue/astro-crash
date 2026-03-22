@@ -328,9 +328,21 @@ export default function CrashGame({
                         onBalanceUpdate(balanceType, () => Number(data.new_balance));
                     }
                 } catch (betError: any) {
-                    console.warn('Server bet failed, using local mode:', betError.message);
-                    // Continue with local mode - the bet will be tracked locally
-                    dbBetId = null;
+                    console.error('Server bet failed:', betError.message);
+                    // Don't silently fall back to local mode for real users
+                    alert('Server connection failed: ' + betError.message + '\nPlease refresh the game.');
+                    
+                    // Refund the optimistically deducted balance
+                    if (balanceDeducted && onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
+                    setIsBetting(false);
+                    if (panel === 'A') {
+                        setBetStatusA('none');
+                        betStatusRefA.current = 'none';
+                    } else {
+                        setBetStatusB('none');
+                        betStatusRefB.current = 'none';
+                    }
+                    return;
                 }
             }
 
