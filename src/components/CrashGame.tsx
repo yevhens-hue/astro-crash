@@ -255,6 +255,8 @@ export default function CrashGame({
         if (panel === 'A') betBalanceTypeA.current = balanceType;
         else betBalanceTypeB.current = balanceType;
 
+        let balanceDeducted = false;
+
         try {
             console.log(`Starting bet for panel ${panel}... Amount:`, amount);
             setIsBetting(true);
@@ -273,15 +275,16 @@ export default function CrashGame({
                 try {
                     const { data: roundData, error: roundError } = await supabase.functions.invoke('generate-round');
                     if (roundError || !roundData) {
-                        // Fall back to local simulation
-                        console.warn('generate-round error:', roundError);
                         throw new Error(roundError?.message || 'Server unavailable, using local mode');
                     }
                     crashAt = parseFloat(roundData.crash_point);
                     roundId = roundData.id;
                     serverSeed = roundData.server_seed;
                 } catch (serverError: any) {
-                    // Fall back to local simulation
+                    if (address !== 'guest_test_wallet') {
+                        throw new Error(serverError.message || 'Server round generation failed');
+                    }
+                    // Fall back to local simulation for guests
                     console.warn('Server round generation failed, using local mode:', serverError.message);
                     crashAt = Math.max(1.1, 0.99 / (1 - Math.random()));
                     roundId = `local_round_${Date.now()}`;
@@ -318,7 +321,6 @@ export default function CrashGame({
                     });
 
                     if (error || !data?.success) {
-                        console.warn('place-bet error:', error, data);
                         throw new Error(error?.message || data?.error || 'Failed to place bet');
                     }
 
@@ -327,6 +329,9 @@ export default function CrashGame({
                         onBalanceUpdate(balanceType, () => Number(data.new_balance));
                     }
                 } catch (betError: any) {
+                    if (address !== 'guest_test_wallet') {
+                        throw new Error(betError.message || 'Server bet failed');
+                    }
                     console.warn('Server bet failed, using local mode:', betError.message);
                     // Continue with local mode - the bet will be tracked locally
                     dbBetId = null;
@@ -353,13 +358,19 @@ export default function CrashGame({
 
             if (latestCountdownRef.current === null || latestCountdownRef.current === 0) {
                 // IDLE mode -> Start immediately
-                if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev - amount);
+                if (onBalanceUpdate) {
+                    onBalanceUpdate(balanceType, prev => prev - amount);
+                    balanceDeducted = true;
+                }
                 startLaunchSequence(crashAt);
             } else {
                 // COUNTDOWN mode -> Store it, wait for 0
                 pendingCrashAtRef.current = crashAt;
                 // Subtract immediately since it's "BET PLACED"
-                if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev - amount);
+                if (onBalanceUpdate) {
+                    onBalanceUpdate(balanceType, prev => prev - amount);
+                    balanceDeducted = true;
+                }
             }
 
             // Move this after balance subtraction to ensure UI shows bet from both panels
@@ -381,9 +392,8 @@ export default function CrashGame({
             let errorMessage = e.message || 'Check connection';
             if (errorMessage.includes('Failed to send a request')) {
                 errorMessage = 'Server unavailable. Game will continue in offline mode.';
-                // Don't show alert for server errors - continue with local mode silently
                 // Refund the balance if it was deducted
-                if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
+                if (balanceDeducted && onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
                 setIsBetting(false);
 
                 // Reset bet status
@@ -398,10 +408,12 @@ export default function CrashGame({
             } else if (errorMessage.includes('NetworkError')) {
                 errorMessage = 'Network error. Check your internet connection.';
             }
+            
+            // Refund the balance if it was deducted
+            if (balanceDeducted && onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
+            
             alert(`Bet failed: ${errorMessage}`);
-            // Reset status on failure (refund is handled by state reverting or simply not update)
-            // But here we subtracted optimistically, so we should refund:
-            if (onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
+            setIsBetting(false);
 
             if (panel === 'A') {
                 setBetStatusA('none');
