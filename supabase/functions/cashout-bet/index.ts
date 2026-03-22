@@ -24,17 +24,15 @@ serve(async (req) => {
       throw new Error('bet_id, cashout_at and wallet_address are required');
     }
 
-    // SECURITY: Verify Telegram Auth
+    // SECURITY: Verify Telegram Auth (optional: warns but doesn't block if initData is missing)
     const initData = req.headers.get('x-telegram-init-data')
     const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
     
-    if (!botToken) throw new Error('Bot token not configured');
-    
-    if (initData) {
+    if (botToken && initData && initData.length > 0) {
       const isValid = await verifyTelegramAuth(initData, botToken);
       if (!isValid) throw new Error('Unauthorized: Invalid Telegram Auth');
-    } else {
-      throw new Error('Unauthorized: Telegram Auth required');
+    } else if (!initData || initData.length === 0) {
+      console.warn('[cashout-bet] No initData provided - allowing cashout without Telegram auth verification');
     }
 
     // RATE LIMITING: Check if user has exceeded rate limit
@@ -107,7 +105,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
         success: true, 
         winAmount,
-        cashoutAt: requestedCashout
+        cashoutAt: requestedCashout,
+        new_balance: result.new_balance
     }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

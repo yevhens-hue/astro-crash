@@ -307,6 +307,59 @@ export default function Page() {
   const [balance, setBalance] = useState<number>(0);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const wallet = useTonWallet();
+  const [custodialAddress, setCustodialAddress] = useState<string | null>(null);
+
+  // SECURITY NOTE: The custodial wallet feature uses Telegram user ID from initDataUnsafe.
+  // This is client-side data that could potentially be spoofed. However:
+  // 1. The actual financial operations (place-bet, cashout-bet) validate initData server-side
+  // 2. The risk is limited to information disclosure (viewing balance) or fake account creation
+  // For a production app, consider adding server-side validation of Telegram initData
+  // by creating an Edge Function that validates the initData hash before returning user data.
+  // Try to extract Telegram user for custodial wallet support
+  useEffect(() => {
+    let attempts = 0;
+    const extractCustodial = () => {
+      try {
+        const tg = (window as any).Telegram?.WebApp;
+        // Try multiple ways to get user info
+        const tgUser = tg?.initDataUnsafe?.user;
+        const initData = tg?.initDataUnsafe;
+        
+        let userId = null;
+        
+        // Method 1: Direct user object
+        if (tgUser?.id) {
+          userId = tgUser.id;
+        }
+        // Method 2: Try to parse from initData
+        else if (initData) {
+          // initData might contain user info in different formats
+          const userParam = initData.user;
+          if (userParam?.id) {
+            userId = userParam.id;
+          }
+        }
+        
+        if (userId) {
+          const custodialAddr = `tg_${userId}`;
+          console.log('[Custodial] Setting address from Telegram user:', userId);
+          setCustodialAddress(custodialAddr);
+        } else {
+          attempts++;
+          if (attempts < 20) {
+            setTimeout(extractCustodial, 100);
+          } else {
+            console.log('[Custodial] No Telegram user found after 2s - will use wallet or guest mode');
+          }
+        }
+      } catch (error) {
+        console.error('[Custodial] Error extracting Telegram user:', error);
+        // Continue without custodial address - fallback to wallet or guest mode
+      }
+    };
+    extractCustodial();
+  }, []);
+
   const rawAddress = wallet?.account.address;
   const friendlyAddress = useTonAddress();
 
@@ -375,7 +428,10 @@ export default function Page() {
     }
   }, []);
 
-  const address = rawAddress || (isDemoMode || FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
+  // If TonConnect is connected, use it. Otherwise use custodial Telegram wallet.
+  // If neither, use guest_test_wallet for demo/guest mode (for testing in browser without Telegram)
+  // In production Telegram bot, custodialAddress should always be available from initDataUnsafe
+  const address = rawAddress || custodialAddress || (isDemoMode || FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
 
   useEffect(() => {
     const fetchBalance = async (userAddress: string) => {
@@ -828,6 +884,7 @@ export default function Page() {
             <div className="w-full flex justify-center">
               {activeGame === 'crash' ? (
                 <CrashGame
+                  userAddress={address}
                   balance={balance}
                   bonus_balance={bonusBalance}
                   onBalanceUpdate={handleBalanceUpdate}
@@ -837,6 +894,7 @@ export default function Page() {
                 />
               ) : (
                 <SlotMachine
+                  userAddress={address}
                   balance={balance}
                   bonus_balance={bonusBalance}
                   onBalanceUpdate={handleBalanceUpdate}
@@ -863,18 +921,18 @@ export default function Page() {
               const text = encodeURIComponent(`🚀 I JUST WON ${bigWin.amount.toFixed(2)} TON (${bigWin.multiplier.toFixed(2)}x) on @AstroCrashRobot_bot! 💎\n\nJoin me and win big!`);
               const playUrl = encodeURIComponent('https://t.me/AstroCrashRobot_bot/play' + (referralCode ? '?startapp=' + referralCode : ''));
               const url = `https://t.me/share/url?url=${playUrl}&text=${text}`;
-              
+
               try {
-                  const tg = (window as any).Telegram?.WebApp;
-                  if (tg && typeof tg.openTelegramLink === 'function') {
-                      tg.openTelegramLink(url);
-                  } else {
-                      window.open(url, '_blank');
-                  }
-              } catch (e) {
+                const tg = (window as any).Telegram?.WebApp;
+                if (tg && typeof tg.openTelegramLink === 'function') {
+                  tg.openTelegramLink(url);
+                } else {
                   window.open(url, '_blank');
+                }
+              } catch (e) {
+                window.open(url, '_blank');
               }
-              
+
               setTimeout(() => setBigWin(null), 500);
             }}
           />

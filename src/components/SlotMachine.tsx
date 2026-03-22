@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
-import { useTonWallet } from '@tonconnect/ui-react';
+// Note: wallet is accessed via userAddress prop
 import { supabase } from '@/lib/supabase';
 import { FEATURE_FLAGS } from '@/lib/flags';
 import { useI18n } from '@/lib/i18n';
@@ -31,17 +31,19 @@ export default function SlotMachine({
     bonus_balance = 0,
     onBalanceUpdate,
     onWageringUpdate,
-    onBigWin
+    onBigWin,
+    userAddress
 }: {
     balance?: number,
     bonus_balance?: number,
     onBalanceUpdate?: (type: 'balance' | 'bonus', updater: (prev: number) => number) => void,
     onWageringUpdate?: (amount: number) => void,
-    onBigWin?: (multiplier: number, amount: number) => void
+    onBigWin?: (multiplier: number, amount: number) => void,
+    userAddress?: string | null
 }) {
     const { t } = useI18n();
-    const wallet = useTonWallet();
-    const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
+    // Note: wallet is now accessed via userAddress prop instead of direct TonConnect
+    const address = userAddress;
     const [reels, setReels] = useState(Array(REEL_COUNT).fill(SYMBOLS[0]));
     const [isSpinning, setIsSpinning] = useState(false);
     const [jackpot, setJackpot] = useState<JackpotData>({ current_amount: 10, last_win_amount: null, last_winner_address: null, last_win_at: null });
@@ -361,7 +363,7 @@ export default function SlotMachine({
                 </div>
             )}
 
-            {FEATURE_FLAGS.GUEST_MODE && !wallet && (
+            {FEATURE_FLAGS.GUEST_MODE && !address && (
                 <div className="bg-orange-500/10 border border-orange-500/20 px-4 py-2 rounded-full">
                     <p className="text-[10px] text-orange-400 font-black uppercase tracking-[0.2em] animate-pulse">
                         {t('guest_mode_active')}

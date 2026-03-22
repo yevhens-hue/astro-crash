@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rocket, Users, TrendingUp } from 'lucide-react';
-import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
+import { useTonConnectUI } from '@tonconnect/ui-react';
 import { supabase } from '@/lib/supabase';
 import { SoundManager } from '@/lib/sounds';
 import { FEATURE_FLAGS } from '@/lib/flags';
@@ -16,17 +16,19 @@ export default function CrashGame({
     onBalanceUpdate,
     onWageringUpdate,
     onBigWin,
-    referralCode
+    referralCode,
+    userAddress
 }: {
     balance?: number,
     bonus_balance?: number,
     onBalanceUpdate?: (type: 'balance' | 'bonus', updater: (prev: number) => number) => void,
     onWageringUpdate?: (amount: number) => void,
     onBigWin?: (multiplier: number, amount: number) => void,
-    referralCode?: string | null
+    referralCode?: string | null,
+    userAddress?: string | null
 }) {
     const { t } = useI18n();
-    const wallet = useTonWallet();
+    // Note: wallet is now accessed via userAddress prop instead of direct TonConnect
     const [tonConnectUI] = useTonConnectUI();
 
     const [multiplier, setMultiplier] = useState(1.00);
@@ -131,7 +133,7 @@ export default function CrashGame({
             clearInterval(interval);
             supabase.removeChannel(channel);
         };
-    }, [wallet]);
+    }, [userAddress]);
 
     useEffect(() => {
         isAutoCashRefA.current = isAutoCashA;
@@ -166,11 +168,11 @@ export default function CrashGame({
         if (all) setAllBets(all);
 
         // My bets
-        if (wallet) {
+        if (userAddress && userAddress !== 'guest_test_wallet') {
             const { data: myUser } = await supabase
                 .from('users')
                 .select('id')
-                .eq('wallet_address', wallet.account.address)
+                .eq('wallet_address', userAddress)
                 .single();
 
             if (myUser) {
@@ -236,7 +238,7 @@ export default function CrashGame({
     };
 
     const handlePlaceBet = async (panel: 'A' | 'B') => {
-        const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
+        const address = userAddress;
 
         if (!address && !FEATURE_FLAGS.DEBUG_MODE) {
             alert("Please connect your wallet first!");
@@ -408,10 +410,10 @@ export default function CrashGame({
             } else if (errorMessage.includes('NetworkError')) {
                 errorMessage = 'Network error. Check your internet connection.';
             }
-            
+
             // Refund the balance if it was deducted
             if (balanceDeducted && onBalanceUpdate) onBalanceUpdate(balanceType, prev => prev + amount);
-            
+
             alert(`Bet failed: ${errorMessage}`);
             setIsBetting(false);
 
@@ -570,7 +572,7 @@ export default function CrashGame({
     };
 
     const cashOut = (panel: 'A' | 'B', isAuto: boolean = false) => {
-        const address = wallet?.account.address || (FEATURE_FLAGS.GUEST_MODE ? "guest_test_wallet" : null);
+        const address = userAddress;
         const betStatusRef = panel === 'A' ? betStatusRefA : betStatusRefB;
         const currentBetIdRef = panel === 'A' ? currentBetIdRefA : currentBetIdRefB;
         const setBetStatus = panel === 'A' ? setBetStatusA : setBetStatusB;
@@ -660,7 +662,22 @@ export default function CrashGame({
 
                 if (cashoutError || !cashoutData?.success) {
                     console.error("Cashout securely failed:", cashoutError || cashoutData);
-                    return; // Reverting optimistic UI on failure could be implemented here
+                    // Don't revert here - let the atomic RPC handle consistency
+                    // The server will handle any needed rollback
+                    alert(`Cashout failed: ${cashoutData?.error || 'Unknown error'}`);
+                    return;
+                }
+
+                // Confirm balance from server response (with validation)
+                if (typeof cashoutData?.new_balance === 'number' && !isNaN(cashoutData.new_balance) && onBalanceUpdate) {
+                    onBalanceUpdate(balanceType, () => Number(cashoutData.new_balance));
+                    console.log('[Cashout] Balance confirmed from server:', cashoutData.new_balance);
+                } else {
+                    console.warn('[Cashout] Server did not return new_balance, using winAmount');
+                    // Fallback to optimistic update if server doesn't return new balance
+                    if (onBalanceUpdate) {
+                        onBalanceUpdate(balanceType, (prev: number) => prev + winAmount);
+                    }
                 }
 
                 // 2. Trigger Blockchain Payout
@@ -938,18 +955,18 @@ export default function CrashGame({
                                     <button
                                         onClick={() => {
                                             const shareText = `🚀 I just hit ${lastWin?.toFixed(2)}x on Astro Crash! Try to beat my score! Play now: @AstroCrashRobot_bot`;
-                                            const playUrl = referralCode 
+                                            const playUrl = referralCode
                                                 ? `https://t.me/AstroCrashRobot_bot/play?startapp=${referralCode}`
                                                 : 'https://t.me/AstroCrashRobot_bot/play';
                                             const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(playUrl)}&text=${encodeURIComponent(shareText)}`;
-                                            
+
                                             const tg = (window as any).Telegram?.WebApp;
                                             if (tg?.openTelegramLink) {
                                                 tg.openTelegramLink(shareUrl);
                                             } else {
                                                 window.open(shareUrl, '_blank');
                                             }
-                                            
+
                                             setTimeout(() => setShowShareModal(false), 500);
                                         }}
                                         className="gold-button w-full py-2.5 text-xs shrink-0"
@@ -1085,7 +1102,7 @@ export default function CrashGame({
                     </div>
                 </div>
 
-                {!wallet && !FEATURE_FLAGS.GUEST_MODE && (
+                {!userAddress && !FEATURE_FLAGS.GUEST_MODE && (
                     <div className="w-full mt-2">
                         <button
                             onClick={() => tonConnectUI.openModal()}
