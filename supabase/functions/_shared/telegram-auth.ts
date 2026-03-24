@@ -1,13 +1,29 @@
 export async function verifyTelegramAuth(initData: string, botToken: string): Promise<{valid: boolean, reason?: string}> {
   console.log('[TELEGRAM_AUTH] Starting auth verification');
-  console.log('[TELEGRAM_AUTH] Token length:', botToken?.length);
   
-  const urlParams = new URLSearchParams(initData);
-  const hash = urlParams.get("hash");
-  const authDate = urlParams.get("auth_date");
+  if (!initData) return { valid: false, reason: 'No initData' };
+  if (!botToken) return { valid: false, reason: 'No bot token' };
+
+  const parts = initData.split('&');
+  let hash = '';
+  let authDate: string | null = null;
+  const cleanParts = [];
   
-  urlParams.delete("hash");
-  urlParams.delete("signature");
+  for (const part of parts) {
+    if (part.startsWith('hash=')) {
+      hash = part.substring(5);
+    } else if (part.startsWith('signature=')) {
+      // ignore
+    } else {
+      if (part.startsWith('auth_date=')) authDate = part.substring(10);
+      cleanParts.push(part);
+    }
+  }
+
+  if (!hash) {
+    console.log('[TELEGRAM_AUTH] No hash found in initData');
+    return { valid: false, reason: 'No hash found' };
+  }
 
   if (authDate) {
     const authTimestamp = parseInt(authDate, 10);
@@ -20,10 +36,13 @@ export async function verifyTelegramAuth(initData: string, botToken: string): Pr
     return { valid: false, reason: 'No auth_date' };
   }
 
-  const dataCheckString = Array.from(urlParams.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${value}`)
-    .join("\n");
+  cleanParts.sort();
+  const dataCheckString = cleanParts.map(p => {
+    const eqIdx = p.indexOf('=');
+    const key = p.substring(0, eqIdx);
+    const val = decodeURIComponent(p.substring(eqIdx + 1));
+    return `${key}=${val}`;
+  }).join('\n');
 
   const cleanBotToken = botToken.trim();
 
@@ -70,6 +89,4 @@ export async function verifyTelegramAuth(initData: string, botToken: string): Pr
     console.error("[TELEGRAM_AUTH] Crypto error:", error);
     return { valid: false, reason: 'Crypto hash generation failed' };
   }
-
-  return { valid: true };
 }
