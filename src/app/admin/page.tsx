@@ -150,7 +150,7 @@ export default function AdminDashboard() {
           href="/"
           className="gold-button px-6 py-3 rounded-xl font-bold uppercase tracking-wider text-sm"
         >
-          {t('back_to_home') || 'Back to Home'}
+          Back to Home
         </Link>
       </div>
     );

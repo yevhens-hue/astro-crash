@@ -27,11 +27,13 @@ serve(async (req) => {
 
     // 1. Verify Telegram Auth
     if (!botToken) throw new Error('Bot token not configured');
-    if (botToken && initData && initData.length > 0) {
-      const authResult = await verifyTelegramAuth(initData, botToken);
-      if (!authResult.valid) throw new Error(`Unauthorized: ${authResult.reason || 'Invalid Telegram Auth'}`);
-    } else if (!initData || initData.length === 0) {
-      throw new Error('Unauthorized: Telegram Auth required');
+    if (!initData || initData.length === 0) {
+      throw new Error('Telegram verification failed: No initData provided');
+    }
+    
+    const authResult = await verifyTelegramAuth(initData, botToken);
+    if (!authResult.valid) {
+      throw new Error(`Telegram auth failed: ${authResult.reason || 'Invalid signature'}`);
     }
 
     const { wallet_address, tx_hash, is_bonus } = await req.json()
@@ -44,7 +46,7 @@ serve(async (req) => {
     const { data: rateLimitData, error: rateLimitError } = await supabaseClient.rpc('check_rate_limit', {
       p_wallet_address: wallet_address,
       p_endpoint: 'spin-slot',
-      p_limit: 10,  // Max 10 spins per minute
+      p_limit: 20,  // Max 20 spins per minute
       p_window_seconds: 60
     });
 

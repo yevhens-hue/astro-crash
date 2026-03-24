@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.place_bet_atomic(TEXT, TEXT, DECIMAL, BOOLEAN);

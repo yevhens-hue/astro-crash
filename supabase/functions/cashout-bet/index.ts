@@ -24,22 +24,26 @@ serve(async (req) => {
       throw new Error('bet_id, cashout_at and wallet_address are required');
     }
 
-    // SECURITY: Verify Telegram Auth (required for security)
-    const initData = req.headers.get('x-telegram-init-data')
-    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
+    // SECURITY: Verify Telegram Auth
+    const initData = req.headers.get('x-telegram-init-data');
+    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
     
     if (!botToken) throw new Error('Bot token not configured');
-    if (!initData || initData.length === 0) throw new Error('Unauthorized: Telegram Auth required');
+    if (!initData || initData.length === 0) {
+      throw new Error('Telegram verification failed: No initData provided');
+    }
     
     const authResult = await verifyTelegramAuth(initData, botToken);
-    if (!authResult.valid) throw new Error(`Unauthorized: ${authResult.reason || 'Invalid Telegram Auth'}`);
+    if (!authResult.valid) {
+      throw new Error(`Telegram auth failed: ${authResult.reason || 'Invalid signature'}`);
+    }
 
     // RATE LIMITING: Check if user has exceeded rate limit
     const { data: rateLimitData, error: rateLimitError } = await supabaseClient.rpc('check_rate_limit', {
       p_wallet_address: wallet_address,
       p_endpoint: 'cashout-bet',
-      p_limit: 20,  // Max 20 cashouts per minute
-      p_window_seconds: 60
+      p_limit: 2,  // Max 2 cashouts per 10 seconds
+      p_window_seconds: 10
     });
 
     if (rateLimitError) {

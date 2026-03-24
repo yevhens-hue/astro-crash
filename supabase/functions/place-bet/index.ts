@@ -21,12 +21,16 @@ serve(async (req) => {
     const initData = req.headers.get('x-telegram-init-data')
     const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
 
-    // 1. Verify Telegram Auth (required for security)
+    // 1. Verify Telegram Auth
     if (!botToken) throw new Error('Bot token not configured');
-    if (!initData || initData.length === 0) throw new Error('Unauthorized: Telegram Auth required');
+    if (!initData || initData.length === 0) {
+      throw new Error('Telegram verification failed: No initData provided');
+    }
     
     const authResult = await verifyTelegramAuth(initData, botToken);
-    if (!authResult.valid) throw new Error(`Unauthorized: ${authResult.reason || 'Invalid Telegram Auth'}`);
+    if (!authResult.valid) {
+      throw new Error(`Telegram auth failed: ${authResult.reason || 'Invalid signature'}`);
+    }
 
     const { wallet_address, round_id, amount, is_bonus } = await req.json()
 
@@ -38,7 +42,7 @@ serve(async (req) => {
     const { data: rateLimitData, error: rateLimitError } = await supabaseClient.rpc('check_rate_limit', {
       p_wallet_address: wallet_address,
       p_endpoint: 'place-bet',
-      p_limit: 10,  // Max 10 bets per minute
+      p_limit: 20,  // Max 20 bets per minute
       p_window_seconds: 60
     });
 
@@ -51,7 +55,7 @@ serve(async (req) => {
       const { data: status } = await supabaseClient.rpc('get_rate_limit_status', {
         p_wallet_address: wallet_address,
         p_endpoint: 'place-bet',
-        p_limit: 10,
+        p_limit: 20,
         p_window_seconds: 60
       });
 
@@ -79,7 +83,7 @@ serve(async (req) => {
     const { data: rateStatus } = await supabaseClient.rpc('get_rate_limit_status', {
       p_wallet_address: wallet_address,
       p_endpoint: 'place-bet',
-      p_limit: 10,
+      p_limit: 20,
       p_window_seconds: 60
     });
 
