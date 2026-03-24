@@ -12,8 +12,6 @@ export async function verifyTelegramAuth(initData: string, botToken: string): Pr
   for (const part of parts) {
     if (part.startsWith('hash=')) {
       hash = part.substring(5);
-    } else if (part.startsWith('signature=')) {
-      // ignore
     } else {
       if (part.startsWith('auth_date=')) authDate = part.substring(10);
       cleanParts.push(part);
