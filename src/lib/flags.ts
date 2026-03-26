@@ -17,4 +17,9 @@ if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
     if (!process.env.NEXT_PUBLIC_HOUSE_WALLET) {
         console.error('CRITICAL: NEXT_PUBLIC_HOUSE_WALLET is not set in production!');
     }
+    // SECURITY: Disable guest mode in production
+    if (FEATURE_FLAGS.GUEST_MODE) {
+        console.error('SECURITY WARNING: GUEST_MODE is enabled in production! This should be disabled.');
+        FEATURE_FLAGS.GUEST_MODE = false;
+    }
 }

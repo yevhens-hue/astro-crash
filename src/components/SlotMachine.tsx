@@ -169,8 +169,9 @@ export default function SlotMachine({
                         setJackpot(prev => ({ ...prev, current_amount: data.currentJackpot }));
                     }
 
-                    if (typeof data.new_balance !== 'undefined' && onBalanceUpdate) {
-                        onBalanceUpdate(balanceType, () => Number(data.new_balance));
+                    if (onBalanceUpdate) {
+                        if (typeof data.new_balance !== 'undefined') onBalanceUpdate('balance', () => Number(data.new_balance));
+                        if (typeof data.new_bonus !== 'undefined') onBalanceUpdate('bonus', () => Number(data.new_bonus));
                     }
                     serverSpinSuccess = true;
                 }

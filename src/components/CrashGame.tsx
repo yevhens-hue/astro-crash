@@ -334,8 +334,9 @@ export default function CrashGame({
                     }
 
                     dbBetId = data.bet_id;
-                    if (typeof data.new_balance !== 'undefined' && onBalanceUpdate) {
-                        onBalanceUpdate(balanceType, () => Number(data.new_balance));
+                    if (onBalanceUpdate) {
+                        if (typeof data.new_balance !== 'undefined') onBalanceUpdate('balance', () => Number(data.new_balance));
+                        if (typeof data.new_bonus !== 'undefined') onBalanceUpdate('bonus', () => Number(data.new_bonus));
                     }
                 } catch (betError: any) {
                     console.error('Server bet failed:', betError.message);
@@ -695,13 +696,22 @@ export default function CrashGame({
                 }
 
                 // Confirm balance from server response (with validation)
-                if (typeof cashoutData?.new_balance === 'number' && !isNaN(cashoutData.new_balance) && onBalanceUpdate) {
-                    onBalanceUpdate(balanceType, () => Number(cashoutData.new_balance));
-                    console.log('[Cashout] Balance confirmed from server:', cashoutData.new_balance);
-                } else {
-                    console.warn('[Cashout] Server did not return new_balance, using winAmount');
-                    // Fallback to optimistic update if server doesn't return new balance
-                    if (onBalanceUpdate) {
+                if (onBalanceUpdate) {
+                    let balanceUpdatedFromServer = false;
+                    if (typeof cashoutData?.new_balance === 'number' && !isNaN(cashoutData.new_balance)) {
+                        onBalanceUpdate('balance', () => Number(cashoutData.new_balance));
+                        balanceUpdatedFromServer = true;
+                    }
+                    if (typeof cashoutData?.new_bonus === 'number' && !isNaN(cashoutData.new_bonus)) {
+                        onBalanceUpdate('bonus', () => Number(cashoutData.new_bonus));
+                        balanceUpdatedFromServer = true;
+                    }
+
+                    if (balanceUpdatedFromServer) {
+                        console.log('[Cashout] Balance(s) confirmed from server:', cashoutData.new_balance, cashoutData.new_bonus);
+                    } else {
+                        console.warn('[Cashout] Server did not return new_balance or new_bonus, using winAmount for optimistic update');
+                        // Fallback to optimistic update if server doesn't return new balance
                         onBalanceUpdate(balanceType, (prev: number) => prev + winAmount);
                     }
                 }

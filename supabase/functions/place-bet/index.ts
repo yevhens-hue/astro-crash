@@ -91,6 +91,7 @@ serve(async (req) => {
         success: true, 
         bet_id: result.bet_id,
         new_balance: result.new_balance,
+        new_bonus: result.new_bonus,
         rate_limit: rateStatus
     }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

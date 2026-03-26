@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTonWallet, TonConnectButton, useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 import { Home, Trophy, Menu, TrendingUp, Users, MessageSquare, ArrowUpRight, ArrowDownLeft, X, Loader2, Shield, Send, Volume2, VolumeX, Gift, Bell, BellOff, ShieldAlert } from 'lucide-react';
 import TxModal from '@/components/TxModal';
@@ -305,56 +305,44 @@ function BurgerMenu({
 export default function Page() {
   const { t } = useI18n();
   const [balance, setBalance] = useState<number>(0);
+  const balanceRef = useRef<number>(0);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const wallet = useTonWallet();
   const [custodialAddress, setCustodialAddress] = useState<string | null>(null);
 
-  // SECURITY NOTE: The custodial wallet feature uses Telegram user ID from initDataUnsafe.
-  // This is client-side data that could potentially be spoofed. However:
-  // 1. The actual financial operations (place-bet, cashout-bet) validate initData server-side
-  // 2. The risk is limited to information disclosure (viewing balance) or fake account creation
-  // For a production app, consider adding server-side validation of Telegram initData
-  // by creating an Edge Function that validates the initData hash before returning user data.
-  // Try to extract Telegram user for custodial wallet support
+  // SECURITY: Validate Telegram user server-side before setting custodial address
   useEffect(() => {
     let attempts = 0;
-    const extractCustodial = () => {
+    const extractCustodial = async () => {
       try {
         const tg = (window as any).Telegram?.WebApp;
-        // Try multiple ways to get user info
-        const tgUser = tg?.initDataUnsafe?.user;
-        const initData = tg?.initDataUnsafe;
-        
-        let userId = null;
-        
-        // Method 1: Direct user object
-        if (tgUser?.id) {
-          userId = tgUser.id;
-        }
-        // Method 2: Try to parse from initData
-        else if (initData) {
-          // initData might contain user info in different formats
-          const userParam = initData.user;
-          if (userParam?.id) {
-            userId = userParam.id;
-          }
-        }
-        
-        if (userId) {
-          const custodialAddr = `tg_${userId}`;
-          console.log('[Custodial] Setting address from Telegram user:', userId);
-          setCustodialAddress(custodialAddr);
-        } else {
+        const initData = tg?.initData;
+
+        if (!initData) {
           attempts++;
           if (attempts < 20) {
             setTimeout(extractCustodial, 100);
-          } else {
-            console.log('[Custodial] No Telegram user found after 2s - will use wallet or guest mode');
           }
+          return;
         }
+
+        // Validate initData server-side
+        const { data, error } = await supabase.functions.invoke('validate-telegram-user', {
+          headers: {
+            'x-telegram-init-data': initData
+          }
+        });
+
+        if (error || !data?.success) {
+          console.error('[Custodial] Server validation failed:', error?.message || data?.error);
+          return;
+        }
+
+        const custodialAddr = `tg_${data.telegram_id}`;
+        console.log('[Custodial] Setting address from validated Telegram user:', data.telegram_id);
+        setCustodialAddress(custodialAddr);
       } catch (error) {
-        console.error('[Custodial] Error extracting Telegram user:', error);
-        // Continue without custodial address - fallback to wallet or guest mode
+        console.error('[Custodial] Error validating Telegram user:', error);
       }
     };
     extractCustodial();
@@ -452,7 +440,9 @@ export default function Page() {
         setUserId(data.id);
         setReferralCode(data.referral_code);
         setIsAdmin(!!data.is_admin);
-        setBalance(Number(data.balance));
+        const currentBalance = Number(data.balance);
+        setBalance(currentBalance);
+        balanceRef.current = currentBalance;
         // Update username or ID if missing/changed
         if (telegramId || (tgUsername && data.username !== tgUsername)) {
           await supabase
@@ -472,7 +462,6 @@ export default function Page() {
           });
         }
 
-        setBalance(Number(data.balance));
         setBonusBalance(Number(data.bonus_balance || 0));
         setWageringRequirement(Number(data.wagering_requirement || 0));
         setWageringTotal(Number(data.wagering_total || 0));
@@ -568,7 +557,14 @@ export default function Page() {
           filter: `wallet_address=eq.${address}`
         }, (payload: any) => {
           if (payload.new) {
-            if (typeof payload.new.balance !== 'undefined') setBalance(Number(payload.new.balance));
+            // Only update balance if it's different from current ref to avoid stale overwrites
+            if (typeof payload.new.balance !== 'undefined') {
+              const newBalance = Number(payload.new.balance);
+              if (newBalance !== balanceRef.current) {
+                setBalance(newBalance);
+                balanceRef.current = newBalance;
+              }
+            }
             if (typeof payload.new.bonus_balance !== 'undefined') setBonusBalance(Number(payload.new.bonus_balance));
             if (typeof payload.new.wagering_requirement !== 'undefined') setWageringRequirement(Number(payload.new.wagering_requirement));
           }

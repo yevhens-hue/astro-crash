@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { TonClient, WalletContractV5R1, internal, Address } from "npm:@ton/ton@14.0.0";
 import { mnemonicToWalletKey } from "npm:@ton/crypto@3.2.0";
+import { verifyTelegramAuth } from "../_shared/telegram-auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,18 +52,37 @@ serve(async (req) => {
     }
 
     // SECURITY: Only allow withdrawal to user's own wallet address
-    if (recipient_address !== wallet_address) {
+    // Normalize addresses to handle different formats (bounceable, non-bounceable, raw)
+    let normalizedRecipient: string;
+    let normalizedWallet: string;
+    try {
+        normalizedRecipient = Address.parse(recipient_address).toString({ bounceable: false, testOnly: false });
+        normalizedWallet = Address.parse(wallet_address).toString({ bounceable: false, testOnly: false });
+    } catch (e) {
+        throw new Error("Invalid address format");
+    }
+    
+    if (normalizedRecipient !== normalizedWallet) {
         throw new Error("Security: Withdrawals can only be sent to your registered wallet address");
     }
 
 
-    // 2. Verify Telegram Auth (optional but recommended for additional security)
+    // 2. Verify Telegram Auth (REQUIRED for security)
     const initData = req.headers.get('x-telegram-init-data');
-    if (initData) {
-        // In production, verify initData here using verifyTelegramAuth
-        // For now, we log it for audit purposes
-        console.log(`[WITHDRAWAL] Telegram initData received for user: ${wallet_address}`);
+    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
+    
+    if (!botToken) {
+        throw new Error('Bot token not configured');
     }
+    if (!initData || initData.length === 0) {
+        throw new Error('Telegram verification failed: No initData provided');
+    }
+    
+    const authResult = await verifyTelegramAuth(initData, botToken);
+    if (!authResult.valid) {
+        throw new Error(`Telegram auth failed: ${authResult.reason || 'Invalid signature'}`);
+    }
+    console.log(`[WITHDRAWAL] Telegram auth verified for user: ${wallet_address}`);
 
     if (targetUser.balance < amount) {
         throw new Error(`Insufficient balance. Your balance: ${targetUser.balance} TON.`);

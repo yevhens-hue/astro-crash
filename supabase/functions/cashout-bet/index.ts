@@ -109,7 +109,8 @@ serve(async (req) => {
         success: true, 
         winAmount,
         cashoutAt: requestedCashout,
-        new_balance: result.new_balance
+        new_balance: result.new_balance,
+        new_bonus: result.new_bonus
     }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
