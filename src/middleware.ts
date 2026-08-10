@@ -47,38 +47,7 @@ const BLOCKED_INDIAN_STATES = new Set([
 const ALLOWED_PATHS = ['/terms', '/privacy', '/blocked'];
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Always allow legal and static pages
-  if (
-    ALLOWED_PATHS.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.includes('.')  // static files
-  ) {
-    return NextResponse.next();
-  }
-
-  // Get visitor's country and region from Vercel's geo headers
-  const country = request.headers.get('x-vercel-ip-country') ?? null;
-  const region = request.headers.get('x-vercel-ip-country-region') ?? null;
-
-  let isBlocked = false;
-
-  if (country && BLOCKED_COUNTRIES.has(country)) {
-    isBlocked = true;
-  } else if (country === 'IN' && region && BLOCKED_INDIAN_STATES.has(region.toUpperCase())) {
-    // Specifically block restricted Indian states
-    isBlocked = true;
-  }
-
-  if (isBlocked) {
-    const blockedUrl = new URL('/blocked', request.url);
-    if (country) blockedUrl.searchParams.set('country', country);
-    if (region) blockedUrl.searchParams.set('region', region);
-    return NextResponse.redirect(blockedUrl);
-  }
-
+  // Public access is open globally for Telegram Mini App
   return NextResponse.next();
 }
 
