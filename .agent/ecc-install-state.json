@@ -1,0 +1,3627 @@
+{
+  "schemaVersion": "ecc.install.v1",
+  "installedAt": "2026-06-20T16:10:28.011Z",
+  "target": {
+    "id": "antigravity-project",
+    "target": "antigravity",
+    "kind": "project",
+    "root": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent",
+    "installStatePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/ecc-install-state.json"
+  },
+  "request": {
+    "profile": null,
+    "modules": [],
+    "includeComponents": [],
+    "excludeComponents": [],
+    "legacyLanguages": [
+      "typescript",
+      "javascript"
+    ],
+    "legacyMode": true
+  },
+  "resolution": {
+    "selectedModules": [
+      "rules-core",
+      "agents-core",
+      "commands-core"
+    ],
+    "skippedModules": []
+  },
+  "source": {
+    "repoVersion": "2.0.0",
+    "repoCommit": "34faa39bd3cd496a0aece0245f2b7e38b7923abc",
+    "manifestVersion": 1
+  },
+  "operations": [
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/angular/coding-style.md",
+      "sourceRelativePath": "rules/angular/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/angular-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/angular/hooks.md",
+      "sourceRelativePath": "rules/angular/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/angular-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/angular/patterns.md",
+      "sourceRelativePath": "rules/angular/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/angular-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/angular/security.md",
+      "sourceRelativePath": "rules/angular/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/angular-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/angular/testing.md",
+      "sourceRelativePath": "rules/angular/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/angular-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/arkts/coding-style.md",
+      "sourceRelativePath": "rules/arkts/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/arkts-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/arkts/hooks.md",
+      "sourceRelativePath": "rules/arkts/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/arkts-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/arkts/patterns.md",
+      "sourceRelativePath": "rules/arkts/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/arkts-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/arkts/security.md",
+      "sourceRelativePath": "rules/arkts/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/arkts-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/arkts/testing.md",
+      "sourceRelativePath": "rules/arkts/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/arkts-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/agents.md",
+      "sourceRelativePath": "rules/common/agents.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-agents.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/code-review.md",
+      "sourceRelativePath": "rules/common/code-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-code-review.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/coding-style.md",
+      "sourceRelativePath": "rules/common/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/development-workflow.md",
+      "sourceRelativePath": "rules/common/development-workflow.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-development-workflow.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/git-workflow.md",
+      "sourceRelativePath": "rules/common/git-workflow.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-git-workflow.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/hooks.md",
+      "sourceRelativePath": "rules/common/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/patterns.md",
+      "sourceRelativePath": "rules/common/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/performance.md",
+      "sourceRelativePath": "rules/common/performance.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-performance.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/security.md",
+      "sourceRelativePath": "rules/common/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/common/testing.md",
+      "sourceRelativePath": "rules/common/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/common-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/cpp/coding-style.md",
+      "sourceRelativePath": "rules/cpp/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/cpp-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/cpp/hooks.md",
+      "sourceRelativePath": "rules/cpp/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/cpp-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/cpp/patterns.md",
+      "sourceRelativePath": "rules/cpp/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/cpp-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/cpp/security.md",
+      "sourceRelativePath": "rules/cpp/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/cpp-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/cpp/testing.md",
+      "sourceRelativePath": "rules/cpp/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/cpp-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/csharp/coding-style.md",
+      "sourceRelativePath": "rules/csharp/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/csharp-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/csharp/hooks.md",
+      "sourceRelativePath": "rules/csharp/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/csharp-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/csharp/patterns.md",
+      "sourceRelativePath": "rules/csharp/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/csharp-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/csharp/security.md",
+      "sourceRelativePath": "rules/csharp/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/csharp-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/csharp/testing.md",
+      "sourceRelativePath": "rules/csharp/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/csharp-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/dart/coding-style.md",
+      "sourceRelativePath": "rules/dart/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/dart-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/dart/hooks.md",
+      "sourceRelativePath": "rules/dart/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/dart-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/dart/patterns.md",
+      "sourceRelativePath": "rules/dart/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/dart-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/dart/security.md",
+      "sourceRelativePath": "rules/dart/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/dart-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/dart/testing.md",
+      "sourceRelativePath": "rules/dart/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/dart-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/fsharp/coding-style.md",
+      "sourceRelativePath": "rules/fsharp/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/fsharp-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/fsharp/hooks.md",
+      "sourceRelativePath": "rules/fsharp/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/fsharp-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/fsharp/patterns.md",
+      "sourceRelativePath": "rules/fsharp/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/fsharp-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/fsharp/security.md",
+      "sourceRelativePath": "rules/fsharp/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/fsharp-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/fsharp/testing.md",
+      "sourceRelativePath": "rules/fsharp/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/fsharp-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/golang/coding-style.md",
+      "sourceRelativePath": "rules/golang/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/golang-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/golang/hooks.md",
+      "sourceRelativePath": "rules/golang/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/golang-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/golang/patterns.md",
+      "sourceRelativePath": "rules/golang/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/golang-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/golang/security.md",
+      "sourceRelativePath": "rules/golang/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/golang-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/golang/testing.md",
+      "sourceRelativePath": "rules/golang/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/golang-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/java/coding-style.md",
+      "sourceRelativePath": "rules/java/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/java-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/java/hooks.md",
+      "sourceRelativePath": "rules/java/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/java-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/java/patterns.md",
+      "sourceRelativePath": "rules/java/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/java-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/java/security.md",
+      "sourceRelativePath": "rules/java/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/java-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/java/testing.md",
+      "sourceRelativePath": "rules/java/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/java-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/kotlin/coding-style.md",
+      "sourceRelativePath": "rules/kotlin/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/kotlin-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/kotlin/hooks.md",
+      "sourceRelativePath": "rules/kotlin/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/kotlin-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/kotlin/patterns.md",
+      "sourceRelativePath": "rules/kotlin/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/kotlin-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/kotlin/security.md",
+      "sourceRelativePath": "rules/kotlin/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/kotlin-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/kotlin/testing.md",
+      "sourceRelativePath": "rules/kotlin/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/kotlin-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/nuxt/coding-style.md",
+      "sourceRelativePath": "rules/nuxt/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/nuxt-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/nuxt/hooks.md",
+      "sourceRelativePath": "rules/nuxt/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/nuxt-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/nuxt/patterns.md",
+      "sourceRelativePath": "rules/nuxt/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/nuxt-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/nuxt/security.md",
+      "sourceRelativePath": "rules/nuxt/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/nuxt-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/nuxt/testing.md",
+      "sourceRelativePath": "rules/nuxt/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/nuxt-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/perl/coding-style.md",
+      "sourceRelativePath": "rules/perl/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/perl-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/perl/hooks.md",
+      "sourceRelativePath": "rules/perl/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/perl-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/perl/patterns.md",
+      "sourceRelativePath": "rules/perl/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/perl-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/perl/security.md",
+      "sourceRelativePath": "rules/perl/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/perl-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/perl/testing.md",
+      "sourceRelativePath": "rules/perl/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/perl-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/php/coding-style.md",
+      "sourceRelativePath": "rules/php/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/php-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/php/hooks.md",
+      "sourceRelativePath": "rules/php/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/php-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/php/patterns.md",
+      "sourceRelativePath": "rules/php/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/php-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/php/security.md",
+      "sourceRelativePath": "rules/php/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/php-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/php/testing.md",
+      "sourceRelativePath": "rules/php/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/php-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/python/coding-style.md",
+      "sourceRelativePath": "rules/python/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/python-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/python/fastapi.md",
+      "sourceRelativePath": "rules/python/fastapi.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/python-fastapi.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/python/hooks.md",
+      "sourceRelativePath": "rules/python/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/python-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/python/patterns.md",
+      "sourceRelativePath": "rules/python/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/python-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/python/security.md",
+      "sourceRelativePath": "rules/python/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/python-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/python/testing.md",
+      "sourceRelativePath": "rules/python/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/python-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/react/coding-style.md",
+      "sourceRelativePath": "rules/react/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/react-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/react/hooks.md",
+      "sourceRelativePath": "rules/react/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/react-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/react/patterns.md",
+      "sourceRelativePath": "rules/react/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/react-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/react/security.md",
+      "sourceRelativePath": "rules/react/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/react-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/react/testing.md",
+      "sourceRelativePath": "rules/react/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/react-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/README.md",
+      "sourceRelativePath": "rules/README.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/README.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/ruby/coding-style.md",
+      "sourceRelativePath": "rules/ruby/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/ruby-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/ruby/hooks.md",
+      "sourceRelativePath": "rules/ruby/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/ruby-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/ruby/patterns.md",
+      "sourceRelativePath": "rules/ruby/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/ruby-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/ruby/security.md",
+      "sourceRelativePath": "rules/ruby/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/ruby-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/ruby/testing.md",
+      "sourceRelativePath": "rules/ruby/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/ruby-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/rust/coding-style.md",
+      "sourceRelativePath": "rules/rust/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/rust-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/rust/hooks.md",
+      "sourceRelativePath": "rules/rust/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/rust-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/rust/patterns.md",
+      "sourceRelativePath": "rules/rust/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/rust-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/rust/security.md",
+      "sourceRelativePath": "rules/rust/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/rust-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/rust/testing.md",
+      "sourceRelativePath": "rules/rust/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/rust-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/swift/coding-style.md",
+      "sourceRelativePath": "rules/swift/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/swift-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/swift/hooks.md",
+      "sourceRelativePath": "rules/swift/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/swift-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/swift/patterns.md",
+      "sourceRelativePath": "rules/swift/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/swift-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/swift/security.md",
+      "sourceRelativePath": "rules/swift/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/swift-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/swift/testing.md",
+      "sourceRelativePath": "rules/swift/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/swift-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/typescript/coding-style.md",
+      "sourceRelativePath": "rules/typescript/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/typescript-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/typescript/hooks.md",
+      "sourceRelativePath": "rules/typescript/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/typescript-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/typescript/patterns.md",
+      "sourceRelativePath": "rules/typescript/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/typescript-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/typescript/security.md",
+      "sourceRelativePath": "rules/typescript/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/typescript-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/typescript/testing.md",
+      "sourceRelativePath": "rules/typescript/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/typescript-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/vue/coding-style.md",
+      "sourceRelativePath": "rules/vue/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/vue-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/vue/hooks.md",
+      "sourceRelativePath": "rules/vue/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/vue-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/vue/patterns.md",
+      "sourceRelativePath": "rules/vue/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/vue-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/vue/security.md",
+      "sourceRelativePath": "rules/vue/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/vue-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/vue/testing.md",
+      "sourceRelativePath": "rules/vue/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/vue-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/web/coding-style.md",
+      "sourceRelativePath": "rules/web/coding-style.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/web-coding-style.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/web/design-quality.md",
+      "sourceRelativePath": "rules/web/design-quality.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/web-design-quality.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/web/hooks.md",
+      "sourceRelativePath": "rules/web/hooks.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/web-hooks.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/web/patterns.md",
+      "sourceRelativePath": "rules/web/patterns.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/web-patterns.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/web/performance.md",
+      "sourceRelativePath": "rules/web/performance.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/web-performance.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/web/security.md",
+      "sourceRelativePath": "rules/web/security.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/web-security.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "rules-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/rules/web/testing.md",
+      "sourceRelativePath": "rules/web/testing.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/rules/web-testing.md",
+      "strategy": "flatten-copy",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/plugins/marketplace.json",
+      "sourceRelativePath": ".agents/plugins/marketplace.json",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/plugins/marketplace.json",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/agent-introspection-debugging/SKILL.md",
+      "sourceRelativePath": ".agents/skills/agent-introspection-debugging/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/agent-introspection-debugging/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/agent-introspection-debugging/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/agent-introspection-debugging/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/agent-introspection-debugging/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/agent-sort/SKILL.md",
+      "sourceRelativePath": ".agents/skills/agent-sort/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/agent-sort/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/agent-sort/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/agent-sort/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/agent-sort/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/api-design/SKILL.md",
+      "sourceRelativePath": ".agents/skills/api-design/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/api-design/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/api-design/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/api-design/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/api-design/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/article-writing/SKILL.md",
+      "sourceRelativePath": ".agents/skills/article-writing/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/article-writing/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/article-writing/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/article-writing/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/article-writing/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/backend-patterns/SKILL.md",
+      "sourceRelativePath": ".agents/skills/backend-patterns/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/backend-patterns/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/backend-patterns/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/backend-patterns/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/backend-patterns/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/benchmark-methodology/SKILL.md",
+      "sourceRelativePath": ".agents/skills/benchmark-methodology/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/benchmark-methodology/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/benchmark-methodology/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/benchmark-methodology/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/benchmark-methodology/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/SKILL.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/brand-discovery/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/references/10_purpose-why.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/references/10_purpose-why.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/references/10_purpose-why.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/references/20_positioning.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/references/20_positioning.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/references/20_positioning.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/references/30_audience-niche.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/references/30_audience-niche.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/references/30_audience-niche.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/references/40_personality-archetype.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/references/40_personality-archetype.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/references/40_personality-archetype.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/references/50_voice-tone.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/references/50_voice-tone.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/references/50_voice-tone.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/references/60_narrative-story.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/references/60_narrative-story.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/references/60_narrative-story.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/references/70_founder-tension.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/references/70_founder-tension.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/references/70_founder-tension.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-discovery/references/90_SYNTHESIS.md",
+      "sourceRelativePath": ".agents/skills/brand-discovery/references/90_SYNTHESIS.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-discovery/references/90_SYNTHESIS.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-voice/SKILL.md",
+      "sourceRelativePath": ".agents/skills/brand-voice/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-voice/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-voice/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/brand-voice/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-voice/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/brand-voice/references/voice-profile-schema.md",
+      "sourceRelativePath": ".agents/skills/brand-voice/references/voice-profile-schema.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/brand-voice/references/voice-profile-schema.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/bun-runtime/SKILL.md",
+      "sourceRelativePath": ".agents/skills/bun-runtime/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/bun-runtime/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/bun-runtime/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/bun-runtime/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/bun-runtime/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/coding-standards/SKILL.md",
+      "sourceRelativePath": ".agents/skills/coding-standards/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/coding-standards/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/coding-standards/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/coding-standards/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/coding-standards/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/competitive-platform-analysis/SKILL.md",
+      "sourceRelativePath": ".agents/skills/competitive-platform-analysis/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/competitive-platform-analysis/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/competitive-platform-analysis/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/competitive-platform-analysis/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/competitive-platform-analysis/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/competitive-report-structure/SKILL.md",
+      "sourceRelativePath": ".agents/skills/competitive-report-structure/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/competitive-report-structure/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/competitive-report-structure/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/competitive-report-structure/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/competitive-report-structure/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/content-engine/SKILL.md",
+      "sourceRelativePath": ".agents/skills/content-engine/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/content-engine/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/content-engine/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/content-engine/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/content-engine/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/crosspost/SKILL.md",
+      "sourceRelativePath": ".agents/skills/crosspost/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/crosspost/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/crosspost/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/crosspost/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/crosspost/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/deep-research/SKILL.md",
+      "sourceRelativePath": ".agents/skills/deep-research/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/deep-research/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/deep-research/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/deep-research/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/deep-research/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/dmux-workflows/SKILL.md",
+      "sourceRelativePath": ".agents/skills/dmux-workflows/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/dmux-workflows/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/dmux-workflows/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/dmux-workflows/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/dmux-workflows/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/documentation-lookup/SKILL.md",
+      "sourceRelativePath": ".agents/skills/documentation-lookup/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/documentation-lookup/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/documentation-lookup/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/documentation-lookup/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/documentation-lookup/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/e2e-testing/SKILL.md",
+      "sourceRelativePath": ".agents/skills/e2e-testing/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/e2e-testing/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/e2e-testing/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/e2e-testing/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/e2e-testing/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/eval-harness/SKILL.md",
+      "sourceRelativePath": ".agents/skills/eval-harness/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/eval-harness/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/eval-harness/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/eval-harness/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/eval-harness/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/everything-claude-code/SKILL.md",
+      "sourceRelativePath": ".agents/skills/everything-claude-code/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/everything-claude-code/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/everything-claude-code/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/everything-claude-code/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/everything-claude-code/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/exa-search/SKILL.md",
+      "sourceRelativePath": ".agents/skills/exa-search/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/exa-search/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/exa-search/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/exa-search/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/exa-search/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/fal-ai-media/SKILL.md",
+      "sourceRelativePath": ".agents/skills/fal-ai-media/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/fal-ai-media/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/fal-ai-media/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/fal-ai-media/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/fal-ai-media/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/frontend-patterns/SKILL.md",
+      "sourceRelativePath": ".agents/skills/frontend-patterns/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/frontend-patterns/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/frontend-patterns/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/frontend-patterns/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/frontend-patterns/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/frontend-slides/SKILL.md",
+      "sourceRelativePath": ".agents/skills/frontend-slides/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/frontend-slides/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/frontend-slides/STYLE_PRESETS.md",
+      "sourceRelativePath": ".agents/skills/frontend-slides/STYLE_PRESETS.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/frontend-slides/STYLE_PRESETS.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/frontend-slides/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/frontend-slides/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/frontend-slides/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/investor-materials/SKILL.md",
+      "sourceRelativePath": ".agents/skills/investor-materials/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/investor-materials/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/investor-materials/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/investor-materials/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/investor-materials/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/investor-outreach/SKILL.md",
+      "sourceRelativePath": ".agents/skills/investor-outreach/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/investor-outreach/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/investor-outreach/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/investor-outreach/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/investor-outreach/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/market-research/SKILL.md",
+      "sourceRelativePath": ".agents/skills/market-research/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/market-research/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/market-research/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/market-research/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/market-research/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/mcp-server-patterns/SKILL.md",
+      "sourceRelativePath": ".agents/skills/mcp-server-patterns/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/mcp-server-patterns/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/mcp-server-patterns/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/mcp-server-patterns/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/mcp-server-patterns/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/mle-workflow/SKILL.md",
+      "sourceRelativePath": ".agents/skills/mle-workflow/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/mle-workflow/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/mle-workflow/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/mle-workflow/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/mle-workflow/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/nextjs-turbopack/SKILL.md",
+      "sourceRelativePath": ".agents/skills/nextjs-turbopack/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/nextjs-turbopack/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/nextjs-turbopack/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/nextjs-turbopack/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/nextjs-turbopack/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/product-capability/SKILL.md",
+      "sourceRelativePath": ".agents/skills/product-capability/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/product-capability/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/product-capability/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/product-capability/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/product-capability/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/security-review/SKILL.md",
+      "sourceRelativePath": ".agents/skills/security-review/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/security-review/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/security-review/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/security-review/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/security-review/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/strategic-compact/SKILL.md",
+      "sourceRelativePath": ".agents/skills/strategic-compact/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/strategic-compact/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/strategic-compact/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/strategic-compact/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/strategic-compact/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/tdd-workflow/SKILL.md",
+      "sourceRelativePath": ".agents/skills/tdd-workflow/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/tdd-workflow/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/tdd-workflow/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/tdd-workflow/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/tdd-workflow/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/verification-loop/SKILL.md",
+      "sourceRelativePath": ".agents/skills/verification-loop/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/verification-loop/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/verification-loop/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/verification-loop/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/verification-loop/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/video-editing/SKILL.md",
+      "sourceRelativePath": ".agents/skills/video-editing/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/video-editing/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/video-editing/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/video-editing/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/video-editing/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/x-api/SKILL.md",
+      "sourceRelativePath": ".agents/skills/x-api/SKILL.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/x-api/SKILL.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/.agents/skills/x-api/agents/openai.yaml",
+      "sourceRelativePath": ".agents/skills/x-api/agents/openai.yaml",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/.agents/skills/x-api/agents/openai.yaml",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/a11y-architect.md",
+      "sourceRelativePath": "agents/a11y-architect.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/a11y-architect.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/agent-evaluator.md",
+      "sourceRelativePath": "agents/agent-evaluator.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/agent-evaluator.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/architect.md",
+      "sourceRelativePath": "agents/architect.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/architect.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/build-error-resolver.md",
+      "sourceRelativePath": "agents/build-error-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/build-error-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/chief-of-staff.md",
+      "sourceRelativePath": "agents/chief-of-staff.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/chief-of-staff.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/code-architect.md",
+      "sourceRelativePath": "agents/code-architect.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/code-architect.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/code-explorer.md",
+      "sourceRelativePath": "agents/code-explorer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/code-explorer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/code-reviewer.md",
+      "sourceRelativePath": "agents/code-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/code-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/code-simplifier.md",
+      "sourceRelativePath": "agents/code-simplifier.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/code-simplifier.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/comment-analyzer.md",
+      "sourceRelativePath": "agents/comment-analyzer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/comment-analyzer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/conversation-analyzer.md",
+      "sourceRelativePath": "agents/conversation-analyzer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/conversation-analyzer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/cpp-build-resolver.md",
+      "sourceRelativePath": "agents/cpp-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/cpp-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/cpp-reviewer.md",
+      "sourceRelativePath": "agents/cpp-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/cpp-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/csharp-reviewer.md",
+      "sourceRelativePath": "agents/csharp-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/csharp-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/dart-build-resolver.md",
+      "sourceRelativePath": "agents/dart-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/dart-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/database-reviewer.md",
+      "sourceRelativePath": "agents/database-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/database-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/django-build-resolver.md",
+      "sourceRelativePath": "agents/django-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/django-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/django-reviewer.md",
+      "sourceRelativePath": "agents/django-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/django-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/doc-updater.md",
+      "sourceRelativePath": "agents/doc-updater.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/doc-updater.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/docs-lookup.md",
+      "sourceRelativePath": "agents/docs-lookup.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/docs-lookup.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/e2e-runner.md",
+      "sourceRelativePath": "agents/e2e-runner.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/e2e-runner.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/fastapi-reviewer.md",
+      "sourceRelativePath": "agents/fastapi-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/fastapi-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/flutter-reviewer.md",
+      "sourceRelativePath": "agents/flutter-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/flutter-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/fsharp-reviewer.md",
+      "sourceRelativePath": "agents/fsharp-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/fsharp-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/gan-evaluator.md",
+      "sourceRelativePath": "agents/gan-evaluator.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/gan-evaluator.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/gan-generator.md",
+      "sourceRelativePath": "agents/gan-generator.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/gan-generator.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/gan-planner.md",
+      "sourceRelativePath": "agents/gan-planner.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/gan-planner.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/go-build-resolver.md",
+      "sourceRelativePath": "agents/go-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/go-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/go-reviewer.md",
+      "sourceRelativePath": "agents/go-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/go-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/harmonyos-app-resolver.md",
+      "sourceRelativePath": "agents/harmonyos-app-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/harmonyos-app-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/harness-optimizer.md",
+      "sourceRelativePath": "agents/harness-optimizer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/harness-optimizer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/healthcare-reviewer.md",
+      "sourceRelativePath": "agents/healthcare-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/healthcare-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/homelab-architect.md",
+      "sourceRelativePath": "agents/homelab-architect.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/homelab-architect.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/java-build-resolver.md",
+      "sourceRelativePath": "agents/java-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/java-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/java-reviewer.md",
+      "sourceRelativePath": "agents/java-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/java-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/kotlin-build-resolver.md",
+      "sourceRelativePath": "agents/kotlin-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/kotlin-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/kotlin-reviewer.md",
+      "sourceRelativePath": "agents/kotlin-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/kotlin-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/loop-operator.md",
+      "sourceRelativePath": "agents/loop-operator.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/loop-operator.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/marketing-agent.md",
+      "sourceRelativePath": "agents/marketing-agent.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/marketing-agent.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/mle-reviewer.md",
+      "sourceRelativePath": "agents/mle-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/mle-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/network-architect.md",
+      "sourceRelativePath": "agents/network-architect.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/network-architect.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/network-config-reviewer.md",
+      "sourceRelativePath": "agents/network-config-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/network-config-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/network-troubleshooter.md",
+      "sourceRelativePath": "agents/network-troubleshooter.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/network-troubleshooter.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/opensource-forker.md",
+      "sourceRelativePath": "agents/opensource-forker.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/opensource-forker.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/opensource-packager.md",
+      "sourceRelativePath": "agents/opensource-packager.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/opensource-packager.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/opensource-sanitizer.md",
+      "sourceRelativePath": "agents/opensource-sanitizer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/opensource-sanitizer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/performance-optimizer.md",
+      "sourceRelativePath": "agents/performance-optimizer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/performance-optimizer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/php-reviewer.md",
+      "sourceRelativePath": "agents/php-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/php-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/planner.md",
+      "sourceRelativePath": "agents/planner.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/planner.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/pr-test-analyzer.md",
+      "sourceRelativePath": "agents/pr-test-analyzer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/pr-test-analyzer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/python-reviewer.md",
+      "sourceRelativePath": "agents/python-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/python-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/pytorch-build-resolver.md",
+      "sourceRelativePath": "agents/pytorch-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/pytorch-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/react-build-resolver.md",
+      "sourceRelativePath": "agents/react-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/react-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/react-reviewer.md",
+      "sourceRelativePath": "agents/react-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/react-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/refactor-cleaner.md",
+      "sourceRelativePath": "agents/refactor-cleaner.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/refactor-cleaner.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/rust-build-resolver.md",
+      "sourceRelativePath": "agents/rust-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/rust-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/rust-reviewer.md",
+      "sourceRelativePath": "agents/rust-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/rust-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/security-reviewer.md",
+      "sourceRelativePath": "agents/security-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/security-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/seo-specialist.md",
+      "sourceRelativePath": "agents/seo-specialist.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/seo-specialist.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/silent-failure-hunter.md",
+      "sourceRelativePath": "agents/silent-failure-hunter.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/silent-failure-hunter.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/spec-miner.md",
+      "sourceRelativePath": "agents/spec-miner.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/spec-miner.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/swift-build-resolver.md",
+      "sourceRelativePath": "agents/swift-build-resolver.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/swift-build-resolver.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/swift-reviewer.md",
+      "sourceRelativePath": "agents/swift-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/swift-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/tdd-guide.md",
+      "sourceRelativePath": "agents/tdd-guide.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/tdd-guide.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/type-design-analyzer.md",
+      "sourceRelativePath": "agents/type-design-analyzer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/type-design-analyzer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/typescript-reviewer.md",
+      "sourceRelativePath": "agents/typescript-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/typescript-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/agents/vue-reviewer.md",
+      "sourceRelativePath": "agents/vue-reviewer.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/skills/vue-reviewer.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "agents-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/AGENTS.md",
+      "sourceRelativePath": "AGENTS.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/AGENTS.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/aside.md",
+      "sourceRelativePath": "commands/aside.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/aside.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/auto-update.md",
+      "sourceRelativePath": "commands/auto-update.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/auto-update.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/build-fix.md",
+      "sourceRelativePath": "commands/build-fix.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/build-fix.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/checkpoint.md",
+      "sourceRelativePath": "commands/checkpoint.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/checkpoint.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/code-review.md",
+      "sourceRelativePath": "commands/code-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/code-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/cost-report.md",
+      "sourceRelativePath": "commands/cost-report.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/cost-report.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/cpp-build.md",
+      "sourceRelativePath": "commands/cpp-build.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/cpp-build.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/cpp-review.md",
+      "sourceRelativePath": "commands/cpp-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/cpp-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/cpp-test.md",
+      "sourceRelativePath": "commands/cpp-test.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/cpp-test.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/ecc-guide.md",
+      "sourceRelativePath": "commands/ecc-guide.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/ecc-guide.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/epic-claim.md",
+      "sourceRelativePath": "commands/epic-claim.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/epic-claim.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/epic-decompose.md",
+      "sourceRelativePath": "commands/epic-decompose.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/epic-decompose.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/epic-publish.md",
+      "sourceRelativePath": "commands/epic-publish.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/epic-publish.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/epic-review.md",
+      "sourceRelativePath": "commands/epic-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/epic-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/epic-sync.md",
+      "sourceRelativePath": "commands/epic-sync.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/epic-sync.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/epic-unblock.md",
+      "sourceRelativePath": "commands/epic-unblock.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/epic-unblock.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/epic-validate.md",
+      "sourceRelativePath": "commands/epic-validate.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/epic-validate.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/evolve.md",
+      "sourceRelativePath": "commands/evolve.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/evolve.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/fastapi-review.md",
+      "sourceRelativePath": "commands/fastapi-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/fastapi-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/feature-dev.md",
+      "sourceRelativePath": "commands/feature-dev.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/feature-dev.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/flutter-build.md",
+      "sourceRelativePath": "commands/flutter-build.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/flutter-build.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/flutter-review.md",
+      "sourceRelativePath": "commands/flutter-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/flutter-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/flutter-test.md",
+      "sourceRelativePath": "commands/flutter-test.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/flutter-test.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/gan-build.md",
+      "sourceRelativePath": "commands/gan-build.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/gan-build.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/gan-design.md",
+      "sourceRelativePath": "commands/gan-design.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/gan-design.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/go-build.md",
+      "sourceRelativePath": "commands/go-build.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/go-build.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/go-review.md",
+      "sourceRelativePath": "commands/go-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/go-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/go-test.md",
+      "sourceRelativePath": "commands/go-test.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/go-test.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/gradle-build.md",
+      "sourceRelativePath": "commands/gradle-build.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/gradle-build.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/harness-audit.md",
+      "sourceRelativePath": "commands/harness-audit.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/harness-audit.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/hookify-configure.md",
+      "sourceRelativePath": "commands/hookify-configure.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/hookify-configure.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/hookify-help.md",
+      "sourceRelativePath": "commands/hookify-help.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/hookify-help.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/hookify-list.md",
+      "sourceRelativePath": "commands/hookify-list.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/hookify-list.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/hookify.md",
+      "sourceRelativePath": "commands/hookify.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/hookify.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/instinct-export.md",
+      "sourceRelativePath": "commands/instinct-export.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/instinct-export.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/instinct-import.md",
+      "sourceRelativePath": "commands/instinct-import.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/instinct-import.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/instinct-status.md",
+      "sourceRelativePath": "commands/instinct-status.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/instinct-status.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/jira.md",
+      "sourceRelativePath": "commands/jira.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/jira.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/kotlin-build.md",
+      "sourceRelativePath": "commands/kotlin-build.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/kotlin-build.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/kotlin-review.md",
+      "sourceRelativePath": "commands/kotlin-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/kotlin-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/kotlin-test.md",
+      "sourceRelativePath": "commands/kotlin-test.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/kotlin-test.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/learn-eval.md",
+      "sourceRelativePath": "commands/learn-eval.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/learn-eval.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/learn.md",
+      "sourceRelativePath": "commands/learn.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/learn.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/loop-start.md",
+      "sourceRelativePath": "commands/loop-start.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/loop-start.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/loop-status.md",
+      "sourceRelativePath": "commands/loop-status.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/loop-status.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/marketing-campaign.md",
+      "sourceRelativePath": "commands/marketing-campaign.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/marketing-campaign.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/model-route.md",
+      "sourceRelativePath": "commands/model-route.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/model-route.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/multi-backend.md",
+      "sourceRelativePath": "commands/multi-backend.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/multi-backend.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/multi-execute.md",
+      "sourceRelativePath": "commands/multi-execute.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/multi-execute.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/multi-frontend.md",
+      "sourceRelativePath": "commands/multi-frontend.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/multi-frontend.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/multi-plan.md",
+      "sourceRelativePath": "commands/multi-plan.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/multi-plan.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/multi-workflow.md",
+      "sourceRelativePath": "commands/multi-workflow.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/multi-workflow.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/orch-add-feature.md",
+      "sourceRelativePath": "commands/orch-add-feature.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/orch-add-feature.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/orch-build-mvp.md",
+      "sourceRelativePath": "commands/orch-build-mvp.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/orch-build-mvp.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/orch-change-feature.md",
+      "sourceRelativePath": "commands/orch-change-feature.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/orch-change-feature.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/orch-fix-defect.md",
+      "sourceRelativePath": "commands/orch-fix-defect.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/orch-fix-defect.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/orch-refine-code.md",
+      "sourceRelativePath": "commands/orch-refine-code.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/orch-refine-code.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/plan-prd.md",
+      "sourceRelativePath": "commands/plan-prd.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/plan-prd.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/plan.md",
+      "sourceRelativePath": "commands/plan.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/plan.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/pm2.md",
+      "sourceRelativePath": "commands/pm2.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/pm2.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/pr.md",
+      "sourceRelativePath": "commands/pr.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/pr.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/project-init.md",
+      "sourceRelativePath": "commands/project-init.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/project-init.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/projects.md",
+      "sourceRelativePath": "commands/projects.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/projects.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/promote.md",
+      "sourceRelativePath": "commands/promote.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/promote.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/prp-commit.md",
+      "sourceRelativePath": "commands/prp-commit.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/prp-commit.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/prp-implement.md",
+      "sourceRelativePath": "commands/prp-implement.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/prp-implement.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/prp-plan.md",
+      "sourceRelativePath": "commands/prp-plan.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/prp-plan.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/prp-pr.md",
+      "sourceRelativePath": "commands/prp-pr.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/prp-pr.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/prp-prd.md",
+      "sourceRelativePath": "commands/prp-prd.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/prp-prd.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/prune.md",
+      "sourceRelativePath": "commands/prune.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/prune.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/python-review.md",
+      "sourceRelativePath": "commands/python-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/python-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/quality-gate.md",
+      "sourceRelativePath": "commands/quality-gate.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/quality-gate.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/react-build.md",
+      "sourceRelativePath": "commands/react-build.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/react-build.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/react-review.md",
+      "sourceRelativePath": "commands/react-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/react-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/react-test.md",
+      "sourceRelativePath": "commands/react-test.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/react-test.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/refactor-clean.md",
+      "sourceRelativePath": "commands/refactor-clean.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/refactor-clean.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/resume-session.md",
+      "sourceRelativePath": "commands/resume-session.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/resume-session.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/review-pr.md",
+      "sourceRelativePath": "commands/review-pr.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/review-pr.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/rust-build.md",
+      "sourceRelativePath": "commands/rust-build.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/rust-build.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/rust-review.md",
+      "sourceRelativePath": "commands/rust-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/rust-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/rust-test.md",
+      "sourceRelativePath": "commands/rust-test.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/rust-test.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/santa-loop.md",
+      "sourceRelativePath": "commands/santa-loop.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/santa-loop.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/save-session.md",
+      "sourceRelativePath": "commands/save-session.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/save-session.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/security-scan.md",
+      "sourceRelativePath": "commands/security-scan.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/security-scan.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/sessions.md",
+      "sourceRelativePath": "commands/sessions.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/sessions.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/setup-pm.md",
+      "sourceRelativePath": "commands/setup-pm.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/setup-pm.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/skill-create.md",
+      "sourceRelativePath": "commands/skill-create.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/skill-create.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/skill-health.md",
+      "sourceRelativePath": "commands/skill-health.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/skill-health.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/test-coverage.md",
+      "sourceRelativePath": "commands/test-coverage.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/test-coverage.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/update-codemaps.md",
+      "sourceRelativePath": "commands/update-codemaps.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/update-codemaps.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/update-docs.md",
+      "sourceRelativePath": "commands/update-docs.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/update-docs.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    },
+    {
+      "kind": "copy-file",
+      "moduleId": "commands-core",
+      "sourcePath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/ECC/commands/vue-review.md",
+      "sourceRelativePath": "commands/vue-review.md",
+      "destinationPath": "/Users/yevhen/.gemini/antigravity/scratch/projects/github/astro-crash/.agent/workflows/vue-review.md",
+      "strategy": "preserve-relative-path",
+      "ownership": "managed",
+      "scaffoldOnly": false
+    }
+  ]
+}
