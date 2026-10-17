@@ -47,7 +47,49 @@ const BLOCKED_INDIAN_STATES = new Set([
 const ALLOWED_PATHS = ['/terms', '/privacy', '/blocked'];
 
 export function middleware(request: NextRequest) {
-  // Public access is open globally for Telegram Mini App
+  const { pathname } = request.nextUrl;
+
+  // Always allow legal pages and assets
+  if (
+    ALLOWED_PATHS.some((path) => pathname.startsWith(path)) ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/health') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
+
+  // Detect Country & Region from Cloudflare / Vercel headers / Geo API
+  const country = (
+    request.headers.get('cf-ipcountry') ||
+    request.headers.get('x-vercel-ip-country') ||
+    (request as any).geo?.country ||
+    ''
+  ).toUpperCase();
+
+  const region = (
+    request.headers.get('cf-region-code') ||
+    request.headers.get('x-vercel-ip-country-region') ||
+    (request as any).geo?.region ||
+    ''
+  ).toUpperCase();
+
+  // Strict Geo-Block: Restricted countries
+  if (country && BLOCKED_COUNTRIES.has(country)) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/blocked';
+    url.searchParams.set('reason', 'country');
+    return NextResponse.redirect(url);
+  }
+
+  // Strict Geo-Block: Restricted Indian states (Public Gambling Act compliance)
+  if (country === 'IN' && region && BLOCKED_INDIAN_STATES.has(region)) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/blocked';
+    url.searchParams.set('reason', 'state');
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 
